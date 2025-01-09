@@ -1,0 +1,66 @@
+.avatarPreviewContainer {
+    --avatar-size: 150px;
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    position: relative;
+}
+
+.avatarPreview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 50%;
+    overflow: hidden;
+    transition: opacity 0.5s;
+}
+
+.avatarPreview.avatarPreviewBlurred {
+    opacity: 0.5;
+}
+
+.avatarAddButton {
+    background: rgba(var(--bs-primary-rgb), 0.07) !important;
+    border: 1px dashed rgba(var(--bs-primary-rgb), 0.25) !important;
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+}
+
+.avatarAddButton:hover {
+    color: var(--bs-primary) !important;
+    background: rgba(var(--bs-primary-rgb), 0.25) !important;
+    border: 1px dashed rgba(var(--bs-primary-rgb), 0.5) !important;
+}
+
+.avatarAddButton:active {
+    color: var(--bs-primary-text-emphasis) !important;
+    background: rgba(var(--bs-primary-rgb), 0.5) !important;
+    border: 1px dashed rgba(var(--bs-primary-rgb), 0.75) !important;
+}
+
+.avatarEditButton, .avatarDeleteButton {
+    position: absolute;
+    right: 0;
+}
+
+.avatarEditButton {
+    top: 0;
+    transform: translate(35%, -35%);
+}
+
+.avatarDeleteButton {
+    bottom: 0;
+    transform: translate(35%, 35%);
+}
+
+.avatarSpinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: opacity .5s;
+    opacity: 0;
+}
+
+.avatarSpinner.avatarSpinnerVisible {
+    opacity: 1 !important;
+}

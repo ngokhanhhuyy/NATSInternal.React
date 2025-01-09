@@ -1,0 +1,22 @@
+.notificationItem {
+    cursor: pointer;
+}
+
+.notificationIconContainer {
+    height: 100%;
+    width: 35px;
+    aspect-ratio: 1;
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+
+.notificationIconContainer,
+.notificationText {
+    transition-duration: 0.35s;
+    transition-delay: 0s;
+}
+
+.notificationItem:hover .notificationIconContainer,
+.notificationItem:hover .notificationText {
+    transform: translateX(0.5rem) !important;
+}

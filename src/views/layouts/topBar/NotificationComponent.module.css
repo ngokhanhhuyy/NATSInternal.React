@@ -1,0 +1,49 @@
+.button :global i .notification-dot {
+    border: 2px solid white;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    display: block;
+}
+
+.button :global i {
+    position: relative;
+    transition-duration: var(--topbar-icon-transition-duration);
+}
+
+.button:hover :global i {
+    filter: var(--topbar-icon-hover-filter);
+}
+
+.dropdownMenu {
+    min-width: 350px;
+    right: -30px !important;
+    top: 15px !important;
+}
+
+.dropdownMenu :global .indicator {
+    background: linear-gradient(135deg, white 50%, transparent 50%);
+    width: 20px;
+    height: 20px;
+    border: 0 solid rgba(var(--bs-primary-rgb), 0.5);
+    border-top-width: 1px;
+    border-left-width: 1px;
+    position: absolute;
+    right: 30px;
+    top: 0;
+    transition: 0.5s;
+    transform-origin: center;
+    transform: translate(0%, calc(-50% - (1px * 0.5) )) rotate(45deg);
+}
+
+@media (max-width: 576px) {
+    .dropdownMenu {
+        width: 90% !important;
+        position: fixed !important;
+        left: 50% !important;
+        transform: translate(-50%, calc(var(--topbar-height) + 10px)) !important;
+    }
+}

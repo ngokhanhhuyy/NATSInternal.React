@@ -1,0 +1,18 @@
+.blockBody {
+    --bs-border-opacity: .25;
+}
+
+.avatarContainer {
+    width: 100px;
+    height: 100px;
+    overflow: hidden;
+    border-radius: 50%;
+}
+
+.avatarContainer img {
+    object-fit: cover;
+    object-position: 50% 50%;
+    aspect-ratio: 1;
+    width: 100%;
+    height: 100%;
+}

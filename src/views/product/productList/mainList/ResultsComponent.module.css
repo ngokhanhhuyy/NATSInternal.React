@@ -1,0 +1,19 @@
+.thumbnail {
+    width: 70px !important;
+    height: 70px !important;
+    object-fit: cover;
+    object-position: 50% 50%;
+    cursor: pointer;
+}
+
+.additionalInfo {
+    overflow: hidden;
+}
+
+.additionalInfo :global span {
+    width: auto;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

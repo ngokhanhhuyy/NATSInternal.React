@@ -1,0 +1,76 @@
+.container {
+    background: rgba(255, 255, 255, 255);
+    width: 250px;
+    height: 250px;
+    position: absolute;
+    padding: 25px;
+    top: calc(50% - var(--topbar-height));
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.loadingLogo {
+    filter: grayscale(0);
+    max-width: 100%;
+    animation-name: loadingLogoScaling;
+    animation-duration: 0.75s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    animation-timing-function: ease-in-out;
+}
+
+.border {
+    border-width: 5px;
+    border-style: solid;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    transform-origin: 50% 50%;
+    top: 0;
+    clip-path: polygon(0 0, 100% 0, 50% 50%);
+    position: absolute;
+    animation-duration: 0.5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    animation-name: borderSpinning;
+}
+
+@media (max-width: 720px) {
+    .container {
+        top: calc(50% - var(--topbar-height));
+    }
+}
+
+@keyframes borderSpinning {
+    0% {
+        border-color: var(--bs-primary);
+        transform: rotate(0deg);
+    }
+
+    25% {
+        border-color: var(--bs-success);
+    }
+
+    50% {
+        border-color: var(--bs-warning);
+    }
+
+    75% {
+        border-color: var(--bs-danger);
+    }
+
+    100% {
+        border-color: var(--bs-primary);
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes loadingLogoScaling {
+    from {
+        transform: scale(0.9);
+    }
+
+    to {
+        transform: scale(0.8);
+    }
+}

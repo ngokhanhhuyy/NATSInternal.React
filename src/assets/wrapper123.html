@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+            crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container-fluid h-100 m-0 p-0">
+        <div class="d-flex flex-column h-100 justify-content-start align-items-stretch">
+            <div class="bg-secondary bg-opacity-10 w-100 p-2">
+                <div class="input-group shadow-sm">
+                    <div class="btn-group overflow-visible">
+                        <button id="optionsButton" class="btn btn-success" data-bs-toggle="dropdown"
+                                data-bs-auto-close="outside"></button>
+                        <div class="dropdown-menu shadow p-0" style="width: 300px;">
+                            <form id="options" class="small p-3 d-flex flex-column">
+                                <div class="form-group">
+                                    <label class="form-label opacity-75 fw-bold" for="interceptApiCalls">
+                                        Intercept Api calls
+                                    </label>
+                                    <select class="form-select" name="interceptApiCalls" id="interceptApiCalls">
+                                        <option value="IncludeAuthCalls">Enabled (Include authentication calls)</option>
+                                        <option value="ExcludeAuthCalls">Enabled (Exclude authentication calls)</option>
+                                        <option value="">Disabled</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mt-3">
+                                    <label class="form-label opacity-75 fw-bold m-0" for="interceptScriptRequests">
+                                        Intercept requests for scripts
+                                    </label>
+                                    <select class="form-select" name="interceptScriptRequests"
+                                            id="interceptScriptRequests">
+                                        <option value="MainJsAsArrayBuffer">
+                                            Enabled (fetch main.js script as ArrayBuffer)
+                                        </option>
+                                        <option value="MainJsAsString">
+                                            Enabled (fetch main.js script as string)
+                                        </option>
+                                        <option value="ExcludeMainJs">
+                                            Enabled (exclude main.js script)
+                                        </option>
+                                        <option value="">Disabled</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mt-3">
+                                    <label class="form-label opacity-75 fw-bold m-0"
+                                            for="webSocketOpeningTimeout">
+                                        WebSocket opening timeout (seconds)
+                                    </label>
+                                    <select class="form-select" name="webSocketOpeningTimeout"
+                                            id="webSocketOpeningTimeout">
+                                        <option value="3">3</option>
+                                        <option value="5">5</option>
+                                        <option value="10">10</option>
+                                        <option value="15">15</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mt-3">
+                                    <label class="form-label opacity-75 fw-bold m-0"
+                                            for="requestTimeout">
+                                        Request timeout (seconds)
+                                    </label>
+                                    <select class="form-select" name="requestTimeout"
+                                            id="requestTimeout">
+                                        <option value="5">5</option>
+                                        <option value="10">10</option>
+                                        <option value="15">15</option>
+                                        <option value="20">20</option>
+                                        <option value="30">30</option>
+                                        <option value="60">60</option>
+                                    </select>
+                                </div>
+                                <div class="d-flex justify-content-end mt-3">
+                                    <button class="btn btn-outline-primary"
+                                            id="loadConfigButton" type="button"
+                                            title="Load Service Worker config">
+                                        <i class="bi bi-arrow-clockwise"></i> 
+                                    </button>
+                                    <button class="btn btn-outline-primary mx-2"
+                                            id="resetWsButton" type="button"
+                                            title="Reset WebSocket connection">
+                                        <i class="bi bi-hdd-network-fill"></i>
+                                    </button>
+                                    <button type="submit" id="configSubmitButton"
+                                            class="btn btn-primary" title="Save">
+                                        <i class="bi bi-floppy"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <input type="text" id="addressInput" class="form-control"></input>
+                    <button id="refreshButton" class="btn btn-primary">Refresh</button>
+                </div>
+            </div>
+            <div class="d-flex h-100 justify-content-stretch align-items-stretch">
+                <iframe id="iframe" src="/" class="w-100 h-100"></iframe>
+            </div>
+        </div>
+    </div>
+    <script>
+        let /** @type {ServiceWorkerRegistration} */ serviceWorkerRegistration;
+        // if ("serviceWorker" in navigator) {
+        //     navigator.serviceWorker.register("./serviceWorker.js")
+        //         .then(registration => {
+        //             serviceWorkerRegistration = registration;
+        //             registration.update();
+        //             console.log("Service Worker registered with scope:", registration.scope);
+        //         }).catch(error => {
+        //             console.error("Service Worker registration failed:", error);
+        //         });
+        // }
+        
+        /**
+         * @typedef {object} Config
+         * @property {"IncludeAuthCalls" | "ExcludeAuthCalls" | false} interceptApiCalls
+         * @property {"MainJsAsArrayBuffer" | "MainJsAsString" | "ExcludeMainJs" | false} interceptScriptRequests
+         * @property {number} webSocketOpeningTimeout
+         * @property {number} requestTimeout
+         */
+
+        let /** @type {HTMLButtonElement} */ optionsButton;
+        let /** @type {HTMLFormElement} */ configForm, /** @type {HTMLButtonElement} */ configSubmitButton;
+        let /** @type {string} */ currentRoute;
+        let /** @type {HTMLInputElement} */ addressInput, /** @type {HTMLIFrameElement} */ iframe;
+        let /** @type {HTMLButtonElement} */ refreshButton, /** @type {HTMLButtonElement} */ resetWSButton;
+        
+        window.addEventListener("DOMContentLoaded", () => {
+            optionsButton = document.getElementById("optionsButton");
+
+            configForm = document.getElementById("options");
+            configForm.addEventListener("submit", changeServiceWorkerConfig);
+
+            configSubmitButton = document.getElementById("configSubmitButton");
+
+            addressInput = document.getElementById("addressInput");
+            addressInput.addEventListener("focus", () => addressInput.select());
+            addressInput.addEventListener("focusout", () =>  addressInput.blur());
+            addressInput.addEventListener("keydown", (event) => {
+                if (event.keyCode === 13) {
+                    iframe.src = window.location.origin + currentRoute;
+                }
+            });
+            
+            iframe = document.getElementById("iframe");
+            iframe.addEventListener("load", () => {
+                optionsButton.textContent = "http(s)://root/";
+            });
+
+            refreshButton = document.getElementById("refreshButton");
+            refreshButton.addEventListener("click", () => iframe.src = iframe.src);
+
+            loadConfigButton = document.getElementById("loadConfigButton");
+            loadConfigButton.addEventListener("click", getServiceWorkerConfig);
+
+            resetWSButton = document.getElementById("resetWsButton");
+            resetWSButton.addEventListener("click", resetServiceWorkerWSConnection);
+        });
+
+        window.addEventListener("message", (event) => {
+            if (typeof event.data === "string") {
+                console.log(event.data);
+                return;
+            }
+
+            /** @type {{ type: string, newRoute: string }} */
+            const { type, newRoute } = event.data;
+            if (type === "routeChanged") {
+                currentRoute = newRoute;
+                addressInput.value = newRoute.substring(1, newRoute.length);
+            }
+        });
+
+        navigator.serviceWorker.addEventListener("message", (event) => {
+            /** @type {{ type: "changeConfig" | config: Config }} */
+            const data = event.data;
+            if (data.type === "changeConfig") {
+                onServiceWorkerConfigReceived(data.config);
+            }
+        });
+
+        function getServiceWorkerConfig() {
+            serviceWorkerRegistration.active.postMessage({ type: "getConfig" });
+        }
+
+        function onServiceWorkerConfigReceived(config) {
+            Object.keys(config).forEach(key => {
+                /** @type {HTMLInputElement | HTMLSelectElement} */ 
+                const element = configForm.querySelector(`input[name=${key}]`, `select[name=${key}]`);
+                const value = config[key];
+                element.value = !isNaN(value) ? parseInt(value / 1000) : value;
+            });
+            console.log("Loaded service worker config:", config);
+        }
+
+        function changeServiceWorkerConfig(/** @type {SubmitEvent} */ event) {
+            event.preventDefault();
+            const formData = Object.fromEntries(new FormData(event.target));
+            const config = {};
+            Object.keys(formData).forEach(key => {
+                console.log(JSON.stringify(formData));
+                config[key] = !isNaN(formData[key]) ? parseInt(formData[key])* 1000 : (formData[key] || false);
+            });
+            serviceWorkerRegistration.active.postMessage({ type: "changeConfig", config });
+        }
+
+        function resetServiceWorkerWSConnection() {
+            serviceWorkerRegistration.active.postMessage({ type: "resetWsConnection" });
+        }
+    </script>
+
+    <style>
+        @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+
+        html, body {
+            height: 100vh;
+        }
+    </style>
+</body>
+</html>

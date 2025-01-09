@@ -1,0 +1,9 @@
+.customerListBlock :global .block-body {
+    overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    .customerListBlock :global .block-body:has(ul) {
+        border-bottom: 1px solid var(--border-color) !important;
+    }
+}

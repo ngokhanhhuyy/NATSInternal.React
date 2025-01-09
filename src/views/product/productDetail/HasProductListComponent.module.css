@@ -1,0 +1,26 @@
+.hasProductList :global select.form-select.success:not(:focus) {
+    border-color: var(--bs-success-border-subtle) !important;
+}
+
+.hasProductList :global select.form-select.primary:not(:focus) {
+    border-color: var(--bs-primary-border-subtle) !important;
+}
+
+.hasProductList :global select.form-select.danger:not(:focus) {
+    border-color: var(--bs-danger-border-subtle) !important;
+}
+
+.hasProductList :global select.form-select.success:focus {
+    border-color: var(--bs-success) !important;
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-success-rgb), 0.25) !important;
+}
+
+.hasProductList :global select.form-select.primary:focus {
+    border-color: var(--bs-success) !important;
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25) !important;
+}
+
+.hasProductList :global select.form-select.danger:focus {
+    border-color: var(--bs-success) !important;
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-danger-rgb), 0.25) !important;
+}

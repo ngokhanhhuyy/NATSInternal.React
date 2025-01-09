@@ -1,0 +1,28 @@
+.progress {
+    background: transparent !important;
+    height: 5px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 20;
+}
+
+.pending {
+    transition: 0s !important;
+    opacity: 0;
+}
+
+.waiting { 
+    transition: width 2s ease !important;
+    opacity: 1;
+}
+
+.finishing {
+    transition: width .1s !important;
+    opacity: 1;
+}
+
+.hiding {
+    transition: opacity .2s !important;
+    opacity: 0;
+}

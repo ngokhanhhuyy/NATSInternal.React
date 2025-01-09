@@ -1,0 +1,3 @@
+.offcanvasNavigationBar {
+    width: var(--sidebar-width-expanded) !important;
+}
