@@ -7,13 +7,13 @@ import MoneyInput from "@/views/form/MoneyInputComponent";
 // Props.
 interface PickedItemListProps<TUpsertItem extends IExportProductUpsertItemModel<TUpsertItem>> {
     model: TUpsertItem[];
-    onChanged: (index: number, changedModel: TUpsertItem) => void;
+    onChanged: (index: number, changedData: Partial<TUpsertItem>) => void;
     onUnpicked: (index: number) => void;
 }
 
 interface PickedItemProps<TUpsertItem extends IExportProductUpsertItemModel<TUpsertItem>> {
     model: TUpsertItem;
-    onChanged: (changedModel: TUpsertItem) => void;
+    onChanged: (changedData: Partial<TUpsertItem>) => void;
     onUnpicked: () => void;
     index: number;
 }
@@ -50,8 +50,8 @@ const PickedItemList = <TUpsertItem extends IExportProductUpsertItemModel<TUpser
                         {model.map((item, index) => (
                             <Item
                                 model={item}
-                                onChanged={(changedItemModel: TUpsertItem) => {
-                                    onChanged(index, changedItemModel);
+                                onChanged={(changedData: TUpsertItem) => {
+                                    onChanged(index, changedData);
                                 }}
                                 onUnpicked={() => onUnpicked(index)}
                                 index={index}
@@ -104,15 +104,15 @@ const Item = <TUpsertItem extends IExportProductUpsertItemModel<TUpsertItem>>
 
     // Callback.
     const handleProductAmountPerUnitChanged = (productAmountPerUnit: number) => {
-        onChanged(model.from({ productAmountPerUnit } as Partial<TUpsertItem>));
+        onChanged({ productAmountPerUnit } as Partial<TUpsertItem>);
     };
 
     const handleVatPercentagePerUnitChanged = (vatPercentagePerUnit: number) => {
-        onChanged(model.from({ vatPercentagePerUnit } as Partial<TUpsertItem>));
+        onChanged({ vatPercentagePerUnit } as Partial<TUpsertItem>);
     };
 
     const handleQuantityChanged = (quantity: number) => {
-        onChanged(model.from({ quantity } as Partial<TUpsertItem>));
+        onChanged({ quantity } as Partial<TUpsertItem>);
     };
 
     return (

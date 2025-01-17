@@ -21,7 +21,7 @@ interface Props<
     resourceType: string;
     isReloading: boolean;
     model: TList;
-    setModel: React.Dispatch<React.SetStateAction<TList>>;
+    onChanged: (changedData: Partial<TList>) => void;
 }
 
 // Component.
@@ -37,7 +37,7 @@ const HasStatsListFilters = <
     const initialDataStore = useInitialDataStore();
 
     // States.
-    const { isReloading, resourceType, model, setModel } = props;
+    const { isReloading, resourceType, model, onChanged } = props;
 
     // Computed.
     const blockTitle = useMemo<string>(() => {
@@ -56,7 +56,16 @@ const HasStatsListFilters = <
     // Header
     const computeHeader = () => {
         if (model.canCreate) {
-            return <CreatingLink to={model.createRoute} canCreate={model.canCreate} />;
+            return (
+                <>
+                    {isReloading && (
+                        <div className="spinner-border spinner-border-sm me-3" role="status">
+                            <span className="visually-hidden">Đang tải...</span>
+                        </div>
+                    )}
+                    <CreatingLink to={model.createRoute} canCreate={model.canCreate} />
+                </>
+            );
         }
 
         return null;
@@ -72,7 +81,7 @@ const HasStatsListFilters = <
                         monthYearOptions={model.monthYearOptions}
                         value={model.monthYear}
                         onValueChanged={monthYear => {
-                            setModel(model => model.from({ monthYear } as Partial<TList>));
+                            onChanged({ monthYear } as Partial<TList>);
                         }}
                     />
                 </div>
@@ -84,7 +93,7 @@ const HasStatsListFilters = <
                         options={model.sortingOptions}
                         value={model.sortingByField}
                         onValueChanged={sortingByField => {
-                            setModel(m => m.from({ sortingByField } as Partial<TList>));
+                            onChanged({ sortingByField } as Partial<TList>);
                         }}
                     />
                 </div>
@@ -97,7 +106,7 @@ const HasStatsListFilters = <
                         falseDisplayName="Từ lớn đến nhỏ"
                         value={model.sortingByAscending}
                         onValueChanged={sortingByAscending => {
-                            setModel(m => m.from({ sortingByAscending } as Partial<TList>));
+                            onChanged({ sortingByAscending } as Partial<TList>);
                         }}
                     />
                 </div>

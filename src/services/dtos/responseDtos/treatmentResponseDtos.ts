@@ -15,8 +15,8 @@ declare global {
         }>;
         
         type Detail = Implements<IExportProductDetail<
-                Item,
-                Photo,
+                DetailItem,
+                DetailPhoto,
                 UpdateHistory,
                 ItemUpdateHistory,
                 ExistingAuthorization>, {
@@ -30,8 +30,8 @@ declare global {
             customer: ResponseDtos.Customer.Basic;
             createdUser: ResponseDtos.User.Basic;
             therapist: ResponseDtos.User.Basic | null;
-            items: Item[];
-            photos: Photo[];
+            items: DetailItem[];
+            photos: DetailPhoto[];
             authorization: ExistingAuthorization;
             updateHistories: UpdateHistory[] | null;
         }>;

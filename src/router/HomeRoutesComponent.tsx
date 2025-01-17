@@ -52,6 +52,10 @@ const OrderListView = React.lazy(() => import("@/views/order/orderList/OrderList
 const OrderDetailView = React.lazy(() => import("@/views/order/orderDetail/OrderDetailView"));
 const OrderUpsertView = React.lazy(() => import("@/views/order/orderUpsert/OrderUpsertView"));
 
+// Treatment views.
+const TreatmentListView = React.lazy(() => import("@/views/treatment/treatmentList/TreatmentListView"));
+const TreatmentDetailView = React.lazy(() => import("@/views/treatment/treatmentDetail/treatmentDetailView"));
+
 // import HomeView from "@/views/home/HomeView";
 
 // // User views.
@@ -522,6 +526,30 @@ const routes: Routes = {
             breadcrumbItems: [
                 { text: "Danh sách đơn bản lẻ", to: routeGenerator.getOrderListRoutePath()},
                 { text: "Chỉnh sửa đơn bán lẻ" },
+            ]
+        }
+    },
+    treatmentList: {
+        path: /^\/treatments\/?$/,
+        element: async () => <TreatmentListView />,
+        meta: {
+            pageTitle: "Danh sách liệu trình",
+            breadcrumbItems: [
+                { text: "Danh sách liệu trình" },
+            ]
+        }
+    },
+    treatmentDetail: {
+        path: /^\/treatments\/(?<id>\d+)\/?$/,
+        element: async ({ params }) => <TreatmentDetailView id={parseInt(params.id)} />,
+        meta: {
+            pageTitle: "Chi tiết liệu trình",
+            breadcrumbItems: [
+                {
+                    text: "Danh sách liệu trình",
+                    to: routeGenerator.getTreatmentListRoutePath()
+                },
+                { text: "Chi tiết liệu trình" },
             ]
         }
     },

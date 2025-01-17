@@ -4,7 +4,6 @@ import { useBrandService } from "@/services/brandService";
 import { useProductCategoryService } from "@/services/productCategoryService";
 import { ProductListModel } from "@/models/product/productListModel";
 import { ProductBasicModel } from "@/models/product/productBasicModel";
-import { ClonableArrayModel } from "@/models/arrayModel";
 import { SupplyUpsertItemModel } from "@/models/supply/supplyItem/supplyUpsertItemModel";
 import { useAlertModalStore } from "@/stores/alertModalStore";
 import { ValidationError } from "@/errors";
@@ -21,19 +20,17 @@ import SelectInput, { SelectInputOption } from "@/views/form/SelectInputComponen
 // Child components.
 import Results from "./ProductPickerResultsComponent";
 
-// Type.
-type SupplyItemsModel = ClonableArrayModel<SupplyUpsertItemModel>;
-
 // Props.
 interface Props {
     isInitialLoading: boolean;
     onInitialLoadingFinished(): void;
-    value: ClonableArrayModel<SupplyUpsertItemModel>;
-    onValueChanged(value: SupplyItemsModel): void;
+    pickedItems: SupplyUpsertItemModel[];
+    onChanged(index: number, changedData: Partial<SupplyUpsertItemModel>): void;
+    onPicked(product: ProductBasicModel): void | Promise<void>;
 }
 
 // Component.
-const ProductPicker = ({ value, onValueChanged, ...props }: Props) => {
+const ProductPicker = ({ pickedItems, onChanged, onPicked, ...props }: Props) => {
     // Dependencies.
     const alertModalStore = useAlertModalStore();
     const productService = useMemo(useProductService, []);
@@ -111,18 +108,12 @@ const ProductPicker = ({ value, onValueChanged, ...props }: Props) => {
 
     // Callbacks.
     const handlePicked = (product: ProductBasicModel) => {
-        const index = value.findIndex(i => i.product.id === product.id);
+        const index = pickedItems.findIndex(i => i.product.id === product.id);
         if (index >= 0) {
-            onValueChanged(value.from(index, { quantity: value[index].quantity + 1 }));
+            onChanged(index, { quantity: pickedItems[index].quantity + 1 });
         } else {
-            onValueChanged(value.add(new SupplyUpsertItemModel(product)));
+            onPicked(product);
         }
-    };
-
-    const handleQuantityIncremented = (product: ProductBasicModel) => {
-        const index = value.findIndex(i => i.product.id === product.id);
-        const quantity = value[index].quantity + 1;
-        onValueChanged(value.from(index, { quantity }));
     };
 
     const handlePreviousPageButtonClicked = () => {
@@ -153,7 +144,7 @@ const ProductPicker = ({ value, onValueChanged, ...props }: Props) => {
                 </div>
     
                 {/* Category options */}
-                <div className="col col-xl-6 col-lg-12 col-md-6 col-sm-12 col-12">
+                <div className="col col-xl-6 col-lg-12 col-md-6 col-12">
                     <Label text="Phân loại" />
                     <SelectInput name="categoryId" options={categoryOptions}
                         value={model.categoryId?.toString() ?? ""}
@@ -169,7 +160,7 @@ const ProductPicker = ({ value, onValueChanged, ...props }: Props) => {
                 </div>
     
                 {/* Brand options */}
-                <div className="col col-xl-6 col-lg-12 col-md-6 col-sm-12 col-1">
+                <div className="col col-xl-6 col-lg-12 col-md-6 col-12">
                     <Label text="Thương hiệu" />
                     <SelectInput name="brandId" options={brandOptions}
                         value={model.brandId?.toString() ?? ""}
@@ -218,13 +209,12 @@ const ProductPicker = ({ value, onValueChanged, ...props }: Props) => {
     
                 {/* Results list */}
                 <div className="col col-12">
-                    <Results isInitialLoading={props.isInitialLoading}
+                    <Results
                         isReloading={isReloading}
                         productsModel={model.items}
                         productsModelResultsPerPage={model.resultsPerPage}
-                        supplyItemsModel={value}
+                        supplyItemsModel={pickedItems}
                         onPicked={handlePicked}
-                        onQuantityIncremented={handleQuantityIncremented}
                     />
                 </div>
             </FormContext.Provider>

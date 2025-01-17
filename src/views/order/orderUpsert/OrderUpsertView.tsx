@@ -49,7 +49,7 @@ const OrderUpsertView = ({ id }: { id?: number }) => {
     return (
         <ExportProductUpsertView
             resourceType="order"
-            isForCreating={id != null}
+            isForCreating={id == null}
             initializeModel={() => new OrderUpsertModel()}
             initialLoadAsync={initialLoadAsync}
             initializeItemModel={(product) => new OrderUpsertItemModel(product)}

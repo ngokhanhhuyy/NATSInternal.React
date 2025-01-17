@@ -27,7 +27,7 @@ interface Props<
         TAuthorization extends IHasStatsExistingAuthorizationModel> {
     resourceType: string;
     renderMiddle?: (model: TDetail) => React.ReactNode;
-    renderBottom?: (model: TDetail) => React.ReactNode;
+    renderBottom?: (model: TDetail, avatarStyle: React.CSSProperties) => React.ReactNode;
     initialLoadAsync: () => Promise<TDetail>;
 }
 
@@ -92,7 +92,7 @@ const ExportProductDetailView = <
         return model?.isLocked ? "Đã khoá" : "Chưa khoá";
     };
 
-    const computeCreatedUserAvatarStyle = (): React.CSSProperties => ({
+    const computeAvatarStyle = (): React.CSSProperties => ({
         objectFit: "contain",
         objectPosition: "50% 50%",
         width: 35,
@@ -251,7 +251,7 @@ const ExportProductDetailView = <
                             <div className="col d-flex justify-content-start
                                             align-items-center">
                                 <img className="img-thumbnail rounded-circle me-2"
-                                    style={computeCreatedUserAvatarStyle()}
+                                    style={computeAvatarStyle()}
                                     src={model.customer.avatarUrl}
                                 />
                                 <Link to={model.customer.detailRoute}
@@ -262,7 +262,7 @@ const ExportProductDetailView = <
                         </div>
                         
                         {/* Therapist */}
-                        {props.renderBottom?.(model)}
+                        {props.renderBottom?.(model, computeAvatarStyle())}
                         
                         {/* CreatedUser */}
                         <div className="row gx-3 mt-3">
@@ -272,7 +272,7 @@ const ExportProductDetailView = <
                             <div className="col d-flex justify-content-start
                                             align-items-center">
                                 <img className="img-thumbnail rounded-circle me-2"
-                                    style={computeCreatedUserAvatarStyle()}
+                                    style={computeAvatarStyle()}
                                     src={model.createdUser.avatarUrl}
                                 />
                                 <Link to={model.createdUser.detailRoute}

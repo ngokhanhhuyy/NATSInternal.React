@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useRef, useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSupplyService } from "@/services/supplyService";
 import { SupplyUpsertModel } from "@/models/supply/supplyUpsertModel";
+import { SupplyUpsertItemModel } from "@/models/supply/supplyItem/supplyUpsertItemModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
@@ -23,6 +24,10 @@ import MainBlock from "@/views/layouts/MainBlockComponent";
 // Child components.
 import ProductPicker from "./productPicker/ProductPickerComponent";
 import SupplyItemList from "./SupplyItemListComponent";
+import SupplyItemInputModal from "./itemInputModal/SupplyItemInputModalComponent";
+
+type ChangedData = Partial<SupplyUpsertItemModel>;
+type ModalPromiseResolve = (changedData: ChangedData | PromiseLike<ChangedData>) => void;
 
 // Component.
 const SupplyUpsertView = ({ id }: { id?: number }) => {
@@ -39,6 +44,8 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
         productPicker: true
     }));
     const [model, setModel] = useState(() => new SupplyUpsertModel());
+    const [modalModel, setModalModel] = useState<SupplyUpsertItemModel | null>(null);
+    const modalPromiseResolve = useRef<ModalPromiseResolve | null>(null);
 
     // Effect.
     useEffect(() => {
@@ -77,6 +84,13 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
     }, [initialLoadingState]);
 
     // Callbacks.
+    const openItemModalAsync = async (item: SupplyUpsertItemModel) => {
+        setModalModel(item);
+        return new Promise<Partial<SupplyUpsertItemModel>>(resolve => {
+            return modalPromiseResolve.current = resolve;
+        });
+    };
+
     const handleSubmissionAsync = async (): Promise<number> => {
         if (id == null) {
             return await service.createAsync(model.toRequestDto());
@@ -180,9 +194,24 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
                                 productPicker: false
                             }));
                         }}
-                        value={model.items}
-                        onValueChanged={items => {
-                            setModel(m => m.from({ items }));
+                        pickedItems={model.items}
+                        onChanged={(index, changedData) => {
+                            setModel(model => model.from({
+                                items: model.items.map((evaluatingItem, evaluatingIndex) => {
+                                    if (evaluatingIndex !== index) {
+                                        return evaluatingItem;
+                                    }
+
+                                    return evaluatingItem.from(changedData);
+                                })
+                            }));
+                        }}
+                        onPicked={async (product) => {
+                            const newItem = new SupplyUpsertItemModel(product);
+                            const changedData = await openItemModalAsync(newItem);
+                            setModel(model => model.from({
+                                items: [ ...model.items, newItem.from(changedData) ]
+                            }));
                         }}
                     />
                 </div>
@@ -192,13 +221,42 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
                     <SupplyItemList
                         model={model.items}
                         modelState={modelState}
-                        onChange={items => {
-                            setModel(m => m.from({ items }));
+                        onEdit={async (index) => {
+                            const item = model.items[index];
+                            const changedData = await openItemModalAsync(item);
+                            setModel(model => model.from({
+                                items: model.items.map((evaluatingItem, evaluatingIndex) => {
+                                    if (evaluatingIndex !== index) {
+                                        return evaluatingItem;
+                                    }
+
+                                    return evaluatingItem.from(changedData);
+                                })
+                            }));
+                        }}
+                        onUnpicked={(index) => {
+                            setModel(model => model.from({
+                                items: model.items.filter((_, evaluatingIndex) => {
+                                    return evaluatingIndex !== index;
+                                })
+                            }));
                         }}
                     />
                 </div>
             </div>
-    
+
+            {/* Item input modal */}
+            <SupplyItemInputModal
+                model={modalModel}
+                onCancel={() => setModalModel(null)}
+                onSaved={(changedData) => {
+                    modalPromiseResolve.current?.(changedData);
+                    setModalModel(null);
+                    modalPromiseResolve.current = null;
+                }}
+            />
+
+            {/* Action buttons */}
             <div className="row g-3 justify-content-end">
                 {/* Delete button */}
                 {model.canDelete && (

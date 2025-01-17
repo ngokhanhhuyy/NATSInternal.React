@@ -26,7 +26,7 @@ interface ExportProductPickerProps<
         TUpsertItem extends IExportProductUpsertItemModel<TUpsertItem>> {
     onInitialLoadingFinished: () => void;
     pickedItems: TUpsertItem[];
-    onChanged: (index: number, changedModel: TUpsertItem) => void;
+    onChanged: (index: number, changedData: Partial<TUpsertItem>) => void;
     onPicked: (product: ProductBasicModel) => void;
     onUnpicked: (index: number) => void;
 }

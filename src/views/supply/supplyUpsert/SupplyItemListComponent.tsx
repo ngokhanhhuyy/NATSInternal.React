@@ -1,30 +1,31 @@
 import React, { useMemo } from "react";
-import type { ClonableArrayModel } from "@/models/arrayModel";
+import { Link } from "react-router-dom";
 import type { SupplyUpsertItemModel } from "@/models/supply/supplyItem/supplyUpsertItemModel";
 import type { IModelState } from "@/hooks/modelStateHook";
+import { useAmountUtility } from "@/utilities/amountUtility";
 
 // Layout components.
 import MainBlock from "@/views/layouts/MainBlockComponent";
 
-// Form component.
-import MoneyInput from "@/views/form/MoneyInputComponent";
-
 // Props.
 interface SupplyItemListProps {
-    model: ClonableArrayModel<SupplyUpsertItemModel>;
+    model: SupplyUpsertItemModel[];
     modelState: IModelState;
-    onChange(model: ClonableArrayModel<SupplyUpsertItemModel>): void;
+    onEdit(index: number): void | Promise<void>;
+    onUnpicked(index: number): void;
 }
 
 interface SupplyItemProps {
     index: number;
     model: SupplyUpsertItemModel;
-    onChange(index: number, model: SupplyUpsertItemModel): void;
-    onDelete(index: number, item: SupplyUpsertItemModel): void;
+    onEdit(): void;
+    onUnpicked(): void;
 }
 
 // Component.
-const SupplyItemList = ({ model, modelState, onChange }: SupplyItemListProps) => {
+const SupplyItemList = (props: SupplyItemListProps) => {
+    const { model, modelState, onEdit, onUnpicked } = props;
+
     // Computed.
     const blockTitle = useMemo<string>(() => {
         if (modelState.hasError("items")) {
@@ -38,15 +39,6 @@ const SupplyItemList = ({ model, modelState, onChange }: SupplyItemListProps) =>
         return modelState.hasError("items") ? "danger" : "primary";
     }, [modelState.hasError("items")]);
 
-    // Callbacks.
-    const handleItemChange = (index: number, item: SupplyUpsertItemModel) => {
-        onChange(model.replace(index, item));
-    };
-
-    const handleItemDelete = (index: number) => {
-        onChange(model.remove(index));
-    };
-
     return (
         <MainBlock title={blockTitle}
                 color={blockColor}
@@ -56,9 +48,13 @@ const SupplyItemList = ({ model, modelState, onChange }: SupplyItemListProps) =>
             {model.length > 0 ? (
                 <ul className="list-group list-group-flush w-100">
                     {model.map((item, index) => (
-                        <SupplyItem index={index} model={item} key={index}
-                                onChange={handleItemChange}
-                                onDelete={handleItemDelete} />
+                        <SupplyItem
+                            index={index}
+                            model={item}
+                            onEdit={() => onEdit(index)}
+                            onUnpicked={() => onUnpicked(index)}
+                            key={index}
+                        />
                     ))}
                 </ul>
             ) : (
@@ -70,8 +66,11 @@ const SupplyItemList = ({ model, modelState, onChange }: SupplyItemListProps) =>
     );
 };
 
-const SupplyItem = ({ index, model, onChange, onDelete }: SupplyItemProps) => {
-    // Memo.
+const SupplyItem = ({ index, model, onEdit, onUnpicked }: SupplyItemProps) => {
+    // Dependencies.
+    const amountUtility = useMemo(useAmountUtility, []);
+
+    // Computed.
     const thumbnailStyle = useMemo<React.CSSProperties>(() => ({
         width: "60px",
         height: "60px",
@@ -85,6 +84,8 @@ const SupplyItem = ({ index, model, onChange, onDelete }: SupplyItemProps) => {
         whiteSpace: "nowrap",
         width: "100%"
     }), []);
+
+    const productAmount = model.productAmountPerUnit * model.quantity;
     
     if (model.hasBeenDeleted) {
         return null;
@@ -94,38 +95,59 @@ const SupplyItem = ({ index, model, onChange, onDelete }: SupplyItemProps) => {
         <li className="list-group-item d-flex align-items-center w-100 bg-transparent"
                 id={`item-${index}`}>
             {/* Thumbnail */}
-            <img className="img-thumbnail product-thumbnail me-2" style={thumbnailStyle}
-                    src={model.product.thumbnailUrl }/>
+            <Link to={model.product.detailRoute} className="me-2">
+                <img className="img-thumbnail product-thumbnail"
+                        style={thumbnailStyle}
+                    src={model.product.thumbnailUrl }
+                />
+            </Link>
     
             {/* Detail */}
             <div className="d-flex flex-column flex-fill item-detail
                             h-100 ms-2 py-2 overflow-hidden">
-                <div className="fw-bold product-name small" style={productNameStyle}>
+                {/* ProductName */}
+                <Link to={model.product.detailRoute} className="fw-bold small"
+                        style={productNameStyle}>
                     {model.product.name}
+                </Link>
+
+                {/* Item Detail */}
+                <div className="small">
+                    {/* ProductAmountPerUnit */}
+                    <span>
+                        {amountUtility.getDisplayText(model.productAmountPerUnit)}
+                    </span> ×&nbsp;
+
+                    {/* Quantity */}
+                    <span>
+                        {model.quantity} {model.product.unit.toLowerCase()}
+                    </span><br/>
+
+                    {/* Total */}
+                    <span className="fw-bold me-2">
+                        Tổng: 
+                    </span>
+                    <span>
+                        {amountUtility.getDisplayText(productAmount)}
+                    </span>
                 </div>
-                <div className="d-flex justify-content-end ms-1">
-                    {/* Amount and SuppliedQuantity */}
-                    <div className="input-group input-group-sm amount-quantity-container ms-1">
-                        <MoneyInput className="small text-end border-end-0 flex-shrink-0"
-                                suffix=" vnđ"
-                                value={model.productAmountPerUnit}
-                                onValueChanged={productAmountPerUnit => {
-                                    onChange(index, model.from({ productAmountPerUnit }));
-                                }} />
-                        <MoneyInput className="small text-end flex-shrink-0"
-                                style={{ maxWidth: "60px", marginLeft: -1 }}
-                                prefix="×" min={1} max={99}
-                                value={model.quantity}
-                                onValueChanged={quantity => {
-                                    onChange(index, model.from({ quantity }));
-                                }} />
-                    </div>
-                    {/* Delete button */}
-                    <button className="btn btn-outline-danger btn-sm flex-shrink-0 ms-2"
-                            onClick={() => onDelete(index, model)}>
-                        <i className="bi bi-x-lg"></i>
-                    </button>
-                </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="d-flex">
+                {/* Edit button */}
+                <button type="button"
+                        className="btn btn-outline-primary btn-sm flex-shrink-0 ms-2"
+                        onClick={onEdit}>
+                    <i className="bi bi-pencil-square"></i>
+                </button>
+
+                {/* Delete button */}
+                <button type="button"
+                        className="btn btn-outline-danger btn-sm flex-shrink-0 ms-2"
+                        onClick={() => onUnpicked()}>
+                    <i className="bi bi-x-lg"></i>
+                </button>
             </div>
         </li>
     );

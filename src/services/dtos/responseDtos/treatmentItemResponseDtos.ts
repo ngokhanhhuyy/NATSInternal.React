@@ -1,6 +1,6 @@
 declare global {
     namespace ResponseDtos.Treatment {
-        type Item = Implements<IHasProductDetailItem, {
+        type DetailItem = Implements<IHasProductDetailItem, {
             id: number;
             productAmountPerUnit: number;
             vatAmountPerUnit: number;

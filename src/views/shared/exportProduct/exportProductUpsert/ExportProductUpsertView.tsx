@@ -34,7 +34,7 @@ interface ExportProductUpsertViewProps<
         initialData: ResponseDtos.InitialData) => Promise<TUpsert>;
     initializeItemModel: (product: ProductBasicModel) => TUpsertItem;
     submitAsync(model: TUpsert): Promise<number>;
-    deleteAsync(): Promise<void>
+    deleteAsync(): Promise<void>;
     getListRoute(routeGenerator: ReturnType<typeof useRouteGenerator>): string;
     getDetailRoute(routeGenerator: ReturnType<typeof useRouteGenerator>, id: number): string;
     renderForm?: (model: TUpsert) => React.ReactNode | undefined;
@@ -120,11 +120,16 @@ const ExportProductUpsertView = <
         return `bi bi-${stepIndex + 1}-circle-fill`;
     };
 
-    const handleChanged = (index: number, changedItem: TUpsertItem) => {
+    const computeSummaryColumnClassName = (): string => {
+        return currentStepIndex === stepNames.length - 1 ? "" : " d-none";
+    };
+
+    // Callbacks.
+    const handleChanged = (index: number, changedData: Partial<TUpsertItem>) => {
         const items = model.items
             .map((evaluatingItem, evaluatingIndex) => {
                 if (index === evaluatingIndex) {
-                    return changedItem;
+                    return evaluatingItem.from(changedData);
                 }
 
                 return evaluatingItem;
@@ -253,8 +258,7 @@ const ExportProductUpsertView = <
                 </div>
 
                 {/* Summary */}
-                <div className={`col col-12
-                                ${currentStepIndex === stepNames.length - 1 ? "" : "d-none"}`}>
+                <div className={"col col-12" + computeSummaryColumnClassName()}>
                     <Summary
                         isForCreating={props.isForCreating}
                         resourceType={props.resourceType}
@@ -267,7 +271,7 @@ const ExportProductUpsertView = <
             {/* Action buttons */}
             <div className="row g-3 justify-content-end">
                 {/* Delete button */}
-                {!props.isForCreating && (
+                {!props.isForCreating &&  (
                     <div className="col col-auto">
                         <DeleteButton />
                     </div>
