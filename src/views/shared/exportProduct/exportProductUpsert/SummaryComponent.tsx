@@ -114,7 +114,7 @@ const Summary = <
                         <span className="fw-bold">Tổng giá</span>
                     </div>
                     <div className={`col ${amountAfterVatClassName}`}>
-                        <span className="text-primary">
+                        <span>
                             {amountUtility.getDisplayText(model.amountAfterVat)}
                         </span>&nbsp;
 
@@ -206,7 +206,7 @@ const Summary = <
                         {/* Index */}
                         <div className="col col-1 d-flex align-items-center"
                                 style={{ maxWidth: 40 }}>
-                            {index + 1}
+                            {index + 1}.
                         </div>
 
                         {/* Thumbnail */}

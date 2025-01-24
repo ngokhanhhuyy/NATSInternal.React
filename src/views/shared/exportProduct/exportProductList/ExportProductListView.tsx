@@ -82,7 +82,9 @@ const ExportProductListView = <
                         resourceType={resourceType}
                         isReloading={isReloading}
                         model={model}
-                        setModel={setModel}
+                        onChanged={changedData => {
+                            setModel(model => model.from(changedData));
+                        }}
                     />
                 </div>
 

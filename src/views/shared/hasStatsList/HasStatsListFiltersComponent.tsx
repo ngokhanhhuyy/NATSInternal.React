@@ -86,7 +86,7 @@ const HasStatsListFilters = <
                     />
                 </div>
     
-                {/* OrderByField */}
+                {/* SortingByField */}
                 <div className="col col-lg-4 col-md-6 col-sm-12 col-12">
                     <Label text="Trường sắp xếp" />
                     <SortingByFieldSelectInput name="sortingByField"
@@ -98,7 +98,7 @@ const HasStatsListFilters = <
                     />
                 </div>
     
-                {/* OrderByAscending */}
+                {/* SortingByAscending */}
                 <div className="col col-lg-4 col-md-6 col-sm-12 col-12">
                     <Label text="Thứ tự sắp xếp" />
                     <BooleanSelectInput name="sortingByAscending"

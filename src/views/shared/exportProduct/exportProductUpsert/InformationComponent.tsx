@@ -26,8 +26,10 @@ const Information = <
             TUpsert extends IExportProductUpsertModel<TUpsert, TUpsertItem, TPhoto>,
             TUpsertItem extends IExportProductUpsertItemModel<TUpsertItem>,
             TPhoto extends IUpsertPhotoModel<TPhoto>>
-        ({ model, setModel, isForCreating }: InformationProps<TUpsert, TUpsertItem, TPhoto>) =>
+        (props: InformationProps<TUpsert, TUpsertItem, TPhoto>) =>
 {
+    const { model, setModel, isForCreating, render } = props;
+
     return (
         <MainBlock title="Thông tin đơn đặt hàng" closeButton bodyPadding={[0, 2, 2, 2]}>
             <div className="row g-3">
@@ -46,7 +48,7 @@ const Information = <
                 </div>
                 )}
 
-                <slot></slot>
+                {render?.()}
 
                 {/* Note */}
                 <div className="col col-12">

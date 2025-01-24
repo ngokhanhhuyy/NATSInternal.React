@@ -42,6 +42,12 @@ export class TreatmentUpsertModel
         });
     }
 
+    public fromCreatingAuthorizationResponseDto(
+            responseDto: ResponseDtos.Treatment.CreatingAuthorization)
+    {
+        return this.from({ canSetStatsDateTime: responseDto.canSetStatsDateTime });
+    }
+
     public get productAmountBeforeVat(): number {
         return this.items.reduce(
             (amount, item) => amount + (item.productAmountPerUnit * item.quantity), 0);

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, SetStateAction } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ProductBasicModel } from "@/models/product/productBasicModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
@@ -37,8 +37,12 @@ interface ExportProductUpsertViewProps<
     deleteAsync(): Promise<void>;
     getListRoute(routeGenerator: ReturnType<typeof useRouteGenerator>): string;
     getDetailRoute(routeGenerator: ReturnType<typeof useRouteGenerator>, id: number): string;
-    renderForm?: (model: TUpsert) => React.ReactNode | undefined;
-    renderSummary?: (model: TUpsert, labelColumnClassName: string) => React.ReactNode;
+    renderForm?: (
+        model: TUpsert,
+        setModel: React.Dispatch<SetStateAction<TUpsert>>) => React.ReactNode | undefined;
+    renderSummary?: (
+        model: TUpsert,
+        labelColumnClassName: string) => React.ReactNode;
 }
 
 // Component.
@@ -220,7 +224,7 @@ const ExportProductUpsertView = <
                         model={model}
                         setModel={setModel}
                         isForCreating={props.isForCreating}
-                        render={() => props.renderForm?.(model)}
+                        render={() => props.renderForm?.(model, setModel)}
                     />
                 </div>
 
