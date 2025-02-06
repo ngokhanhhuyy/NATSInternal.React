@@ -19,12 +19,14 @@ const BooleanSelectInput = (props: BooleanSelectInputProps) => {
     ];
 
     return (
-        <SelectInput {...rest} options={options}
-                value={value?.toString() ?? ""}
-                onValueChanged={value => {
-                    const parsedValue = JSON.parse(value) as boolean;
-                    onValueChanged?.(parsedValue);
-                }} />
+        <SelectInput {...rest}
+            options={options}
+            value={value?.toString() ?? ""}
+            onValueChanged={value => {
+                const parsedValue = JSON.parse(value) as boolean;
+                onValueChanged?.(parsedValue);
+            }}
+        />
     );
 };
 

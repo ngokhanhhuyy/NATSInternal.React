@@ -136,31 +136,36 @@ const Item = <TUpsertItem extends IExportProductUpsertItemModel<TUpsertItem>>
                     {/* Inputs */}
                     <div className="input-group input-group-sm flex-fill">
                         {/* Amount input */}
-                        <MoneyInput name={`items[${index}].amount`}
+                        {/* <MoneyInput name={`items[${index}].amount`}
                             className="text-end amount-input"
                             suffix=" vnđ" min={0}
                             value={model.productAmountPerUnit}
                             onValueChanged={handleProductAmountPerUnitChanged}
-                        />
+                        /> */}
 
                         {/* VatFactor input */}
-                        <MoneyInput name={`items[${index}].vatFactor`}
+                        {/* <MoneyInput name={`items[${index}].vatFactor`}
                             className="text-end"
                             style={inputStyle}
                             suffix="%" min={0} max={100}
                             value={model.vatPercentagePerUnit}
                             onValueChanged={handleVatPercentagePerUnitChanged}
-                        />
+                        /> */}
                         
                         {/* Quantity input */}
-                        <MoneyInput name={`items[${index}].quantity`}
+                        {/* <MoneyInput name={`items[${index}].quantity`}
                             className="text-end"
                             style={inputStyle}
                             prefix="×" min={1} max={99}
                             value={model.quantity}
                             onValueChanged={handleQuantityChanged}
-                        />
+                        /> */}
                     </div>
+                    {/* Edit button */}
+                    <button className="btn btn-outline-primary btn-sm ms-2 flex-shrink-0"
+                            type="button">
+                        <i className="bi bi-pencil-square"></i>
+                    </button>
 
                     {/* Unpick button */}
                     <button className="btn btn-outline-danger btn-sm ms-2 flex-shrink-0"

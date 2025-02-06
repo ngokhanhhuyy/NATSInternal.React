@@ -49,7 +49,17 @@ const routeGenerator = {
     getTreatmentCreateRoutePath: () => "/treatments/create",
     getTreatmentUpdateRoutePath: (id: number) => `/treatments/${id}/update`,
 
-    getDebtIncurrenceCreateRoute: () => "/debts/incurrences/create",
+    getDebtOverviewRoutePath: () => "/debts/",
+
+    getDebtIncurrenceListRoutePath: () => "/debts/incurrences",
+    getDebtIncurrenceDetailRoutePath: (id: number) => `/debts/incurrences/${id}/create`,
+    getDebtIncurrenceCreateRoutePath: () => "/debts/incurrences/create",
+    getDebtIncurrenceUpdateRoutePath: (id: number) => `/debts/incurrences/${id}/update`,
+
+    getDebtPaymentListRoutePath: () => "/debts/payments",
+    getDebtPaymentDetailRoutePath: (id: number) => `/debts/payments/${id}/create`,
+    getDebtPaymentCreateRoutePath: () => "/debts/payments/create",
+    getDebtPaymentUpdateRoutePath: (id: number) => `/debts/payments/${id}/update`
 };
 
 export function useRouteGenerator() {

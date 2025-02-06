@@ -1,11 +1,11 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo } from "react";
 
 interface Props {
     color?: "primary" | "success" | "danger";
     page: number;
     onPageChanged: (page: number) => any;
     pageCount: number;
-    onPageCountChanged: (page: number) => any;
+    onPageCountChanged?: (page: number) => any;
     onPreviousButtonClicked?: () => any;
     onNextButtonClicked?: () => any;
 }
@@ -22,22 +22,23 @@ const MainBlockPaginator = (props: Props) => {
         return props.pageCount === 0 || props.page === props.pageCount;
     }, [props.pageCount, props.page]);
 
-    // Functions.
-    const onPreviousButtonClicked = useCallback((): void => {
+    // Callbacks.
+    const onPreviousButtonClicked = (): void => {
         props.onPageChanged(props.page - 1);
         props.onPreviousButtonClicked?.();
-    }, []);
+    };
 
-    function onNextButtonClicked(): void {
+    const onNextButtonClicked = (): void => {
         props.onPageChanged(props.page + 1);
         props.onNextButtonClicked?.();
-    }
+    };
 
     return (
         <>
             {/* Previous button */}
             <button className={`btn btn-sm btn-outline-${color}`}
-                    disabled={previousButtonDisabled} onClick={onPreviousButtonClicked}>
+                    disabled={previousButtonDisabled}
+                    onClick={onPreviousButtonClicked}>
                 <i className="bi bi-chevron-left"></i>
             </button>
 
@@ -49,7 +50,8 @@ const MainBlockPaginator = (props: Props) => {
 
             {/* Next button */}
             <button className={`btn btn-sm btn-outline-${color}`}
-                    disabled={nextButtonDisabled} onClick={onNextButtonClicked}>
+                    disabled={nextButtonDisabled}
+                    onClick={onNextButtonClicked}>
                 <i className="bi bi-chevron-right"></i>
             </button>
         </>

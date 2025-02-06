@@ -1,6 +1,8 @@
 import { AbstractClonableModel } from "../baseModels";
-import { ExpenseBasicModel } from "./expenseBasicModel";
-import type { ExpenseExistingAuthorizationModel } from "./expenseExistingAuthorizationModel";
+import { DebtPaymentBasicModel } from "./debtPaymentBasicModel";
+import type {
+    DebtPaymentExistingAuthorizationModel
+} from "./debtPaymentExistingAuthorizationModel";
 import { ListMonthYearModel } from "../list/listMonthYearModel";
 import { ListMonthYearOptionsModel } from "../list/listMonthYearOptionsModel";
 import { ListSortingOptionsModel } from "../list/listSortingOptionsModel";
@@ -11,19 +13,19 @@ type ListRequestDto = RequestDtos.Expense.List;
 
 const routeGenerator = useRouteGenerator();
 
-export class ExpenseListModel
-        extends AbstractClonableModel<ExpenseListModel>
+export class DebtPaymentListModel
+        extends AbstractClonableModel<DebtPaymentListModel>
         implements IHasStatsListModel<
-            ExpenseListModel,
-            ExpenseBasicModel,
-            ExpenseExistingAuthorizationModel> {
+            DebtPaymentListModel,
+            DebtPaymentBasicModel,
+            DebtPaymentExistingAuthorizationModel> {
     public readonly sortingByAscending: boolean | undefined;
     public readonly sortingByField: string | undefined;
     public readonly monthYear: ListMonthYearModel | undefined;
     public readonly createdUserId: number | undefined;
     public readonly page: number = 1;
     public readonly resultsPerPage: number = 15;
-    public readonly items: ExpenseBasicModel[] = [];
+    public readonly items: DebtPaymentBasicModel[] = [];
     public readonly pageCount: number = 0;
     public readonly sortingOptions: ListSortingOptionsModel | undefined;
     public readonly monthYearOptions: ListMonthYearOptionsModel | undefined;
@@ -60,14 +62,14 @@ export class ExpenseListModel
         }
     }
 
-    public fromListResponseDto(list: ResponseDtos.Expense.List) {
+    public fromListResponseDto(list: ResponseDtos.DebtPayment.List) {
         return this.from({
             pageCount: list.pageCount,
-            items: list.items?.map(i => new ExpenseBasicModel(i)) ?? []
+            items: list.items?.map(i => new DebtPaymentBasicModel(i)) ?? []
         });
     }
 
-    public toRequestDto(): RequestDtos.Expense.List {
+    public toRequestDto(): RequestDtos.DebtPayment.List {
         return {
             sortingByAscending: this.sortingByAscending,
             sortingByField: this.sortingByField,

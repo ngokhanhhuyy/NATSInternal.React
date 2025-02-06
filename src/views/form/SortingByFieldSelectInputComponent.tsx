@@ -39,9 +39,12 @@ const SortingByFieldInput = (props: SortingByFieldInputProps) => {
     };
 
     return (
-        <SelectInput options={getComputedOptions() ?? []} {...rest}
-                value={props.value ?? ""}
-                onValueChanged={props.onValueChanged} />
+        <SelectInput
+            options={getComputedOptions() ?? []}
+            {...rest}
+            value={props.value ?? ""}
+            onValueChanged={props.onValueChanged}
+        />
     );
 };
 

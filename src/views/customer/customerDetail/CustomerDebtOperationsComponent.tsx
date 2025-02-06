@@ -28,12 +28,12 @@ const CustomerDebtOperations = ({ model }: { model: CustomerDetailModel | undefi
         if (model) {
             return (
                 <>
-                    <Link to={routeGenerator.getDebtIncurrenceCreateRoute()}
+                    <Link to={routeGenerator.getDebtIncurrenceCreateRoutePath()}
                             className="btn btn-primary btn-sm me-2">
                         <i className="bi bi-plus-lg me-1"></i>
                         <span>Ghi nợ</span>
                     </Link>
-                    <Link to={routeGenerator.getDebtIncurrenceCreateRoute()}
+                    <Link to={routeGenerator.getDebtIncurrenceCreateRoutePath()}
                             className="btn btn-success btn-sm">
                         <i className="bi bi-plus-lg me-1"></i>
                         <span>Trả nợ</span>

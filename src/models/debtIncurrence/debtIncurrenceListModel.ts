@@ -1,29 +1,31 @@
 import { AbstractClonableModel } from "../baseModels";
-import { ExpenseBasicModel } from "./expenseBasicModel";
-import type { ExpenseExistingAuthorizationModel } from "./expenseExistingAuthorizationModel";
+import { DebtIncurrenceBasicModel } from "./debtIncurrenceBasicModel";
+import type {
+    DebtIncurrenceExistingAuthorizationModel
+} from "./debtIncurrenceExistingAuthorizationModel";
 import { ListMonthYearModel } from "../list/listMonthYearModel";
 import { ListMonthYearOptionsModel } from "../list/listMonthYearOptionsModel";
 import { ListSortingOptionsModel } from "../list/listSortingOptionsModel";
 import { useRouteGenerator } from "@/router/routeGenerator";
 
-type InitialResponseDto = ResponseDtos.Expense.Initial;
-type ListRequestDto = RequestDtos.Expense.List;
+type InitialResponseDto = ResponseDtos.DebtIncurrence.Initial;
+type ListRequestDto = RequestDtos.DebtIncurrence.List;
 
 const routeGenerator = useRouteGenerator();
 
-export class ExpenseListModel
-        extends AbstractClonableModel<ExpenseListModel>
+export class DebtIncurrenceListModel
+        extends AbstractClonableModel<DebtIncurrenceListModel>
         implements IHasStatsListModel<
-            ExpenseListModel,
-            ExpenseBasicModel,
-            ExpenseExistingAuthorizationModel> {
+            DebtIncurrenceListModel,
+            DebtIncurrenceBasicModel,
+            DebtIncurrenceExistingAuthorizationModel> {
     public readonly sortingByAscending: boolean | undefined;
     public readonly sortingByField: string | undefined;
     public readonly monthYear: ListMonthYearModel | undefined;
     public readonly createdUserId: number | undefined;
     public readonly page: number = 1;
     public readonly resultsPerPage: number = 15;
-    public readonly items: ExpenseBasicModel[] = [];
+    public readonly items: DebtIncurrenceBasicModel[] = [];
     public readonly pageCount: number = 0;
     public readonly sortingOptions: ListSortingOptionsModel | undefined;
     public readonly monthYearOptions: ListMonthYearOptionsModel | undefined;
@@ -60,14 +62,14 @@ export class ExpenseListModel
         }
     }
 
-    public fromListResponseDto(list: ResponseDtos.Expense.List) {
+    public fromListResponseDto(list: ResponseDtos.DebtIncurrence.List) {
         return this.from({
             pageCount: list.pageCount,
-            items: list.items?.map(i => new ExpenseBasicModel(i)) ?? []
+            items: list.items?.map(i => new DebtIncurrenceBasicModel(i)) ?? []
         });
     }
 
-    public toRequestDto(): RequestDtos.Expense.List {
+    public toRequestDto(): RequestDtos.DebtIncurrence.List {
         return {
             sortingByAscending: this.sortingByAscending,
             sortingByField: this.sortingByField,

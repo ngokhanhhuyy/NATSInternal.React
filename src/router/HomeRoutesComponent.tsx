@@ -57,6 +57,10 @@ const TreatmentListView = React.lazy(() => import("@/views/treatment/treatmentLi
 const TreatmentDetailView = React.lazy(() => import("@/views/treatment/treatmentDetail/treatmentDetailView"));
 const TreatmentUpsertView = React.lazy(() => import("@/views/treatment/treatmentUpsert/TreatmentUpsertView"));
 
+// Debt views.
+const DebtOverviewView = React.lazy(() => import("@/views/debt/overview/DebtOverviewView"));
+
+
 // import HomeView from "@/views/home/HomeView";
 
 // // User views.
@@ -582,6 +586,14 @@ const routes: Routes = {
             ]
         }
     },
+    debtOverviewView: {
+        path: /^\/debts\/?$/,
+        element: async () => <DebtOverviewView />,
+        meta: {
+            pageTitle: "Tổng quan nợ",
+            breadcrumbItems: [{ text: "Tổng quan nợ" }],
+        }
+    }
 };
 
 const HomeRoutes = () => {

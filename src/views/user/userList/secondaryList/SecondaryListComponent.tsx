@@ -122,7 +122,7 @@ const SecondaryList = (props: SecondaryListProps) => {
                 {/* Fallback */}
                 {model.items.length === 0 &&  (
                     <li className="d-flex align-items-center justify-content-center
-                                    p-3 opacity-50">
+                                    text-center p-3 opacity-50">
                         {computeResultNotFoundText()}
                     </li>
                 )}
