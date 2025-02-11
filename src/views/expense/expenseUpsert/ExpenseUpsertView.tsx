@@ -95,10 +95,10 @@ const ExpenseUpsertView = ({ id }: { id?: number }) => {
     const handleSubmissionAsync = async (): Promise<number> => {
         if (id == null) {
             return await service.createAsync(model.toRequestDto());
-        } else {
-            await service.updateAsync(model.id, model.toRequestDto());
-            return model.id;
         }
+        
+        await service.updateAsync(model.id, model.toRequestDto());
+        return model.id;
     };
 
     const handleSucceededSubmissionAsync = async (submittedId: number): Promise<void> => {

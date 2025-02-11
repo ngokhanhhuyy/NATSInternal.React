@@ -59,8 +59,10 @@ const Item = <TBasic extends BasicModel>(props: { model: TBasic }) => {
 
                     <div className="d-flex flex-column">
                         {/* Customer FullName */}
-                        <Link to={props.model.customer.detailRoute} className="d-block">
-                            {props.model.customer.fullName}
+                        <Link
+                            to={props.model.customer.detailRoute}
+                            className="d-block fw-bold">
+                                {props.model.customer.fullName}
                         </Link>
 
                         {/* Amount */}
@@ -78,7 +80,7 @@ const Item = <TBasic extends BasicModel>(props: { model: TBasic }) => {
 
                 {/* DetailRoute */}
                 <div className="col col-auto d-flex justify-content-end
-                            align-items-center">
+                                align-items-center">
                     <Link to={props.model.detailRoute}
                             className="btn btn-outline-primary btn-sm">
                         <i className="bi bi-eye"></i>

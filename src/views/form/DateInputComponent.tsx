@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext } from "react";
+import React, { useRef, useContext } from "react";
 import { FormContext } from "./FormComponent";
 import { DateInputModel } from "@/models/dateTime/dateInputModel";
 
@@ -15,10 +15,8 @@ const DateInput = ({ name, value, onValueChanged, ...props }: DateTimeInputProps
     // Dependencies.
     const formContext = useContext(FormContext);
     const modelState = formContext?.modelState;
-    const isInitialLoading = formContext?.isInitialLoading ?? false;
     
     // Internal states.
-    const [tempValue, setTempValue] = useState(() => value.date);
     const inputElement = useRef<HTMLInputElement>(null!);
 
     // Computed.
@@ -36,36 +34,9 @@ const DateInput = ({ name, value, onValueChanged, ...props }: DateTimeInputProps
 
         return classNames.join(" ");
     };
-
-    // Functions
-    // function enforceMinValue(): void {
-    //     if (props.min == null || !inputElement.current.value.length) {
-    //         return;
-    //     }
-
-    //     if (dateTimeUtility.compareDates(inputElement.current.value, props.min) === -1) {
-    //         inputElement.current.value = props.min;
-    //     }
-    // }
     
-    // function enforceMaxValue(): void {
-    //     if (props.max == null || !inputElement.current.value.length) {
-    //         return;
-    //     }
-    
-    //     if (dateTimeUtility.compareDates(inputElement.current.value, props.max) === 1) {
-    //         inputElement.current.value = props.max;
-    //     }
-    // }
-
-    const onBlur = (): void => {
-        // enforceMinValue();
-        // enforceMaxValue();
-        onValueChanged(value.from({ date: tempValue }));
-    };
-    
-    const onInput = (event: React.FormEvent<HTMLInputElement>): void => {
-        setTempValue((event.target as HTMLInputElement).value);
+    const onChange = (event: React.FormEvent<HTMLInputElement>): void => {
+        onValueChanged(value.from({ date: (event.target as HTMLInputElement).value }));
     };
 
     const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>): void => {
@@ -76,11 +47,14 @@ const DateInput = ({ name, value, onValueChanged, ...props }: DateTimeInputProps
     };
 
     return (
-        <input type={isInitialLoading ? "text" : "date"}
-                className={computeClassName()}
-                value={isInitialLoading ? "" : value.date}
-                name={name} ref={inputElement}
-                onBlur={onBlur} onInput={onInput} onKeyDown={onKeyDown} />
+        <input
+            type="date"
+            className={computeClassName()}
+            value={value.date}
+            name={name} ref={inputElement}
+            onChange={onChange}
+            onKeyDown={onKeyDown}
+        />
     );
 };
 

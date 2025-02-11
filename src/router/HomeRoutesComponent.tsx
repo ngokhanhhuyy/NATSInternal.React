@@ -59,7 +59,7 @@ const TreatmentUpsertView = React.lazy(() => import("@/views/treatment/treatment
 
 // Debt views.
 const DebtOverviewView = React.lazy(() => import("@/views/debt/overview/DebtOverviewView"));
-
+const DebtIncurrenceListView = React.lazy(() => import("@/views/debt/list/DebtIncurrenceListView"));
 
 // import HomeView from "@/views/home/HomeView";
 
@@ -592,6 +592,17 @@ const routes: Routes = {
         meta: {
             pageTitle: "Tổng quan nợ",
             breadcrumbItems: [{ text: "Tổng quan nợ" }],
+        }
+    },
+    debtIncurrenceListView: {
+        path: /^\/debts\/incurrences\/?$/,
+        element: async () => <DebtIncurrenceListView />,
+        meta: {
+            pageTitle: "Danh sách khoản ghi nợ",
+            breadcrumbItems: [
+                { text: "Tổng quan nợ", to: routeGenerator.getDebtOverviewRoutePath() },
+                { text: "Danh sách khoản ghi nợ" },
+            ]
         }
     }
 };

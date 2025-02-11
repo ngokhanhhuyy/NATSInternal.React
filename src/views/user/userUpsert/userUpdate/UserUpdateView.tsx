@@ -69,12 +69,13 @@ const UserUpdateView = ({ id }: { id: number }) => {
     })();
 
     // Callbacks.
-    const handleSubmissionAsync = async (): Promise<void> => {
+    const handleSubmissionAsync = async (): Promise<number> => {
         await userService.updateAsync(model.id, model.toRequestDto());
+        return model.id;
     };
 
-    const handleSucceededSubmissionAsync = async () => {
-        await navigate(routeGenerator.getUserProfileRoutePath(model.id));
+    const handleSucceededSubmissionAsync = async (submissionResult: number) => {
+        await navigate(routeGenerator.getUserProfileRoutePath(submissionResult));
     };
 
     const handleDeletionAsync = async (): Promise<void> => {
@@ -86,46 +87,57 @@ const UserUpdateView = ({ id }: { id: number }) => {
     };
 
     return (
-        <UpsertViewContainer formId="userCreateForm" modelState={modelState}
-                isInitialLoading={isInitialLoading}
-                submittingAction={handleSubmissionAsync}
-                onSubmissionSucceeded={handleSucceededSubmissionAsync}
-                deletingAction={handleDeletionAsync}
-                onDeletionSucceeded={handleSucceededDeletionAsync}>
+        <UpsertViewContainer
+            formId="userCreateForm"
+            modelState={modelState}
+            isInitialLoading={isInitialLoading}
+            submittingAction={handleSubmissionAsync}
+            onSubmissionSucceeded={handleSucceededSubmissionAsync}
+            deletingAction={handleDeletionAsync}
+            onDeletionSucceeded={handleSucceededDeletionAsync}
+        >
             <div className="row g-3">
                 <div className="col col-12 justify-content-end">
-                    <MainBlock title="Chỉnh sửa nhân viên" closeButton
-                            bodyPadding={0} bodyBorder={false}>
+                    <MainBlock
+                        title="Chỉnh sửa nhân viên"
+                        closeButton
+                        bodyPadding={0}
+                        bodyBorder={false}
+                    >
                         {/* Personal information */}
-                        <UserPersonalInfoUpsert borderTop={false}
-                                roundedBottom={isPersonalInformationBlockRounded}
-                                model={model.personalInformation}
-                                setModel={arg => {
-                                    if (typeof arg === "function") {
-                                        setModel(model => model.from({
-                                            personalInformation: arg(model.personalInformation)
-                                        }));
-                                    } else {
-                                        setModel(model => model.from({
-                                            personalInformation: arg
-                                        }));
-                                    }
-                                }} />
+                        <UserPersonalInfoUpsert
+                            borderTop={false}
+                            roundedBottom={isPersonalInformationBlockRounded}
+                            model={model.personalInformation}
+                            setModel={arg => {
+                                if (typeof arg === "function") {
+                                    setModel(model => model.from({
+                                        personalInformation: arg(model.personalInformation)
+                                    }));
+                                } else {
+                                    setModel(model => model.from({
+                                        personalInformation: arg
+                                    }));
+                                }
+                            }}
+                        />
 
                         {/* User information */}
                         {shouldRenderUserUserInformation && (
-                            <UserUserInfoUpsert model={model.userInformation}
-                                    setModel={arg => {
-                                        if (typeof arg === "function") {
-                                            setModel(model => model.from({
-                                                userInformation: arg(model.userInformation)
-                                            }));
-                                        } else {
-                                            setModel(model => model.from({
-                                                userInformation: arg
-                                            }));
-                                        }
-                                    }} />
+                            <UserUserInfoUpsert
+                                model={model.userInformation}
+                                setModel={arg => {
+                                    if (typeof arg === "function") {
+                                        setModel(model => model.from({
+                                            userInformation: arg(model.userInformation)
+                                        }));
+                                    } else {
+                                        setModel(model => model.from({
+                                            userInformation: arg
+                                        }));
+                                    }
+                                }}
+                            />
                         )}
                     </MainBlock>
                 </div>

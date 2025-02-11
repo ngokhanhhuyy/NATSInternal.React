@@ -27,8 +27,8 @@ const ExpenseListView = () => {
 
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished } = useViewStates();
-    const [isReloading, setReloading] = useState<boolean>(() => false);
     const [model, setModel] = useState(() => new ExpenseListModel(initialData.expense));
+    const [isReloading, setReloading] = useState<boolean>(() => false);
 
     // Effect.
     useEffect(() => {
@@ -40,6 +40,7 @@ const ExpenseListView = () => {
                 
                 const responseDto = await service.getListAsync(model.toRequestDto());
                 setModel(model => model.fromListResponseDto(responseDto));
+                document.getElementById("content")?.scrollTo({ top: 0, behavior: "smooth" });
             } catch (error) {
                 if (error instanceof ValidationError) {
                     await alertModalStore.getSubmissionErrorConfirmationAsync();

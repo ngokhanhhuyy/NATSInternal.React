@@ -85,22 +85,22 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
 
     const genderOptions = useMemo(() => [
         { value: Gender[Gender.Male], displayName: "Nam" },
-        { value: Gender[Gender.Female], displayName: "Nam" }
+        { value: Gender[Gender.Female], displayName: "Nữ" }
     ], []);
 
     // Functions.
-    const handleSubmissionAsync =  async (): Promise<void> => {
+    const handleSubmissionAsync =  async (): Promise<number> => {
         if (props.isForCreating) {
-            const id = await customerService.createAsync(model.toRequestDto());
-            setModel(model => model.from({ id }));
-        } else {
-            await customerService.updateAsync(model.id, model.toRequestDto());
+            return await customerService.createAsync(model.toRequestDto());
         }
+        
+        await customerService.updateAsync(model.id, model.toRequestDto());
+        return model.id;
     };
 
-    const handleSucceededSubmissionAsync = useCallback(async (): Promise<void> => {
-        await navigate(routeGenerator.getCustomerDetailRoutePath(model.id));
-    }, [model.id]);
+    const handleSucceededSubmissionAsync = async (submittedId: number): Promise<void> => {
+        await navigate(routeGenerator.getCustomerDetailRoutePath(submittedId));
+    };
 
     const handleDeletionAsync = useCallback(async (): Promise<void> => {
         await customerService.deleteAsync(model.id);
@@ -124,11 +124,15 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
                         <div className="col col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
                             <div className="form-input">
                                 <Label text="Họ" required />
-                                <TextInput name="firstName" placeholder="Nguyễn" maxLength={10}
-                                        value={model.firstName}
-                                        onValueChanged={firstName => {
-                                            setModel(model => model.from({ firstName }));
-                                        }} />
+                                <TextInput
+                                    name="firstName"
+                                    placeholder="Nguyễn"
+                                    maxLength={10}
+                                    value={model.firstName}
+                                    onValueChanged={firstName => {
+                                        setModel(model => model.from({ firstName }));
+                                    }}
+                                />
                                 <ValidationMessage name="firstName" />
                             </div>
                         </div>
@@ -137,11 +141,15 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
                         <div className="col col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
                             <div className="form-input">
                                 <Label text="Tên đệm" />
-                                <TextInput name="middleName" placeholder="Văn" maxLength={20}
-                                        value={model.middleName}
-                                        onValueChanged={middleName => {
-                                            setModel(model => model.from({ middleName }));
-                                        }} />
+                                <TextInput
+                                    name="middleName"
+                                    placeholder="Văn"
+                                    maxLength={20}
+                                    value={model.middleName}
+                                    onValueChanged={(middleName) => {
+                                        setModel(model => model.from({ middleName }));
+                                    }}
+                                />
                                 <ValidationMessage name="middleName" />
                             </div>
                         </div>
@@ -150,11 +158,15 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
                         <div className="col col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
                             <div className="form-input">
                                 <Label text="Tên" required />
-                                <TextInput name="lastName" placeholder="An" maxLength={10}
-                                        value={model.lastName}
-                                        onValueChanged={lastName => {
-                                            setModel(model => model.from({ lastName }));
-                                        }} />
+                                <TextInput
+                                    name="lastName"
+                                    placeholder="An"
+                                    maxLength={10}
+                                    value={model.lastName}
+                                    onValueChanged={lastName => {
+                                        setModel(model => model.from({ lastName }));
+                                    }}
+                                />
                                 <ValidationMessage name="lastName" />
                             </div>
                         </div>
@@ -163,12 +175,15 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
                         <div className="col col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
                             <div className="form-input">
                                 <Label text="Biệt danh" />
-                                <TextInput name="nickName" placeholder="Biệt danh"
-                                        maxLength={35}
-                                        value={model.nickName}
-                                        onValueChanged={nickName => {
-                                            setModel(model => model.from({ nickName }));
-                                        }} />
+                                <TextInput
+                                    name="nickName"
+                                    placeholder="Biệt danh"
+                                    maxLength={35}
+                                    value={model.nickName}
+                                    onValueChanged={nickName => {
+                                        setModel(model => model.from({ nickName }));
+                                    }}
+                                />
                                 <ValidationMessage name="nickName" />
                             </div>
                         </div>
@@ -177,14 +192,16 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
                         <div className="col col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
                             <div className="form-input">
                                 <Label text="Giới tính" />
-                                <SelectInput name="gender"
-                                        options={genderOptions}
-                                        value={Gender[model.gender]}
-                                        onValueChanged={(gender: keyof typeof Gender) => {
-                                            setModel(model => model.from({
-                                                gender: Gender[gender]
-                                            }));
-                                        }} />
+                                <SelectInput
+                                    name="gender"
+                                    options={genderOptions}
+                                    value={Gender[model.gender]}
+                                    onValueChanged={(gender: keyof typeof Gender) => {
+                                        setModel(model => model.from({
+                                            gender: Gender[gender]
+                                        }));
+                                    }}
+                                />
                                 <ValidationMessage name="gender" />
                             </div>
                         </div>
@@ -193,11 +210,13 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
                         <div className="col col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
                             <div className="form-input">
                                 <Label text="Ngày sinh" />
-                                <DateInput name="birthday"
-                                        value={model.birthday}
-                                        onValueChanged={birthday => {
-                                            setModel(model => model.from({ birthday }));
-                                        }} />
+                                <DateInput
+                                    name="birthday"
+                                    value={model.birthday}
+                                    onValueChanged={birthday => {
+                                        setModel(model => model.from({ birthday }));
+                                    }}
+                                />
                                 <ValidationMessage name="birthday" />
                             </div>
                         </div>
@@ -206,12 +225,16 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
                         <div className="col col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                             <div className="form-input">
                                 <Label text="Số điện thoại" />
-                                <TextInput name="phoneNumber" type="tel"
-                                        placeholder="0123 456 789" value={model.phoneNumber}
-                                        onValueChanged={phoneNumber => {
-                                            setModel(model => model.from({ phoneNumber }));
-                                        }}
-                                        maxLength={15} />
+                                <TextInput
+                                    name="phoneNumber"
+                                    type="tel"
+                                    placeholder="0123 456 789"
+                                    value={model.phoneNumber}
+                                    onValueChanged={phoneNumber => {
+                                        setModel(model => model.from({ phoneNumber }));
+                                    }}
+                                    maxLength={15}
+                                />
                                 <ValidationMessage name="phoneNumber" />
                             </div>
                         </div>
@@ -220,12 +243,16 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
                         <div className="col col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                             <div className="form-input">
                                 <Label text="Zalo" />
-                                <TextInput name="zaloNumber" type="tel"
-                                        placeholder="0123 456 789" value={model.zaloNumber}
-                                        onValueChanged={zaloNumber => {
-                                            setModel(model => model.from({ zaloNumber }));
-                                        }}
-                                        maxLength={15} />
+                                <TextInput
+                                    name="zaloNumber"
+                                    type="tel"
+                                    placeholder="0123 456 789"
+                                    value={model.zaloNumber}
+                                    onValueChanged={zaloNumber => {
+                                        setModel(model => model.from({ zaloNumber }));
+                                    }}
+                                    maxLength={15}
+                                />
                                 <ValidationMessage name="zaloNumber" />
                             </div>
                         </div>
@@ -235,11 +262,12 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
                             <div className="form-input">
                                 <Label text="Facebook" />
                                 <TextInput name="facebookUrl" regex="a-zA-Z0-9-.://_@"
-                                        placeholder="https://facebook.com/nguyen.van.a"
-                                        value={model.facebookUrl}
-                                        onValueChanged={facebookUrl => {
-                                            setModel(model => model.from({ facebookUrl }));
-                                        }}/>
+                                    placeholder="https://facebook.com/nguyen.van.a"
+                                    value={model.facebookUrl}
+                                    onValueChanged={facebookUrl => {
+                                        setModel(model => model.from({ facebookUrl }));
+                                    }}
+                                />
                                 <ValidationMessage name="facebookUrl" />
                             </div>
                         </div>
@@ -248,12 +276,16 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
                         <div className="col col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
                             <div className="form-input">
                                 <Label text="Email" />
-                                <TextInput name="email" type="email" maxLength={255}
-                                        placeholder="nguyenvana@gmail.com"
-                                        value={model.email}
-                                        onValueChanged={email => {
-                                            setModel(model => model.from({ email }));
-                                        }} />
+                                <TextInput
+                                    name="email"
+                                    type="email"
+                                    maxLength={255}
+                                    placeholder="nguyenvana@gmail.com"
+                                    value={model.email}
+                                    onValueChanged={email => {
+                                        setModel(model => model.from({ email }));
+                                    }}
+                                />
                                 <ValidationMessage name="email" />
                             </div>
                         </div>
@@ -262,12 +294,15 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
                         <div className="col col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                             <div className="form-input">
                                 <Label text="Địa chỉ" />
-                                <TextInput name="address" maxLength={255}
-                                        placeholder="123 Nguyễn Tất Thành"
-                                        value={model.address}
-                                        onValueChanged={address => {
-                                            setModel(model => model.from({ address }));
-                                        }} />
+                                <TextInput
+                                    name="address"
+                                    maxLength={255}
+                                    placeholder="123 Nguyễn Tất Thành"
+                                    value={model.address}
+                                    onValueChanged={address => {
+                                        setModel(model => model.from({ address }));
+                                    }}
+                                />
                                 <ValidationMessage name="address" />
                             </div>
                         </div>
@@ -276,12 +311,15 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
                         <div className="col col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                             <div className="form-input">
                                 <Label text="Ghi chú" />
-                                <TextAreaInput name="note" maxLength={255}
-                                        style={{ minHeight: "150px" }}
-                                        placeholder="Ghi chú" value={model.note}
-                                        onValueChanged={note => {
-                                            setModel(model => model.from({ note }));
-                                        }} />
+                                <TextAreaInput
+                                    name="note"
+                                    maxLength={255}
+                                    style={{ minHeight: "150px" }}
+                                    placeholder="Ghi chú" value={model.note}
+                                    onValueChanged={note => {
+                                        setModel(model => model.from({ note }));
+                                    }}
+                                />
                                 <ValidationMessage name="note" />
                             </div>
                         </div>

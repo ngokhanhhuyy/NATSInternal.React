@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserService } from "@/services/userService";
 import { UserCreateModel } from "@/models/user/userCreateModel";
@@ -60,14 +60,13 @@ const UserCreateView = () => {
         checkPermissionAsync().then(onInitialLoadingFinished);
     }, []);
 
-    const handleSubmissionAsync = useCallback(async (): Promise<void> => {
-        const createdUserId = await userService.createAsync(model.toRequestDto());
-        setModel(model => model.from({ id: createdUserId }));
-    }, [model]);
+    const handleSubmissionAsync = async (): Promise<number> => {
+        return await userService.createAsync(model.toRequestDto());
+    };
     
-    const handleSucceededSubmissionAsync = useCallback(async (): Promise<void> => {
-        await navigate(routeGenerator.getUserProfileRoutePath(model.id));
-    }, []);
+    const handleSucceededSubmissionAsync = async (submissionResult: number): Promise<void> => {
+        await navigate(routeGenerator.getUserProfileRoutePath(submissionResult));
+    };
 
     return (
         <UpsertViewContainer formId="userCreateForm" modelState={modelState}

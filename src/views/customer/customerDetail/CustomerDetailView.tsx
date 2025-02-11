@@ -44,16 +44,17 @@ const CustomerDetailView = ({ id }: { id: number }) => {
                 {/* Detail */}
                 <div className="col col-12">
                     <CustomerDetail customerId={id} model={model} setModel={setModel}
-                            onInitialLoadingFinished={() => {
-                                setLoadingState(state => ({
-                                    ...state,
-                                    customerDetail: false
-                                }));
-                            }} />
+                        onInitialLoadingFinished={() => {
+                            setLoadingState(state => ({
+                                ...state,
+                                customerDetail: false
+                            }));
+                        }}
+                    />
                 </div>
 
                 {/* Debt */}
-                {(!model || model?.debtOperations.length) && (
+                {(!model || model.debtOperations.length != 0) && (
                     <div className="col col-12">
                         <CustomerDebtOperations model={model} />
                     </div>
