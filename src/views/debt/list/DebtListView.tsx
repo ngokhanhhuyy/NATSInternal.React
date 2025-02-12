@@ -82,7 +82,7 @@ const DebtListView = <
     }, [model.page, model.sortingByAscending, model.sortingByField, model.monthYear]);
 
     return (
-        <MainContainer>
+        <MainContainer isInitialLoading={isInitialLoading}>
             <div className="row g-3">
                 <div className="col col-12">
                     <HasStatsListFilters

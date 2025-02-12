@@ -52,12 +52,12 @@ const routeGenerator = {
     getDebtOverviewRoutePath: () => "/debts/",
 
     getDebtIncurrenceListRoutePath: () => "/debts/incurrences",
-    getDebtIncurrenceDetailRoutePath: (id: number) => `/debts/incurrences/${id}/create`,
+    getDebtIncurrenceDetailRoutePath: (id: number) => `/debts/incurrences/${id}`,
     getDebtIncurrenceCreateRoutePath: () => "/debts/incurrences/create",
     getDebtIncurrenceUpdateRoutePath: (id: number) => `/debts/incurrences/${id}/update`,
 
     getDebtPaymentListRoutePath: () => "/debts/payments",
-    getDebtPaymentDetailRoutePath: (id: number) => `/debts/payments/${id}/create`,
+    getDebtPaymentDetailRoutePath: (id: number) => `/debts/payments/${id}`,
     getDebtPaymentCreateRoutePath: () => "/debts/payments/create",
     getDebtPaymentUpdateRoutePath: (id: number) => `/debts/payments/${id}/update`
 };

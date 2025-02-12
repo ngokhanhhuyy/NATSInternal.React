@@ -60,6 +60,9 @@ const TreatmentUpsertView = React.lazy(() => import("@/views/treatment/treatment
 // Debt views.
 const DebtOverviewView = React.lazy(() => import("@/views/debt/overview/DebtOverviewView"));
 const DebtIncurrenceListView = React.lazy(() => import("@/views/debt/list/DebtIncurrenceListView"));
+const DebtIncurrenceDetailView = React.lazy(() => import("@/views/debt/detail/DebtIncurrenceDetailView"));
+const DebtPaymentListView = React.lazy(() => import("@/views/debt/list/DebtPaymentListView"));
+const DebtPaymentDetailView = React.lazy(() => import("@/views/debt/detail/DebtPaymentDetailView"));
 
 // import HomeView from "@/views/home/HomeView";
 
@@ -604,7 +607,48 @@ const routes: Routes = {
                 { text: "Danh sách khoản ghi nợ" },
             ]
         }
-    }
+    },
+    debtIncurrenceDetailView: {
+        path: /^\/debts\/incurrences\/(?<id>\d+)\/?$/,
+        element: async ({ params }) => <DebtIncurrenceDetailView id={parseInt(params.id)} />,
+        meta: {
+            pageTitle: "Danh sách khoản ghi nợ",
+            breadcrumbItems: [
+                { text: "Tổng quan nợ", to: routeGenerator.getDebtOverviewRoutePath() },
+                {
+                    text: "Danh sách khoản ghi nợ",
+                    to: routeGenerator.getDebtIncurrenceListRoutePath()
+                },
+                { text: "Chi tiết khoản ghi nợ" },
+            ]
+        }
+    },
+    debtPaymentListView: {
+        path: /^\/debts\/payments\/?$/,
+        element: async () => <DebtPaymentListView />,
+        meta: {
+            pageTitle: "Danh sách khoản trả nợ",
+            breadcrumbItems: [
+                { text: "Tổng quan nợ", to: routeGenerator.getDebtOverviewRoutePath() },
+                { text: "Danh sách khoản trả nợ" },
+            ]
+        }
+    },
+    debtPaymentDetailView: {
+        path: /^\/debts\/payments\/(?<id>\d+)\/?$/,
+        element: async ({ params }) => <DebtPaymentDetailView id={parseInt(params.id)} />,
+        meta: {
+            pageTitle: "Danh sách khoản trả nợ",
+            breadcrumbItems: [
+                { text: "Tổng quan nợ", to: routeGenerator.getDebtOverviewRoutePath() },
+                {
+                    text: "Danh sách khoản trả nợ",
+                    to: routeGenerator.getDebtPaymentListRoutePath()
+                },
+                { text: "Chi tiết khoản trả nợ" },
+            ]
+        }
+    },
 };
 
 const HomeRoutes = () => {
@@ -648,6 +692,7 @@ const HomeRoutes = () => {
                         breadcrumbItems = route.meta.breadcrumbItems;
                     }
                     breadcrumbStore.setItems(breadcrumbItems);
+                    document.title = route.meta.pageTitle ?? "";
                 }
             });
         }

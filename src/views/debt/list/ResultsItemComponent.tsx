@@ -44,7 +44,8 @@ const ResultsItem = <
                         {/* Customer FullName */}
                         <Link
                             to={model.customer.detailRoute}
-                            className="customer-name d-block fw-bold">
+                            className="customer-name d-block fw-bold"
+                        >
                                 {model.customer.fullName}
                         </Link>
 
@@ -96,8 +97,10 @@ const ResultsItem = <
 
                 {/* Detail button */}
                 <div className="col d-flex justify-content-end align-items-center">
-                    <Link className="btn btn-outline-primary btn-sm"
-                            to={model.detailRoute}>
+                    <Link
+                        className="btn btn-outline-primary btn-sm"
+                        to={model.detailRoute}
+                    >
                         <i className="bi bi-eye"></i>
                     </Link>
                 </div>

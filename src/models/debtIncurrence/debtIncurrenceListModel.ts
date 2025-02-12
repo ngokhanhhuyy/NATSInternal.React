@@ -30,7 +30,7 @@ export class DebtIncurrenceListModel
     public readonly sortingOptions: ListSortingOptionsModel | undefined;
     public readonly monthYearOptions: ListMonthYearOptionsModel | undefined;
     public readonly canCreate: boolean | undefined;
-    public readonly createRoute: string = routeGenerator.getExpenseCreateRoutePath();
+    public readonly createRoute: string = routeGenerator.getDebtIncurrenceCreateRoutePath();
 
     constructor(initialResponseDto?: InitialResponseDto, requestDto?: ListRequestDto) {
         super();

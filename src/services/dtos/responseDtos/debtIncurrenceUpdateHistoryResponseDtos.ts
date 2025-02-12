@@ -6,10 +6,10 @@ declare global {
             updatedReason: string;
             oldStatsDateTime: string;
             oldAmount: number;
-            oldNote: string;
+            oldNote: string | null;
             newStatsDateTime: string;
             newAmount: number;
-            newNote: string;
+            newNote: string | null;
         }>;
     }
 }

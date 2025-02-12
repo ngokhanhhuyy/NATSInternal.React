@@ -1,7 +1,7 @@
-import { DebtIncurrenceExistingAuthorizationModel }
-    from "./debtIncurrenceExistingAuthorizationModel";
-import { DebtIncurrenceUpdateHistoryModel }
-    from "./debtIncurrenceUpdateHistory/debtIncurrenceUpdateHistoryModel";
+import { DebtPaymentExistingAuthorizationModel }
+    from "./debtPaymentExistingAuthorizationModel";
+import { DebtPaymentUpdateHistoryModel }
+    from "./debtPaymentUpdateHistory/debtPaymentUpdateHistoryModel";
 import { DateTimeDisplayModel } from "../dateTime/dateTimeDisplayModel";
 import { CustomerBasicModel } from "../customer/customerBasicModel";
 import { UserBasicModel } from "../user/userBasicModel";
@@ -9,9 +9,9 @@ import { useRouteGenerator } from "@/router/routeGenerator";
 
 const routeGenerator = useRouteGenerator();
 
-export class DebtIncurrenceDetailModel implements IDebtDetailModel<
-        DebtIncurrenceUpdateHistoryModel,
-        DebtIncurrenceExistingAuthorizationModel> {
+export class DebtPaymentDetailModel implements IDebtDetailModel<
+        DebtPaymentUpdateHistoryModel,
+        DebtPaymentExistingAuthorizationModel> {
     public id: number;
     public amount: number;
     public note: string | null;
@@ -20,10 +20,10 @@ export class DebtIncurrenceDetailModel implements IDebtDetailModel<
     public isLocked: boolean;
     public customer: CustomerBasicModel;
     public createdUser: UserBasicModel;
-    public authorization: DebtIncurrenceExistingAuthorizationModel;
-    public updateHistories: DebtIncurrenceUpdateHistoryModel[];
+    public authorization: DebtPaymentExistingAuthorizationModel;
+    public updateHistories: DebtPaymentUpdateHistoryModel[];
 
-    constructor(responseDto: ResponseDtos.DebtIncurrence.Detail) {
+    constructor(responseDto: ResponseDtos.DebtPayment.Detail) {
         this.id = responseDto.id;
         this.amount = responseDto.amount;
         this.note = responseDto.note;
@@ -32,18 +32,18 @@ export class DebtIncurrenceDetailModel implements IDebtDetailModel<
         this.isLocked = responseDto.isLocked;
         this.customer = new CustomerBasicModel(responseDto.customer);
         this.createdUser = new UserBasicModel(responseDto.createdUser);
-        this.authorization = new DebtIncurrenceExistingAuthorizationModel(
+        this.authorization = new DebtPaymentExistingAuthorizationModel(
             responseDto.authorization);
         this.updateHistories = responseDto.updateHistories
-            ?.map(uh => new DebtIncurrenceUpdateHistoryModel(uh))
+            ?.map(uh => new DebtPaymentUpdateHistoryModel(uh))
             ?? [];
     }
 
     public get detailRoute(): string {
-        return routeGenerator.getDebtIncurrenceDetailRoutePath(this.id);
+        return routeGenerator.getDebtPaymentDetailRoutePath(this.id);
     }
 
     public get updateRoute(): string {
-        return routeGenerator.getDebtIncurrenceUpdateRoutePath(this.id);
+        return routeGenerator.getDebtPaymentUpdateRoutePath(this.id);
     }
 }
