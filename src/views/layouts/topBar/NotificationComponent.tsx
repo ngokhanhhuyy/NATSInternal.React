@@ -99,7 +99,7 @@ const Notification = () => {
                 <Icon unreadCount={unreadNotificationCount} />
             </button>
             <div className={`dropdown-menu dropdown-menu-end border border-primary-subtle
-                            p-0 shadow bg-white ${styles["dropdownMenu"]}`}
+                            p-0 shadow bg-white overflow-hidden ${styles["dropdownMenu"]}`}
                     id="notification-list">
                 <ul className="list-group list-group-flush">
                     {/* Header */}

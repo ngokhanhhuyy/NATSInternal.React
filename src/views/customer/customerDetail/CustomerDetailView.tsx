@@ -1,7 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { type CustomerDetailModel } from "@/models/customer/customerDetailModel";
+import { useCustomerService } from "@/services/customerService";
+import { CustomerDetailModel } from "@/models/customer/customerDetailModel";
 import { useViewStates } from "@/hooks/viewStatesHook";
+import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useRouteGenerator } from "@/router/routeGenerator";
+import { NotFoundError } from "@/errors";
 
 // Layout components.
 import MainContainer from "@/views/layouts/MainContainerComponent";
@@ -13,9 +18,15 @@ import { ConsultantList, OrderList, TreatmentList } from "./HasCustomerListCompo
 
 // Component.
 const CustomerDetailView = ({ id }: { id: number }) => {
+    // Dependencies.
+    const navigate = useNavigate();
+    const alertModalStore = useAlertModalStore();
+    const customerService = useMemo(() => useCustomerService(), []);
+    const routeGenerator = useMemo(() => useRouteGenerator(), []);
+
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished } = useViewStates();
-    const [loadingState, setLoadingState] = useState(() => ({
+    const [initialLoadingStates, setInitialLoadingStates] = useState(() => ({
         customerDetail: true,
         consultantList: true,
         orderList: true,
@@ -25,32 +36,46 @@ const CustomerDetailView = ({ id }: { id: number }) => {
 
     // Effect.
     useEffect(() => {
-        const { customerDetail, consultantList, orderList, treatmentList } = loadingState;
+        const loadAsync = async () => {
+            try {
+                const responseDto = await customerService.getDetailAsync(id);
+                setModel(new CustomerDetailModel(responseDto));
+            } catch (error) {
+                if (error instanceof NotFoundError) {
+                    await alertModalStore.getNotFoundConfirmationAsync();
+                    await navigate(routeGenerator.getCustomerListRoutePath());
+                    return;
+                }
+
+                throw error;
+            }
+        };
+
+        loadAsync().finally(() => {
+            setInitialLoadingStates(states => ({
+                ...states,
+                customerDetail: false
+            }));
+        });
+    }, []);
+
+    useEffect(() => {
+        const { customerDetail, consultantList, orderList, treatmentList } = initialLoadingStates;
         if (!customerDetail && !consultantList && !orderList && !treatmentList) {
             onInitialLoadingFinished();
         }
-    }, [loadingState]);
+    }, [initialLoadingStates]);
+
+    if (!model) {
+        return null;
+    }
     
     return (
         <MainContainer isInitialLoading={isInitialLoading}>
             <div className="row g-3">
-
-                {/* ResourceAccess */}
-                {/* <div className="col col-12">
-                    <ResourceAccess resource-type="Customer" :resource-primary-id="model.id"
-                            accessMode="Detail" />
-                </div> */}
-
                 {/* Detail */}
                 <div className="col col-12">
-                    <CustomerDetail customerId={id} model={model} setModel={setModel}
-                        onInitialLoadingFinished={() => {
-                            setLoadingState(state => ({
-                                ...state,
-                                customerDetail: false
-                            }));
-                        }}
-                    />
+                    <CustomerDetail model={model} />
                 </div>
 
                 {/* Debt */}
@@ -64,38 +89,44 @@ const CustomerDetailView = ({ id }: { id: number }) => {
 
                 {/* Consultant */}
                 <div className="col col-12">
-                    <ConsultantList customerId={id}
-                            isInitialLoading={loadingState.consultantList}
-                            onInitialLoadingFinished={() => {
-                                setLoadingState(state => ({
-                                    ...state,
-                                    consultantList: false
-                                }));
-                            }} />
+                    <ConsultantList
+                        customerId={id}
+                        isInitialLoading={initialLoadingStates.consultantList}
+                        onInitialLoadingFinished={() => {
+                            setInitialLoadingStates(states => ({
+                                ...states,
+                                consultantList: false
+                            }));
+                        }}
+                    />
                 </div>
 
                 {/* OrderList */}
                 <div className="col col-12">
-                    <OrderList customerId={id}
-                            isInitialLoading={loadingState.orderList}
-                            onInitialLoadingFinished={() => {
-                                setLoadingState(state => ({
-                                    ...state,
-                                    orderList: false
-                                }));
-                            }} />
+                    <OrderList
+                        customerId={id}
+                        isInitialLoading={initialLoadingStates.orderList}
+                        onInitialLoadingFinished={() => {
+                            setInitialLoadingStates(states => ({
+                                ...states,
+                                orderList: false
+                            }));
+                        }}
+                    />
                 </div>
 
                 {/* TreatmentList */}
                 <div className="col col-12">
-                    <TreatmentList customerId={id}
-                            isInitialLoading={loadingState.treatmentList}
-                            onInitialLoadingFinished={() => {
-                                setLoadingState(state => ({
-                                    ...state,
-                                    treatmentList: false
-                                }));
-                            }} />
+                    <TreatmentList
+                        customerId={id}
+                        isInitialLoading={initialLoadingStates.treatmentList}
+                        onInitialLoadingFinished={() => {
+                            setInitialLoadingStates(states => ({
+                                ...states,
+                                treatmentList: false
+                            }));
+                        }}
+                    />
                 </div>
             </div>
 

@@ -98,7 +98,7 @@ const ResultItem = ({ model }: { model: CustomerBasicModel }) => {
             {/* Action button */}
             <Link to={model.detailRoute}
                     className="btn btn-outline-primary btn-sm flex-shrink-0 mx-2">
-                <i className="bi bi-eye"></i>
+                <i className="bi bi-info-circle"></i>
             </Link>
         </li>
     );

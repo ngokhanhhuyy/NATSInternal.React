@@ -57,7 +57,7 @@ const ResultItem = ({ model }: { model: CustomerBasicModel }) => {
 
             {/* DetailRoute */}
             <Link to={model.detailRoute} className="btn btn-outline-primary btn-sm">
-                <i className="bi bi-eye"></i>
+                <i className="bi bi-info-circle"></i>
                 <span className="d-sm-inline d-none ms-1">Xem</span>
             </Link>
 

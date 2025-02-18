@@ -1,4 +1,4 @@
-import React, { useContext, type ComponentPropsWithoutRef } from "react";
+import React, { useMemo, useContext, type ComponentPropsWithoutRef } from "react";
 import { FormContext } from "./FormComponent";
 
 interface TextInputProps extends ComponentPropsWithoutRef<"input"> {
@@ -14,17 +14,15 @@ function TextInputComponent(props: TextInputProps) {
     // Dependency.
     const formContext = useContext(FormContext);
     const modelState = formContext?.modelState;
-    const isInitialLoading = formContext?.isInitialLoading ?? false;
+    const isLoading = useMemo(() => {
+        return formContext?.isSubmitting || formContext?.isDeleting;
+    }, [formContext?.isSubmitting, formContext?.isDeleting]);
 
     // Computed.
     const getComputedClassName = () => {
         const classNames: (string | null | undefined)[] = ["form-control", className];
         if (name && modelState?.inputClassName(name)) {
             classNames.push(modelState.inputClassName(name));
-        }
-
-        if (isInitialLoading) {
-            classNames.push("pe-none");
         }
         
         return classNames.filter(name => name != null).join(" ");
@@ -53,8 +51,8 @@ function TextInputComponent(props: TextInputProps) {
 
     return (
         <input {...rest} className={getComputedClassName()} type={type} name={name}
-                placeholder={isInitialLoading ? "" : props.placeholder}
-                value={isInitialLoading ? "" : value}
+                placeholder={isLoading ? "" : props.placeholder}
+                value={isLoading ? "" : value}
                 onChange={handleInput }/>
     );
 }

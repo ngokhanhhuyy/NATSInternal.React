@@ -16,10 +16,8 @@ const ImageInput: React.FC<TextInputProps> = (props: TextInputProps) => {
     const formContext = useContext(FormContext);
     const modelState = useMemo(() => formContext?.modelState, [formContext?.modelState]);
     const isLoading = useMemo(() => {
-        return formContext?.isInitialLoading
-            || formContext?.isSubmitting
-            || formContext?.isDeleting;
-    }, [formContext?.isInitialLoading, formContext?.isSubmitting, formContext?.isDeleting]);
+        return formContext?.isSubmitting || formContext?.isDeleting;
+    }, [formContext?.isSubmitting, formContext?.isDeleting]);
 
     // States and computed.
     const url = useMemo<string | null>(() => props.url ?? null, [props.url]);
@@ -103,19 +101,20 @@ const ImageInput: React.FC<TextInputProps> = (props: TextInputProps) => {
             </button>
 
             {allowDelete && (
-                <button className={`btn btn-outline-danger btn-sm delete-button
-                                    position-absolute
-                                    ${isLoading ? "placeholder disabled" : ""}`}
-                        type="button"
-                        disabled={isLoading}
-                        style={{
-                            display: deleteButtonVisible ? "none" : "unset",
-                            bottom: 0,
-                            right: 0,
-                            transform: "translate(30%, 30%)"
-                        }}
-                        onClick={onDeleteButtonClicked}>
-                    <i className={`bi bi-pencil-square ${isLoading ? "opacity-0" : ""}`} />
+                <button
+                    className={`btn btn-outline-danger btn-sm delete-button position-absolute
+                                ${isLoading ? "placeholder disabled" : ""}`}
+                    type="button"
+                    disabled={isLoading}
+                    style={{
+                        display: deleteButtonVisible ? "none" : "unset",
+                        bottom: 0,
+                        right: 0,
+                        transform: "translate(30%, 30%)"
+                    }}
+                    onClick={onDeleteButtonClicked}
+                >
+                    <i className={`bi bi-trash3 ${isLoading ? "opacity-0" : ""}`} />
                 </button>
             )}
         </div>

@@ -15,8 +15,10 @@ declare global {
         readonly amount: number;
     }
     
-    interface IDebtUpsertModel
-            extends IHasStatsUpsertModel, IHasCustomerUpsertModel {
+    interface IDebtUpsertModel<TUpsert extends object>
+            extends
+                IHasStatsUpsertModel<TUpsert>,
+                IHasCustomerUpsertModel {
         readonly amount: number;
         readonly canSetStatsDateTime: boolean;
         readonly canDelete: boolean;

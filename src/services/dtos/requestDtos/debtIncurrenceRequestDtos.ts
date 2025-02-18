@@ -15,7 +15,7 @@ declare global {
                 amount: number;
                 note: string | null;
                 statsDateTime: string | null;
-                customerId: number | null;
+                customerId: number;
                 updatedReason: string | null;
             }>;
         }

@@ -52,8 +52,9 @@ const Item = ({model}: { model: ProductBasicModel }) => {
                         align-items-center px-3 py-2">
             {/* Thumbnail */}
             <img className={`img-thumbnail ${styles["thumbnail"]}`}
-                    src={thumbnailUrl}
-                    onClick={() => model && navigate(model.detailRoute)}/>
+                src={thumbnailUrl}
+                onClick={() => model && navigate(model.detailRoute)}
+            />
 
             {/* Detail */}
             <div className={`px-3 d-flex flex-column flex-fill justify-content-center
@@ -85,8 +86,8 @@ const Item = ({model}: { model: ProductBasicModel }) => {
             <Button className="btn btn-outline-primary btn-sm m-2 flex-shrink-0"
                     isPlaceholder={!model}
                     onClick={() => model && navigate(model.detailRoute)}>
-                <i className="bi bi-eye"></i>
-                <span className="d-md-inline d-sm-none d-none ms-1">Chi tiết</span>
+                <i className="bi bi-info-circle"></i>
+                <span className="d-md-inline d-sm-none d-none ms-2">Chi tiết</span>
             </Button>
         </li>
     );

@@ -52,7 +52,7 @@ export class SupplyDetailModel implements IHasProductDetailModel<
 
     public get lastUpdatedDateTime(): DateTimeDisplayModel | null {
         if (this.updateHistories && this.updateHistories.length) {
-            return this.updateHistories[this.updateHistories.length].updatedDateTime;
+            return this.updateHistories[this.updateHistories.length - 1].updatedDateTime;
         }
 
         return null;

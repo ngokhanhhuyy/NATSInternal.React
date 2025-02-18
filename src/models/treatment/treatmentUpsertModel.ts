@@ -43,8 +43,7 @@ export class TreatmentUpsertModel
     }
 
     public fromCreatingAuthorizationResponseDto(
-            responseDto: ResponseDtos.Treatment.CreatingAuthorization)
-    {
+            responseDto: ResponseDtos.Treatment.CreatingAuthorization) {
         return this.from({ canSetStatsDateTime: responseDto.canSetStatsDateTime });
     }
 

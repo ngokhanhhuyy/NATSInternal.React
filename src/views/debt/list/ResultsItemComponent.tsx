@@ -101,7 +101,7 @@ const ResultsItem = <
                         className="btn btn-outline-primary btn-sm"
                         to={model.detailRoute}
                     >
-                        <i className="bi bi-eye"></i>
+                        <i className="bi bi-info-circle"></i>
                     </Link>
                 </div>
             </div>

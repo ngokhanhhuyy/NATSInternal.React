@@ -1,16 +1,14 @@
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
+import { SupplyItemUpdateHistoryModel, type SupplyUpdateHistoryModel }
+    from "@/models/supply/supplyUpdateHistory/supplyUpdateHistoryModel";
 import { useAmountUtility } from "@/utilities/amountUtility";
 
 // Layout component.
 import MainBlock from "@/views/layouts/MainBlockComponent";
 
 // Component.
-const UpdateHistoryList = <
-            TUpdateHistory extends IExportProductUpdateHistoryModel<TItemUpdateHistory>,
-            TItemUpdateHistory extends IExportProductItemUpdateHistoryModel>
-        ({ model }: { model: TUpdateHistory[] }) =>
-{
+const SupplyUpdateHistoryList = ({ model }: { model: SupplyUpdateHistoryModel[] }) => {
     return (
         <MainBlock
             title="Lịch sử chỉnh sửa"
@@ -20,18 +18,14 @@ const UpdateHistoryList = <
         >
             <div className="accordion accordion-flush" id="updateHistory">
                 {model.map((updateHistory, index) => (
-                    <UpdateHistory model={updateHistory} key={index} />
+                    <SupplyUpdateHistory model={updateHistory} key={index} />
                 ))}
             </div>
         </MainBlock>
     );
 };
 
-const UpdateHistory = <
-        TUpdateHistory extends IExportProductUpdateHistoryModel<TItemUpdateHistory>,
-        TItemUpdateHistory extends IExportProductItemUpdateHistoryModel>
-    ({ model }: { model: TUpdateHistory }) =>
-{
+const SupplyUpdateHistory = ({ model }: { model: SupplyUpdateHistoryModel }) => {
     // Dependencies.
     const amountUtility = useMemo(useAmountUtility, []);
     
@@ -54,13 +48,12 @@ const UpdateHistory = <
         return oldItemsJson != newItemsJson;
     };
 
-    const computeItemMainText = (item: TItemUpdateHistory): string => {
+    const computeItemMainText = (item: SupplyItemUpdateHistoryModel): string => {
         return `${item.productName} × ${item.quantity}`;
     };
 
-    const computeItemSubText = (item: TItemUpdateHistory): string => {
-        const itemAmountText = amountUtility.getDisplayText(item.productAmountPerUnit);
-        return `${itemAmountText} + ${item.vatAmountPerUnit}% VAT`;
+    const computeItemSubText = (item: SupplyItemUpdateHistoryModel): string => {
+        return amountUtility.getDisplayText(item.productAmountPerUnit);
     };
 
     return (
@@ -76,7 +69,7 @@ const UpdateHistory = <
             </h2>
             <div id="flush-collapseOne" className="accordion-collapse collapse"
                     data-bs-parent="#updateHistory">
-                <div className="accordion-body">
+                <div className="accordion-body p-2">
                     {/* UpdatedDateTime and Updater */}
                     <div className="row g-3">
                         {/* UpdatedDateTime */}
@@ -86,7 +79,7 @@ const UpdateHistory = <
                         </div>
 
                         {/* UpdatedUser */}
-                        <div className={`${columnClassName} mt-md-0 mt-3`}>
+                        <div className={`${columnClassName}`}>
                             <span className="fw-bold">Nhân viên chỉnh sửa</span>
                             <Link to={model.updatedUser.detailRoute}>
                                 {model.updatedUser.fullName}
@@ -99,12 +92,12 @@ const UpdateHistory = <
                     {computeStatsDateTimeVisibility() && (
                         <div className="row g-3">
                             <div className={columnClassName}>
-                                <span className="fw-bold">Thời gian thanh toán (cũ)</span>
+                                <span className="fw-bold">Thời gian nhập hàng (cũ)</span>
                                 <span>{model.oldStatsDateTime.dateTime}</span>
                             </div>
 
-                            <div className={`mt-md-0 mt-3 ${columnClassName}`}>
-                                <span className="fw-bold">Thời gian thanh toán (mới)</span>
+                            <div className={`${columnClassName}`}>
+                                <span className="fw-bold">Thời gian nhập hàng (mới)</span>
                                 <span>{model.newStatsDateTime.dateTime}</span>
                             </div>
                         </div>
@@ -118,7 +111,7 @@ const UpdateHistory = <
                                 {model.oldNote || <span className="opacity-50">Để trống</span>}
                             </div>
 
-                            <div className={`${columnClassName} mt-md-0 mt-3`}>
+                            <div className={`${columnClassName}`}>
                                 <span className="fw-bold">Ghi chú (mới)</span>
                                 {model.newNote || <span className="opacity-50">Để trống</span>}
                             </div>
@@ -142,7 +135,7 @@ const UpdateHistory = <
                                 </ol>
                             </div>
 
-                            <div className={`mt-md-0 mt-3 ${columnClassName}`}>
+                            <div className={`${columnClassName}`}>
                                 <span className="fw-bold">Danh sách sản phẩm (mới)</span>
                                 <ol>
                                     {model.newItems.map((item, index) => (
@@ -163,4 +156,4 @@ const UpdateHistory = <
     );
 };
 
-export default UpdateHistoryList;
+export default SupplyUpdateHistoryList;

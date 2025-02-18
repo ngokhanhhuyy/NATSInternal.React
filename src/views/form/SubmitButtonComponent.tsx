@@ -2,7 +2,6 @@ import React, { useContext } from "react";
 
 // Form component.
 import { FormContext } from "@form/FormComponent";
-import Button from "./ButtonComponent";
 
 // Props.
 interface SubmitButtonProps extends Omit<React.ComponentPropsWithoutRef<"button">, "type"> {
@@ -12,10 +11,13 @@ interface SubmitButtonProps extends Omit<React.ComponentPropsWithoutRef<"button"
 // Component.
 const SubmitButton = ({ children }: SubmitButtonProps) => {
     const formContext = useContext(FormContext);
-    const isInitialLoading = formContext?.isInitialLoading;
 
     return (
-        <Button type="submit" className="btn btn-primary" isPlaceholder={isInitialLoading}>
+        <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={formContext?.isSubmitting || formContext?.isDeleting}
+        >
             {children}
             {!children && (
                 <>
@@ -23,7 +25,7 @@ const SubmitButton = ({ children }: SubmitButtonProps) => {
                     <span className="me-2">Lưu</span>
                 </>
             )}
-        </Button>
+        </button>
     );
 };
 

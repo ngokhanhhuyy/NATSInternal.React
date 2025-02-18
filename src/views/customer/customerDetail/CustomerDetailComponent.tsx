@@ -1,12 +1,7 @@
-import React, { useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useMemo } from "react";
 import { CustomerDetailModel } from "@/models/customer/customerDetailModel";
 import { Gender } from "@/services/dtos/enums";
-import { useCustomerService } from "@/services/customerService";
-import { useRouteGenerator } from "@/router/routeGenerator";
-import { useAlertModalStore } from "@/stores/alertModalStore";
 import { usePhotoUtility } from "@/utilities/photoUtility";
-import { NotFoundError } from "@/errors";
 
 // Layout components.
 import MainBlock from "@/views/layouts/MainBlockComponent";
@@ -16,46 +11,11 @@ import Label from "@/views/form/LabelComponent";
 
 // Props.
 interface CustomerDetailProps {
-    customerId: number;
-    model: CustomerDetailModel | undefined;
-    setModel: (model: CustomerDetailModel) => void;
-    onInitialLoadingFinished: () => void;
+    model: CustomerDetailModel;
 }
 
 // Component.
-const CustomerDetail = (props: CustomerDetailProps) => {
-    const { customerId, model, setModel, onInitialLoadingFinished } = props;
-
-    // Dependency.
-    const navigate = useNavigate();
-    const alertModalStore = useAlertModalStore();
-    const customerService = useMemo(() => useCustomerService(), []);
-    const routeGenerator = useMemo(() => useRouteGenerator(), []);
-
-    // Effect.
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const responseDto = await customerService.getDetailAsync(customerId);
-                setModel(new CustomerDetailModel(responseDto));
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(routeGenerator.getCustomerListRoutePath());
-                    return;
-                }
-
-                throw error;
-            }
-        };
-
-        fetchData().finally(onInitialLoadingFinished);
-    }, []);
-
-    if (!model) {
-        return null;
-    }
-
+const CustomerDetail = ({ model }: CustomerDetailProps) => {
     return (
         <MainBlock title="HỒ SƠ KHÁCH HÀNG" closeButton bodyPadding={[4, 3]}
                 bodyClassName="placeholder-glow">

@@ -83,7 +83,7 @@ const Item = <TBasic extends BasicModel>(props: { model: TBasic }) => {
                                 align-items-center">
                     <Link to={props.model.detailRoute}
                             className="btn btn-outline-primary btn-sm">
-                        <i className="bi bi-eye"></i>
+                        <i className="bi bi-info-circle"></i>
                     </Link>
                 </div>
             </div>

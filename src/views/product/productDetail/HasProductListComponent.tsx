@@ -13,7 +13,6 @@ import * as styles from "./HasProductListComponent.module.css";
 
 // Layout components.
 import MainBlock from "@/views/layouts/MainBlockComponent";
-import { LoadingListBlock } from "@/views/layouts/LoadingView";
 
 // Form components.
 import SelectInput from "@/views/form/SelectInputComponent";
@@ -99,36 +98,33 @@ const HasProductList = <TBasicModel extends BasicModel>
         return classNames.join(" ");
     }, [model.items]);
 
-    if (props.isInitialLoading) {
-        return (
-            <LoadingListBlock hasHeader color={props.blockColor} className="mb-3"
-                    detailSecondaryTextLineCount={0}
-                    length={model.resultsPerPage} />
-        );
-    }
-
     const header: React.ReactNode = (
-        <SelectInput name="resultsPerPage"
-                className={`form-select form-select-sm ${props.blockColor}`}
-                style={{ width: "fit-content" }}
-                disabled={isReloading}
-                options={model.resultsPerPageOptions.map(option => ({
-                    value: option.toString(),
-                    displayName: option.toString()
-                }))}
-                value={model.resultsPerPage.toString()}
-                onValueChanged={resultsPerPage => setModel(model => ({
-                    ...model,
-                    resultsPerPage: parseInt(resultsPerPage)
-                }))} />
+        <SelectInput
+            name="resultsPerPage"
+            className={`form-select form-select-sm ${props.blockColor}`}
+            style={{ width: "fit-content" }}
+            disabled={isReloading}
+            options={model.resultsPerPageOptions.map(option => ({
+                value: option.toString(),
+                displayName: option.toString()
+            }))}
+            value={model.resultsPerPage.toString()}
+            onValueChanged={resultsPerPage => setModel(model => ({
+                ...model,
+                resultsPerPage: parseInt(resultsPerPage)
+            }))}
+        />
     );
 
     return (
-        <MainBlock title={`${resourceDisplayName} gần nhất`} color={props.blockColor}
-                className={`block-order-list mb-3 ${styles["hasProductList"]}`}
-                header={header}
-                bodyClassName={isReloading ? "opacity-50 pe-none" : ""}
-                bodyPadding="0">
+        <MainBlock
+            title={`${resourceDisplayName} gần nhất`}
+            color={props.blockColor}
+            className={`block-order-list mb-3 ${styles["hasProductList"]}`}
+            header={header}
+            bodyClassName={isReloading ? "opacity-50 pe-none" : ""}
+            bodyPadding="0"
+        >
             {model.items.length > 0 ? (
                 <ul className="list-group list-group-flush">
                     {model.items.map(basicModel => (
@@ -137,10 +133,10 @@ const HasProductList = <TBasicModel extends BasicModel>
                             <div className="row small">
                                 {/* Id */}
                                 <div className="col col-2 d-flex justify-content-start
-                                            align-items-center">
-                                <span className={getIdClass(basicModel.isLocked)}>
-                                    #{basicModel.id}
-                                </span>
+                                                align-items-center">
+                                    <span className={getIdClass(basicModel.isLocked)}>
+                                        #{basicModel.id}
+                                    </span>
                                 </div>
 
                                 {/* StatsDate */}
@@ -168,7 +164,7 @@ const HasProductList = <TBasicModel extends BasicModel>
                                 <div className="col col-2 d-flex justify-content-end">
                                     <Link className="btn btn-outline-primary btn-sm"
                                         to={basicModel.detailRoute}>
-                                        <i className="bi bi-eye"></i>
+                                        <i className="bi bi-info-circle"></i>
                                     </Link>
                                 </div>
                             </div>
@@ -195,13 +191,17 @@ const SupplyList = ({productId, isInitialLoading, onInitialLoadingFinished}: Pro
     const service = useMemo(useSupplyService, []);
 
     return (
-        <HasProductList productId={productId} resourceType="supply" blockColor="primary"
-                isInitialLoading={isInitialLoading}
-                onInitialLoadingFinished={onInitialLoadingFinished}
-                onLoadAsync={async (requestDto) => {
-                    const responseDto = await service.getListAsync(requestDto);
-                    return responseDto.items.map(dto => new SupplyBasicModel(dto));
-                }}/>
+        <HasProductList
+            productId={productId}
+            resourceType="supply"
+            blockColor="primary"
+            isInitialLoading={isInitialLoading}
+            onInitialLoadingFinished={onInitialLoadingFinished}
+            onLoadAsync={async (requestDto) => {
+                const responseDto = await service.getListAsync(requestDto);
+                return responseDto.items.map(dto => new SupplyBasicModel(dto));
+            }}
+        />
     );
 };
 
@@ -210,13 +210,17 @@ const OrderList = ({productId, isInitialLoading, onInitialLoadingFinished}: Prop
     const service = useMemo(useOrderService, []);
 
     return (
-        <HasProductList productId={productId} resourceType="order" blockColor="success"
-                isInitialLoading={isInitialLoading}
-                onInitialLoadingFinished={onInitialLoadingFinished}
-                onLoadAsync={async (requestDto) => {
-                    const responseDto = await service.getListAsync(requestDto);
-                    return responseDto.items.map(dto => new OrderBasicModel(dto));
-                }}/>
+        <HasProductList
+            productId={productId}
+            resourceType="order"
+            blockColor="success"
+            isInitialLoading={isInitialLoading}
+            onInitialLoadingFinished={onInitialLoadingFinished}
+            onLoadAsync={async (requestDto) => {
+                const responseDto = await service.getListAsync(requestDto);
+                return responseDto.items.map(dto => new OrderBasicModel(dto));
+            }}
+        />
     );
 };
 
@@ -225,13 +229,17 @@ const TreatmentList = ({productId, isInitialLoading, onInitialLoadingFinished}: 
     const service = useMemo(useTreatmentService, []);
 
     return (
-        <HasProductList productId={productId} resourceType="treatment" blockColor="danger"
-                isInitialLoading={isInitialLoading}
-                onInitialLoadingFinished={onInitialLoadingFinished}
-                onLoadAsync={async (requestDto) => {
-                    const responseDto = await service.getListAsync(requestDto);
-                    return responseDto.items.map(dto => new TreatmentBasicModel(dto));
-                }}/>
+        <HasProductList
+            productId={productId}
+            resourceType="treatment"
+            blockColor="danger"
+            isInitialLoading={isInitialLoading}
+            onInitialLoadingFinished={onInitialLoadingFinished}
+            onLoadAsync={async (requestDto) => {
+                const responseDto = await service.getListAsync(requestDto);
+                return responseDto.items.map(dto => new TreatmentBasicModel(dto));
+            }}
+        />
     );
 };
 

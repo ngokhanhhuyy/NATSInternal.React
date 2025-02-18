@@ -125,7 +125,7 @@ const service = {
      * @example getTopProductRangeTypeOptionsAsync();
      */
     async getTopProductRangeTypeOptionsAsync(): Promise<StatsRangeTypeOptionListResponseDto> {
-        return await apiClient.getAsync("/stats/")
+        return await apiClient.getAsync("/stats/");
     },
 
     /**
@@ -171,7 +171,7 @@ const service = {
             Promise<ResponseDtos.Stats.LastestTransaction[]> {
         return await apiClient.getAsync("/stats/lastestTransactions", requestDto);
     }
-}
+};
 
 /**
  * A service to send requests and handle responses representing the stats related operations.

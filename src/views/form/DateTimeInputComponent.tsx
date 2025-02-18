@@ -23,9 +23,7 @@ const DateTimeInput = ({ name, value, onValueChanged, ...rest }: DateTimeInputPr
 
     // Memo.
     const modelState = formContext?.modelState;
-    const isLoading = formContext?.isInitialLoading ||
-                    formContext?.isSubmitting ||
-                    formContext?.isDeleting;
+    const isLoading = formContext?.isSubmitting || formContext?.isDeleting;
 
     const computedClassName = useMemo<string>(() => {
         const names: (string | null | undefined)[] = ["form-control"];
@@ -45,13 +43,14 @@ const DateTimeInput = ({ name, value, onValueChanged, ...rest }: DateTimeInputPr
         onValueChanged(value.from({ dateTime: tempValue }));
     };
 
-    if (isLoading) {
-        return <input type="text" name={name} className="form-control" disabled />;
-    }
-
     return (
-        <input type="datetime-local" className={computedClassName} {...rest}
-                value={tempValue} onInput={onInput} onBlur={onBlur} />
+        <input
+            type="datetime-local"
+            className={computedClassName}
+            {...rest}
+            value={isLoading ? "" : tempValue}
+            onInput={onInput} onBlur={onBlur}
+        />
     );
 };
 

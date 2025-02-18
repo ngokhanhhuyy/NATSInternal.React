@@ -44,43 +44,43 @@ const ProductPicker = ({ pickedItems, onChanged, onPicked, ...props }: Props) =>
     const [isReloading, setReloading] = useState(false);
 
     // Effect.
-    useEffect(() => {
-        const loadAsync = async () => {
-            try {
-                if (props.isInitialLoading) {
-                    const responseDtos = await Promise.all([
-                        productService.getListAsync(model.toRequestDto()),
-                        productCategoryService.getAllAsync(),
-                        brandService.getAllAsync()
-                    ]);
+    const loadAsync = async () => {
+        try {
+            if (props.isInitialLoading) {
+                const responseDtos = await Promise.all([
+                    productService.getListAsync(model.toRequestDto()),
+                    productCategoryService.getAllAsync(),
+                    brandService.getAllAsync()
+                ]);
 
-                    setModel(model => model.fromResponseDtos(...responseDtos));
-                } else {
-                    setReloading(true);
-                    const list = await productService.getListAsync(model.toRequestDto());
-                    setModel(model => model.fromListResponseDto(list));
-                }
-            } catch (error) {
-                if (error instanceof ValidationError) {
-                    await alertModalStore.getSubmissionErrorConfirmationAsync();
-                    return;
-                }
-
-                throw error;
+                setModel(model => model.fromResponseDtos(...responseDtos));
+            } else {
+                setReloading(true);
+                const list = await productService.getListAsync(model.toRequestDto());
+                setModel(model => model.fromListResponseDto(list));
             }
-        };
+        } catch (error) {
+            if (error instanceof ValidationError) {
+                await alertModalStore.getSubmissionErrorConfirmationAsync();
+                return;
+            }
 
-        loadAsync().finally(() => {
+            throw error;
+        } finally {
             if (props.isInitialLoading) {
                 props.onInitialLoadingFinished();
             }
 
             setReloading(false);
-        });
+        }
+    };
+
+    useEffect(() => {
+        loadAsync();
     }, [model.page, model.brandId, model.categoryId]);
 
     // Computed.
-    const className = isReloading ? "opacity-50 pe-none" : "";
+    const isReloadingClassName = isReloading ? "opacity-50 pe-none" : "";
     const brandOptions: SelectInputOption[] = [
         { value: "", displayName: "Tất cả thương hiệu" },
         ...model.brandOptions?.map(option => ({
@@ -126,25 +126,41 @@ const ProductPicker = ({ pickedItems, onChanged, onPicked, ...props }: Props) =>
 
     // Template.
     return (
-        <MainBlock title="Sản phẩm"
-                className="sticky-top"
-                bodyPadding={[0, 2, 2, 2]}
-                bodyClassName={`row g-3 ${className}`}>
+        <MainBlock
+            title="Sản phẩm"
+            className="sticky-top"
+            bodyPadding={[0, 2, 2, 2]}
+            bodyClassName="row g-3"
+        >
             <FormContext.Provider value={null}>
                 {/* Product name search */}
-                <div className="col col-12">
+                <div className={`col col-12 ${isReloadingClassName}`}>
                     <Label text="Tìm kiếm sản phẩm" />
-                    <TextInput name="productName"
-                        placeholder="Tìm kiếm theo tên ..."
-                        value={model.productName ?? ""}
-                        onValueChanged={productName => setModel(model => model.from({
-                            productName: productName || undefined
-                        }))}
-                    />
+                    <div className="input-group">
+                        <TextInput
+                            name="productName"
+                            className="border-end-0"
+                            placeholder="Tìm kiếm theo tên ..."
+                            value={model.productName ?? ""}
+                            onValueChanged={productName => setModel(model => model.from({
+                                productName: productName || undefined
+                            }))}
+                        />
+
+                        <button
+                            type="button"
+                            className="btn btn-primary flex-shrink-0"
+                            style={{ width: "fit-content" }}
+                            onClick={loadAsync}
+                        >
+                            <i className="bi bi-search" />
+                        </button>
+                    </div>
                 </div>
     
                 {/* Category options */}
-                <div className="col col-xl-6 col-lg-12 col-md-6 col-12">
+                <div className={`col col-xl-6 col-lg-12 col-md-6 col-12
+                                ${isReloadingClassName}`}>
                     <Label text="Phân loại" />
                     <SelectInput name="categoryId" options={categoryOptions}
                         value={model.categoryId?.toString() ?? ""}
@@ -160,9 +176,12 @@ const ProductPicker = ({ pickedItems, onChanged, onPicked, ...props }: Props) =>
                 </div>
     
                 {/* Brand options */}
-                <div className="col col-xl-6 col-lg-12 col-md-6 col-12">
+                <div className={`col col-xl-6 col-lg-12 col-md-6 col-12
+                                ${isReloadingClassName}`}>
                     <Label text="Thương hiệu" />
-                    <SelectInput name="brandId" options={brandOptions}
+                    <SelectInput
+                        name="brandId"
+                        options={brandOptions}
                         value={model.brandId?.toString() ?? ""}
                         onValueChanged={id => {
                             if (!id) {
@@ -176,7 +195,7 @@ const ProductPicker = ({ pickedItems, onChanged, onPicked, ...props }: Props) =>
                 </div>
     
                 {/* Product results */}
-                <div className="col col-12">
+                <div className={`col col-12 ${isReloadingClassName}`}>
                     {/* Pagination */}
                     {model.pageCount > 0 && (
                         <div className="d-flex justify-content-center
@@ -208,7 +227,7 @@ const ProductPicker = ({ pickedItems, onChanged, onPicked, ...props }: Props) =>
                 </div>
     
                 {/* Results list */}
-                <div className="col col-12">
+                <div className={`col col-12 ${isReloadingClassName}`}>
                     <Results
                         isReloading={isReloading}
                         productsModel={model.items}

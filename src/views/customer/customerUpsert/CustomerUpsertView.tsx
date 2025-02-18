@@ -118,8 +118,12 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
                 onDeletionSucceeded={handleSucceededDeletionAsync}>
             <div className="row g-3 justify-content-end">
                 <div className="col col-12">
-                    <MainBlock title={blockTitle} closeButton
-                            bodyClassName="row g-3" bodyPadding={[0, 2, 2, 2]}>
+                    <MainBlock
+                        title={blockTitle}
+                        closeButton
+                        bodyClassName="row g-3"
+                        bodyPadding={[0, 2, 2, 2]}
+                    >
                         {/* FirstName */}
                         <div className="col col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
                             <div className="form-input">

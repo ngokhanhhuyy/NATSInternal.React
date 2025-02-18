@@ -46,6 +46,7 @@ declare global {
         }>;
         
         type DebtOperation = {
+            id: number;
             operation: import("@enums").DebtOperationType;
             amount: number;
             operatedDateTime: string;

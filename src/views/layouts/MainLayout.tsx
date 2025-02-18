@@ -3,7 +3,6 @@ import { Navigate, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuthenticationStore } from "@/stores/authenticationStore";
 import { useInitialDataStore } from "@/stores/initialDataStore";
 import { useHubClient } from "@/services/hubClient";
-import HomeRoutes from "@/router/HomeRoutesComponent";
 import { useRouteGenerator } from "@/router/routeGenerator";
 import { AuthenticationError } from "@/errors";
 import * as styles from "./MainLayout.module.css";
@@ -15,6 +14,10 @@ import MobileNavigationBar from "./sideBar/MobileNavigationBarComponent";
 import NavigationBar from "./sideBar/NavigationBarComponent";
 import Breadcrumb from "@layouts/BreadcrumbComponent";
 
+// Route components.
+import HomeRoutes from "@/router/HomeRoutesComponent";
+
+// Component.
 const MainLayout = () => {
     // Dependencies.
     const authenticationStore = useAuthenticationStore();
@@ -24,10 +27,11 @@ const MainLayout = () => {
     const hubClient = useHubClient();
     const routeGenerator = useRouteGenerator();
 
-    // State.
+    // States.
     const [isAuthenticated, setAuthenticated] = useState<boolean | null>(null);
     const [isFetching, setFetching] = useState<boolean>(true);
 
+    // Effect.
     useEffect(() => {
         authenticationStore
             .isAuthenticatedAsync()
@@ -98,14 +102,20 @@ const MainLayout = () => {
 
                         {/* Add order */}
                         <div className="col col-auto h-100 d-flex align-items-center">
-                            <Link to="/" title="Thêm đơn hàng">
+                            <Link
+                                to={routeGenerator.getOrderCreateRoutePath()}
+                                title="Thêm đơn hàng"
+                            >
                                 <i className="bi bi-cart-plus text-primary fs-4"></i>
                             </Link>
                         </div>
 
                         {/* Add customer */}
                         <div className="col col-auto h-100 d-flex align-items-center">
-                            <Link to="/" title="Thêm khách hàng">
+                            <Link
+                                to={routeGenerator.getCustomerCreateRoutePath()}
+                                title="Thêm khách hàng"
+                            >
                                 <i className="bi bi-person-add text-primary fs-4"></i>
                             </Link>
                         </div>
@@ -122,12 +132,14 @@ const MainLayout = () => {
 
                         {/* Navigation bar + toggler (only display on mobile screen) */}
                         <div className="col col-auto h-100 d-sm-none d-flex">
-                            <button className="btn bg-default border border-primary-subtle p-0"
-                                    type="button" id="navbar-toggler"
-                                    data-bs-toggle="offcanvas"
-                                    data-bs-target="#offcanvas-navbar"
-                                    aria-controls="offcanvas-navbar"
-                                    aria-label="Toggle navigation">
+                            <button
+                                className="btn bg-default border border-primary-subtle p-0"
+                                type="button" id="navbar-toggler"
+                                data-bs-toggle="offcanvas"
+                                data-bs-target="#offcanvas-navbar"
+                                aria-controls="offcanvas-navbar"
+                                aria-label="Toggle navigation"
+                            >
                                 <i className="bi bi-list"></i>
                             </button>
                             <MobileNavigationBar />

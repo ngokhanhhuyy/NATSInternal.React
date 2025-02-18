@@ -44,6 +44,10 @@ const MoneyInput = (props: Props) => {
     }, [props.prefix, props.suffix, tempValue]);
 
     // Computed.
+    const isLoading = useMemo(() => {
+        return formContext?.isSubmitting || formContext?.isDeleting;
+    }, [formContext?.isSubmitting, formContext?.isDeleting]);
+
     const computeClassName = (): string => {
         const classNames: (string | null | undefined)[] = ["form-control", props.className];
         if (props.name) {
@@ -145,13 +149,17 @@ const MoneyInput = (props: Props) => {
     };
 
     return (
-        <input type={type} name={props.name} {...rest}
-            value={tempValue}
+        <input
+            type={type}
+            name={props.name}
+            {...rest}
+            value={isLoading ? "" : tempValue}
             onInput={onInput} onBeforeInput={resetCaret}
             onKeyDown={onKeyDown} onKeyUp={resetCaret}
             onFocus={resetCaret} onBlur={onBlur}
             onMouseDown={onMouseDown}
-            className={computeClassName()} ref={inputElement}
+            className={computeClassName()}
+            ref={inputElement}
         />
     );
 };

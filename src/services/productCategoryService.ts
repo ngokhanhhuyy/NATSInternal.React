@@ -60,8 +60,7 @@ const service = {
      * `requestDto` argument already exists.
      */
     async createAsync(requestDto: RequestDtos.ProductCategory.Upsert): Promise<number> {
-        return await apiClient
-            .postAsync<number>("/productCategory/create", requestDto);
+        return await apiClient.postAsync<number>("/productCategory", requestDto);
     },
 
     /**
@@ -82,10 +81,9 @@ const service = {
      * `requestDto` argument already exists.
      */
     async updateAsync(
-        id: number,
-        requestDto: RequestDtos.ProductCategory.Upsert): Promise<void> {
-        return await apiClient
-            .putAndIgnoreAsync(`/productCategory/${id}`, requestDto);
+            id: number,
+            requestDto: RequestDtos.ProductCategory.Upsert): Promise<void> {
+        return await apiClient.putAndIgnoreAsync(`/productCategory/${id}`, requestDto);
     },
 
     /**
@@ -103,8 +101,7 @@ const service = {
      * to the existence of some related data.
      */
     async deleteAsync(id: number): Promise<void> {
-        return await apiClient
-            .deleteAndIgnoreAsync(`/productCategory/${id}`);
+        return await apiClient.deleteAndIgnoreAsync(`/productCategory/${id}`);
     },
 
     /**

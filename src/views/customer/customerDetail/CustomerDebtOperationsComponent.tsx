@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { DebtOperationType } from "@/services/dtos/enums";
 import { type CustomerDetailModel } from "@/models/customer/customerDetailModel";
@@ -9,14 +9,11 @@ import { useRouteGenerator } from "@/router/routeGenerator";
 // Layout component.
 import MainBlock from "@/views/layouts/MainBlockComponent";
 
-// Placeholder component.
-import PlaceholderText from "@/views/shared/placeholder/PlaceholderTextComponent";
-
 // Utility
 const amountUtility = useAmountUtility();
 
 // Components.
-const CustomerDebtOperations = ({ model }: { model: CustomerDetailModel | undefined }) => {
+const CustomerDebtOperations = ({ model }: { model: CustomerDetailModel }) => {
     // Dependencies.
     const routeGenerator = useRouteGenerator();
 
@@ -58,9 +55,13 @@ const CustomerDebtOperations = ({ model }: { model: CustomerDetailModel | undefi
     })();
 
     return (
-        <MainBlock title="Lịch sử nợ" header={header} bodyPadding={0} bodyBorder={false}
-                bodyClassName={`d-flex flex-column ${className}`}>
-
+        <MainBlock
+            title="Lịch sử nợ"
+            header={header}
+            bodyPadding={0}
+            bodyBorder={false}
+            bodyClassName={`d-flex flex-column ${className}`}
+        >
             {/* Fallback */}
             {model && model.debtOperations.length === 0 && (
                 <div className="p-4 border border-top-0 rounded-bottom-3 text-center">
@@ -73,7 +74,7 @@ const CustomerDebtOperations = ({ model }: { model: CustomerDetailModel | undefi
     );
 };
 
-const List = ({ model }: { model: CustomerDetailModel | undefined  }) => {
+const List = ({ model }: { model: CustomerDetailModel }) => {
     // Computed values.
     const debtAmountClassName = (() => {
         if (!model) {
@@ -84,12 +85,8 @@ const List = ({ model }: { model: CustomerDetailModel | undefined  }) => {
     })();
 
     const debtAmountText = (() => {
-        if (!model) {
-            return <PlaceholderText width={150} />;
-        }
-        
-        if (!model.debtAmount) {
-            amountUtility.getDisplayText(model.debtAmount);
+        if (model.debtAmount) {
+            return amountUtility.getDisplayText(model.debtAmount);
         }
 
         return "Không có khoản nợ nào";
@@ -127,11 +124,8 @@ const List = ({ model }: { model: CustomerDetailModel | undefined  }) => {
             {/* Body */}
             <ul className="list-group list-group-flush m-0 border
                             border-top-0 border-bottom-0 small">
-                {model && model.debtOperations.map((operation, index) => (
+                {model.debtOperations.map((operation, index) => (
                     <ListItem model={operation} key={index} />
-                ))}
-                {!model && Array.from(Array(5).keys()).map(index => (
-                    <ListItem key={index} />
                 ))}
             </ul>
 
@@ -149,24 +143,29 @@ const List = ({ model }: { model: CustomerDetailModel | undefined  }) => {
     );
 };
 
-const ListItem = ({ model }: { model?: CustomerDebtOperationModel }) => {
+const ListItem = ({ model }: { model: CustomerDebtOperationModel }) => {
+    // Dependencies.
+    const routeGenerator = useMemo(useRouteGenerator, []);
+
     // Computed.
-    const iconClassName = model?.operation === DebtOperationType.DebtPayment
+    const iconClassName = model.operation === DebtOperationType.DebtPayment
         ? "bi-arrow-down-left"
         : "bi-arrow-up-right";
 
-    const typeText = model?.operation === DebtOperationType.DebtIncurrence
+    const typeText = model.operation === DebtOperationType.DebtIncurrence
         ? "Ghi nợ"
         : "Trả nợ";
 
     const iconAndTypeColumnClass = (() => {
-        if (!model) {
-            return Math.random() > 0.5 ? "text-danger" : "text-success";
-        }
-
-        return model?.operation === DebtOperationType.DebtIncurrence
+        return model.operation === DebtOperationType.DebtIncurrence
             ? "text-danger"
             : "text-success";
+    })();
+
+    const detailRoute = (() => {
+        return model.operation === DebtOperationType.DebtIncurrence
+            ? routeGenerator.getDebtIncurrenceDetailRoutePath(model.id)
+            : routeGenerator.getDebtPaymentDetailRoutePath(model.id);
     })();
 
     return (
@@ -179,21 +178,16 @@ const ListItem = ({ model }: { model?: CustomerDebtOperationModel }) => {
                         <div className="col col-lg-5 col-12 d-flex align-items-center">
                             <span className="fw-bold">
                                 {/* Icon */}
-                                {model && <i className={`bi ${iconClassName} me-2`}></i>}
-                                {!model && (
-                                    <PlaceholderText width={20} />
-                                )}
+                                <i className={`bi ${iconClassName} me-2`} />
 
                                 {/* Type */}
-                                {model && typeText}
-                                {!model && <PlaceholderText width={100} />}
+                                {typeText}
                             </span>
                         </div>
                         
                         {/* Amount */}
                         <div className="col d-flex align-items-center">
-                            {model && amountUtility.getDisplayText(model.amount)}
-                            {!model && <PlaceholderText width={100} />}
+                            {amountUtility.getDisplayText(model.amount)}
                         </div>
                     </div>
                 </div>
@@ -205,8 +199,7 @@ const ListItem = ({ model }: { model?: CustomerDebtOperationModel }) => {
                         <div className="col col-xl-7 col-lg-8 col-12">
                             <i className="bi bi-calendar-week me-2 text-primary"></i>
                             <span>
-                                {model && model.operatedDateTime.date}
-                                {!model && <PlaceholderText width={150} />}
+                                {model.operatedDateTime.date}
                             </span>
                         </div> 
 
@@ -214,8 +207,7 @@ const ListItem = ({ model }: { model?: CustomerDebtOperationModel }) => {
                         <div className="col">
                             <i className="bi bi-clock me-2 text-primary"></i>
                             <span>
-                                {model && model.operatedDateTime.time}
-                                {!model && <PlaceholderText width={40} />}
+                                {model.operatedDateTime.time}
                             </span>
                         </div>
                     </div>
@@ -224,12 +216,9 @@ const ListItem = ({ model }: { model?: CustomerDebtOperationModel }) => {
                 {/* Action button */}
                 <div className="col col-md-1 col-2 d-flex justify-content-end
                                 align-items-center p-2">
-                    {(!model || model.authorization.canEdit) && (
-                        <button className="btn btn-outline-primary btn-sm">
-                            <i className={`bi bi-pencil-square
-                                        ${!model ? "opacity-0" : ""}`} />
-                        </button>
-                    )}
+                    <Link to={detailRoute} className="btn btn-outline-primary btn-sm">
+                        <i className="bi bi-info-circle" />
+                    </Link>
                 </div>
             </div>
         </li>

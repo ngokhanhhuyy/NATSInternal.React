@@ -5,22 +5,10 @@ const DeleteButton = () => {
     // Dependencies.
     const formContext = useContext(FormContext);
 
-    if (formContext?.isSubmitting) {
-        return (
-            <button type="button" disabled
-                    className="btn btn-outline-danger px-4 placeholder disabled">
-                <div className="opacity-0">
-                    <i className="bi bi-trash3 me-1"></i>
-                    <span>Xoá</span>
-                </div>
-            </button>
-        );
-    }
-
     return (
         <button type="button" className="btn btn-outline-danger px-4"
-                disabled={formContext?.isDeleting}
-                onClick={() => formContext!.delete()}>
+                disabled={formContext?.isDeleting || formContext?.isSubmitting}
+                onClick={() => formContext?.delete()}>
             {/* Spinner */}
             {formContext?.isDeleting && (
                 <>

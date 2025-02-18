@@ -115,19 +115,14 @@ const ExpenseUpsertView = ({ id }: { id?: number }) => {
 
     return (
         <UpsertViewContainer
-                isInitialLoading={isInitialLoading}
-                modelState={modelState}
-                submittingAction={handleSubmissionAsync}
-                onSubmissionSucceeded={handleSucceededSubmissionAsync}
-                deletingAction={handleDeletionAsync}
-                onDeletionSucceeded={handleSucceededDeletionAsync}>
+            isInitialLoading={isInitialLoading}
+            modelState={modelState}
+            submittingAction={handleSubmissionAsync}
+            onSubmissionSucceeded={handleSucceededSubmissionAsync}
+            deletingAction={handleDeletionAsync}
+            onDeletionSucceeded={handleSucceededDeletionAsync}
+        >
             <div className="row g-3">
-                {/* ResourceAccess */}
-                {/* <div className="col col-12">
-                    <ResourceAccess resource-type="Expense" :resource-primary-id="model.id"
-                            accessMode="Update" />
-                </div> */}
-    
                 {/* Expense detail */}
                 <div className="col col-12">
                     <MainBlock title={blockTitle} closeButton bodyPadding={[0, 2, 2, 2]}>

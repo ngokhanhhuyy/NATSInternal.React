@@ -121,13 +121,11 @@ const Form = <TSubmissionResult,>(props: FormProps<TSubmissionResult>) => {
     };
 
     const handleDeletionAsync = useCallback(async () => {
-        console.log(deletingAction != null);
         if (!deletingAction) {
             return;
         }
 
         const confirmationAnswer = await alertModalStore.getDeletingConfirmationAsync();
-        alert(confirmationAnswer);
         if (confirmationAnswer) {
             setDeleting(true);
             try {

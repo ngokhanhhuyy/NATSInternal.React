@@ -46,7 +46,7 @@ const Results = (props: ResultsProps) => {
 
     // Results.
     return (
-        <ul className={`list-group ${isReloading ? "opacity-50 pe-none" : ""}`}>
+        <ul className="list-group">
             {productsModel.map(product => (
                 <Item model={product} key={product.id}
                     isPickable={!pickedProductIds.includes(product.id)}

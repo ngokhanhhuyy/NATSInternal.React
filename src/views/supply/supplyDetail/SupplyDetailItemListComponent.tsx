@@ -3,8 +3,27 @@ import { Link } from "react-router-dom";
 import type { SupplyDetailItemModel } from "@/models/supply/supplyItem/supplyDetailItemModel";
 import { useAmountUtility } from "@/utilities/amountUtility";
 
+// Layout component.
+import MainBlock from "@/views/layouts/MainBlockComponent";
+
 // Component.
-const Item = ({ model }: { model: SupplyDetailItemModel }) => {
+const SupplyDetailItemList = ({ model }: { model: SupplyDetailItemModel[] }) => {
+    return (
+        <MainBlock
+            title="Danh sách sản phẩm"
+            className="h-100"
+            bodyClassName="overflow-hidden"
+            bodyPadding={0}
+        >
+            <ul className="list-group list-group-flush">
+                {/* Items */}
+                {model.map(item => <SupplyDetailItem model={item} key={item.id} />)}
+            </ul>
+        </MainBlock>
+    );
+};
+
+const SupplyDetailItem = ({ model }: { model: SupplyDetailItemModel }) => {
     // Dependency.
     const amountUtility = useMemo(useAmountUtility, []);
     
@@ -22,8 +41,9 @@ const Item = ({ model }: { model: SupplyDetailItemModel }) => {
     }), []);
 
     return (
-        <li className="list-group-item px-3 py-2 d-flex bg-transparent justify-content-start
-                        align-items-center">
+        <li className="list-group-item px-3 py-2 d-flex bg-transparent
+                        justify-content-start align-items-center"
+        >
             {/* Thumbnail */}
             <img className="img-thumbnail me-2 product-photo"
                 src={model.product.thumbnailUrl}
@@ -48,4 +68,4 @@ const Item = ({ model }: { model: SupplyDetailItemModel }) => {
     );
 };
 
-export default Item;
+export default SupplyDetailItemList;

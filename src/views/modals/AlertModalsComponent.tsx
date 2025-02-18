@@ -71,8 +71,14 @@ const Modal = <TResolve extends Resolve<TResult>, TResult>(
 
     // Template.
     return (
-        <div className="modal fade text-center px-2" id={mode} tabIndex={-1}
-                aria-labelledby="modal-label" aria-hidden={!isVisible}>
+        <div
+            className="modal fade text-center px-2"
+            id={mode}
+            tabIndex={-1}
+            data-bs-backdrop="static"
+            aria-labelledby="modal-label"
+            aria-hidden={!isVisible}
+        >
             <div className="modal-dialog modal-dialog-centered mx-auto">
                 <div className="modal-content">
 
@@ -176,13 +182,12 @@ function getElementContent(mode: Mode): ElementsContent {
                     okButton: { text: "Chắc chắn", className: "btn btn-outline-danger" }
                 }
             };
-        case "forbiddenNotification":
+        case "notFoundNotification":
             return {
                 title: "Không tìm thấy dữ liệu",
                 content: [
                     "Dữ liệu bạn yêu cầu đã bị xoá hoặc không tồn tại.",
                     "Vui lòng kiểm tra lại.",
-                    "Nếu lỗi này xảy ra nhiều lần, vui lòng báo với nhà phát triển."
                 ],
                 iconClassName: "bi bi-x-octagon-fill fs-1 text-danger",
                 buttons: {

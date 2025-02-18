@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import MainContainer from "@layouts/MainContainerComponent";
 import { useViewStates } from "@/hooks/viewStatesHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
@@ -7,6 +8,7 @@ const HomeView = () => <LoadingView />;
 
 const LoadingView = () => {
     const store = useAlertModalStore();
+    const navigate = useNavigate();
     const [confirmation, setConfirmation] = useState<boolean | string>();
 
     const columnClassName = "col col-xxl-3 col-xl-4 col-md-6 col-12 d-flex flex-column";
@@ -42,7 +44,10 @@ const LoadingView = () => {
                 <div className={columnClassName}>
                     <button className="btn btn-primary mb-3"
                         onClick={() => store.getNotFoundConfirmationAsync()
-                            .then(() => setConfirmation("NotFound"))}>
+                            .then(() => {
+                                setConfirmation("NotFound");
+                                navigate("/products");
+                            })}>
                         NotFoundConfirmation
                     </button>
                     <span className="border border-primary-subtle bg-primary-subtle

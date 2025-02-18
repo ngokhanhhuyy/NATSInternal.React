@@ -88,21 +88,21 @@ const ProductCategoryUpsertView = ({ id }: { id?: number }) => {
     }, []);
 
     return (
-        <UpsertViewContainer modelState={modelState} isInitialLoading={isInitialLoading}
-                submittingAction={handleSubmissionAsync}
-                onSubmissionSucceeded={handleDeletionAsync}
-                deletingAction={handleDeletionAsync}
-                onDeletionSucceeded={handleSucceededAsync}>
+        <UpsertViewContainer
+            modelState={modelState}
+            isInitialLoading={isInitialLoading}
+            submittingAction={handleSubmissionAsync}
+            onSubmissionSucceeded={handleSucceededAsync}
+            deletingAction={handleDeletionAsync}
+            onDeletionSucceeded={handleSucceededAsync}
+        >
             <div className="row g-3 justify-content-end">
-                {/*<div className="col col-12" v-if="!props.isForCreating">*/}
-                {/*    <ResourceAccess resource-type="ProductCategory"
-                            :resource-primary-id="model.id"*/}
-                {/*    access-mode="Update" />*/}
-                {/*</div>*/}
-
                 <div className="col col-12">
-                    <InputBlock model={model} setModel={setModel}
-                        isForCreating={isForCreating}/>
+                    <InputBlock
+                        model={model}
+                        setModel={setModel}
+                        isForCreating={isForCreating}
+                    />
                 </div>
 
                 {!isForCreating && model.canDelete && (
@@ -133,17 +133,28 @@ const InputBlock = ({ isForCreating, model, setModel }: InputBlockProps) => {
         if (isForCreating) {
             return "Tạo phân loại sản phẩm mới";
         }
+
         return "Chỉnh sửa phân loại sản phẩm";
     }, [isForCreating]);
 
     return (
-        <MainBlock title={blockTitle} closeButton bodyClassName="row g-3"
-                bodyPadding={[2, 3, 3, 3]}>
-            <Label text="Tên phân loại" />
-            <TextInput name="name" maxLength={30} placeholder="Tên phân loại"
+        <MainBlock
+            title={blockTitle}
+            closeButton
+            bodyClassName="row g-3"
+            bodyPadding={[0, 2, 2, 2]}
+        >
+            <div className="col col-12">
+                <Label text="Tên phân loại" />
+                <TextInput
+                    name="name"
+                    maxLength={30}
+                    placeholder="Tên phân loại"
                     value={model.name}
-                    onValueChanged={name => setModel(m => m.from({ name }))}/>
-            <ValidationMessage name="name" />
+                    onValueChanged={name => setModel(m => m.from({ name }))}
+                />
+                <ValidationMessage name="name" />
+            </div>
         </MainBlock>
     );
 };

@@ -22,10 +22,8 @@ const NumberInputComponent = (props: Props) => {
     const formContext = useContext(FormContext);
     const modelState = useMemo(() => formContext?.modelState, [formContext?.modelState]);
     const isLoading = useMemo(() => {
-        return formContext?.isInitialLoading
-            || formContext?.isSubmitting
-            || formContext?.isDeleting;
-    }, [formContext?.isInitialLoading, formContext?.isSubmitting, formContext?.isDeleting]);
+        return formContext?.isSubmitting || formContext?.isDeleting;
+    }, [formContext?.isSubmitting, formContext?.isDeleting]);
 
     // Memo.
     const mask = useMemo(() => new Mask({
@@ -38,6 +36,10 @@ const NumberInputComponent = (props: Props) => {
 
     // Computed.
     const getComputedValue = () => {
+        if (isLoading) {
+            return "";
+        }
+        
         return mask.masked(value.toLocaleString()).replaceAll(".", " ");
     };
 
@@ -72,14 +74,14 @@ const NumberInputComponent = (props: Props) => {
         }
     };
 
-    if (isLoading) {
-        return <input type="text" name={props.name} className="form-control" disabled />;
-    }
-
     return (
-        <input type={type} value={getComputedValue()} {...rest}
-                onInput={onInput} onChange={onChanged}
-                className={`form-control ${getComputedClassName}`} />
+        <input
+            type={type}
+            value={getComputedValue()}
+            {...rest}
+            onInput={onInput} onChange={onChanged}
+            className={`form-control ${getComputedClassName}`}
+        />
     );
 };
 

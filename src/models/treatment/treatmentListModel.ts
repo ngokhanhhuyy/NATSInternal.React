@@ -14,9 +14,10 @@ const routeGenerator = useRouteGenerator();
 
 export class TreatmentListModel
         extends AbstractClonableModel<TreatmentListModel>
-        implements
-            IExportProductListModel<
-            TreatmentBasicModel, TreatmentExistingAuthorizationModel> {
+        implements IExportProductListModel<
+            TreatmentListModel,
+            TreatmentBasicModel,
+            TreatmentExistingAuthorizationModel> {
     public readonly sortingByAscending: boolean | undefined;
     public readonly sortingByField: string | undefined;
     public readonly monthYear: ListMonthYearModel | undefined;
@@ -64,12 +65,12 @@ export class TreatmentListModel
         }
     }
         
-        public fromListResponseDto(responseDto: ResponseDtos.Treatment.List) {
-            return this.from({
-                pageCount: responseDto.pageCount,
-                items: responseDto.items?.map(i => new TreatmentBasicModel(i)) ?? []
-            });
-        }
+    public fromListResponseDto(responseDto: ResponseDtos.Treatment.List) {
+        return this.from({
+            pageCount: responseDto.pageCount,
+            items: responseDto.items?.map(i => new TreatmentBasicModel(i)) ?? []
+        });
+    }
 
     public toRequestDto(): RequestDtos.Treatment.List {
         return {

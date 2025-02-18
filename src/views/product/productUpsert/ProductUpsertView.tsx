@@ -75,7 +75,8 @@ const ProductUpsertView = ({ id }: { id?: number; }) => {
                         await navigate(-1);
                         return;
                     }
-
+                    
+                    console.log(error);
                     throw error;
                 }
             }
@@ -94,12 +95,14 @@ const ProductUpsertView = ({ id }: { id?: number; }) => {
     }, []);
 
     // Functions.
-    const handleSubmissionAsync = async (): Promise<void> => {
+    const handleSubmissionAsync = async (): Promise<number> => {
         if (isForCreating) {
             const id = await productService.createAsync(model.toRequestDto());
             setModel(model => model.from({ id }));
+            return id;
         } else {
             await productService.updateAsync(model.id, model.toRequestDto());
+            return model.id;
         }
     };
 
@@ -107,8 +110,8 @@ const ProductUpsertView = ({ id }: { id?: number; }) => {
         await productService.deleteAsync(model.id);
     };
     
-    const handleSucceededSubmissionAsync = async (): Promise<void> => {
-        await navigate(routeGenerator.getProductDetailRoutePath(model.id));
+    const handleSucceededSubmissionAsync = async (submissionResult: number): Promise<void> => {
+        await navigate(routeGenerator.getProductDetailRoutePath(submissionResult));
     };
 
     const handleSucceededDeletionAsync = useCallback(async (): Promise<void> => {
@@ -120,16 +123,15 @@ const ProductUpsertView = ({ id }: { id?: number; }) => {
     };
 
     return (
-        <UpsertViewContainer modelState={modelState} isInitialLoading={isInitialLoading}
-                submittingAction={handleSubmissionAsync}
-                deletingAction={handleDeletionAsync}
-                onSubmissionSucceeded={handleSucceededSubmissionAsync}
-                onDeletionSucceeded={handleSucceededDeletionAsync}>
+        <UpsertViewContainer
+            modelState={modelState}
+            isInitialLoading={isInitialLoading}
+            submittingAction={handleSubmissionAsync}
+            deletingAction={handleDeletionAsync}
+            onSubmissionSucceeded={handleSucceededSubmissionAsync}
+            onDeletionSucceeded={handleSucceededDeletionAsync}
+        >
             <div className="row g-3">
-                {/* <div className="col col-12">
-                    <ResourceAccess resourceType="Product" resourcePrimaryId={model.id}
-                            accessMode="Update" />
-                </div> */}
                 <div className="col col-12">
                     <MainBlock title={blockTitle} bodyPadding={2} closeButton>
                         {/* Upper row */}

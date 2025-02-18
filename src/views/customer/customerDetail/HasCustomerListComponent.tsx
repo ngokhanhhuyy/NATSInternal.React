@@ -16,15 +16,14 @@ import { ValidationError } from "@/errors";
 // Layout component.
 import MainBlock from "@/views/layouts/MainBlockComponent";
 import MainBlockPaginator from "@/views/layouts/MainBlockPaginatorComponent";
-import { LoadingListBlock } from "@/views/layouts/LoadingView";
 
 // Utility.
 const amountUtility = useAmountUtility();
 
 export interface HasCustomerListProps<
-        TListModel extends IHasCustomerListModel<TBasicModel, TAuthorizationModel>,
-        TBasicModel extends IHasCustomerBasicModel<TAuthorizationModel>,
-        TAuthorizationModel extends IHasStatsExistingAuthorizationModel> {
+        TList extends IHasCustomerListModel<TList, TBasic, TAuthorization>,
+        TBasic extends IHasCustomerBasicModel<TAuthorization>,
+        TAuthorization extends IHasStatsExistingAuthorizationModel> {
     resourceType: string;
     blockColor: "primary" | "success" | "danger";
     idPrefix: string;
@@ -33,17 +32,17 @@ export interface HasCustomerListProps<
     onInitialLoadingFinished: () => void;
     initializeModel: (
         requestDto: { customerId: number, resultsPerPage: number },
-        initialData: ResponseDtos.InitialData) => TListModel;
+        initialData: ResponseDtos.InitialData) => TList;
     onLoadAsync: (
-        model: TListModel,
-        setModel: React.Dispatch<React.SetStateAction<TListModel>>) => Promise<void>;
+        model: TList,
+        setModel: React.Dispatch<React.SetStateAction<TList>>) => Promise<void>;
 };
 
 const HasCustomerList = <
-            TListModel extends IHasCustomerListModel<TBasicModel, TAuthorizationModel>,
-            TBasicModel extends IHasCustomerBasicModel<TAuthorizationModel>,
-            TAuthorizationModel extends IHasStatsExistingAuthorizationModel>
-        (props: HasCustomerListProps<TListModel, TBasicModel, TAuthorizationModel>) => {
+            TList extends IHasCustomerListModel<TList, TBasic, TAuthorization>,
+            TBasic extends IHasCustomerBasicModel<TAuthorization>,
+            TAuthorization extends IHasStatsExistingAuthorizationModel>
+        (props: HasCustomerListProps<TList, TBasic, TAuthorization>) => {
     // Dependencies.
     const initialDataStore = useInitialDataStore();
     const alertModalStore = useAlertModalStore();
@@ -51,7 +50,7 @@ const HasCustomerList = <
     const routeGenerator = useMemo(() => useRouteGenerator(), []);
 
     // Model and state.
-    const [model, setModel] = useState<TListModel>(() => {
+    const [model, setModel] = useState<TList>(() => {
         const requestDto = { resultsPerPage: 5, customerId: props.customerId };
         return props.initializeModel(requestDto, initialDataStore.data);
     });
@@ -65,7 +64,11 @@ const HasCustomerList = <
 
     // Effect.
     useEffect(() => { 
-        const fetchData = async () => {
+        const loadAsync = async () => {
+            if (!props.isInitialLoading) {
+                setIsReloading(true);
+            }
+
             try {
                 await props.onLoadAsync(model, setModel);
             } catch (error) {
@@ -76,86 +79,76 @@ const HasCustomerList = <
                 }
 
                 throw error;
-            } finally {
-                props.onInitialLoadingFinished();
             }
         };
 
-        fetchData();
-    }, []);
-
-    useEffect(() => {
-        if (!props.isInitialLoading) {
-            reloadAsync(); 
-        }
-    }, [model.page]);
-
-    if (props.isInitialLoading) {
-        return <LoadingListBlock color={props.blockColor} hasHeader length={3}
-                detailSecondaryTextLineCount={0} />;
-    }
-
-    // Functions.
-    const reloadAsync = async (): Promise<void> => {
-        setIsReloading(true);
-        try {
-            await Promise.all([
-                props.onLoadAsync(model, setModel),
-                new Promise(resolve => setTimeout(resolve, 250))
-            ]);
-        } catch (error) {
-            if (error instanceof ValidationError) {
-                await alertModalStore.getSubmissionErrorConfirmationAsync();
-                return;
+        loadAsync().finally(() => {
+            if (props.isInitialLoading) {
+                props.onInitialLoadingFinished();
             }
 
-            throw error;
-        } finally {
-            props.onInitialLoadingFinished();
             setIsReloading(false);
-        }
-    };
+        });
+    }, [model.page]);
 
+    // Header.
     const computeHeader = () => {
         if (!model.items.length) {
             return null;
         }
 
-        return  (
-            <MainBlockPaginator page={model.page}
-                    onPageChanged={(page) => setModel({ ...model, page })}
+        return (
+            <>
+                {isReloading && (
+                    <div className="spinner-border spinner-border-sm me-3" role="status">
+                        <span className="visually-hidden">Đang tải...</span>
+                    </div>
+                )}
+                <MainBlockPaginator
+                    page={model.page}
+                    onPageChanged={(page) => setModel(model => model.from({ ...model, page }))}
                     pageCount={model.pageCount}
                     onPageCountChanged={(pageCount) => setModel({ ...model, pageCount })}
-                    color={props.blockColor} />
+                    color={props.blockColor}
+                />
+            </>
         );
     };
 
     return (
-        <MainBlock title={resourceDisplayName} className="h-100" header={computeHeader()}
-                bodyClassName="h-100" bodyPadding={0} color={props.blockColor}
-                style={{ pointerEvents: isReloading ? "none" : "auto" }}>
-            <ul className="list-group list-group-flush">
-                <ListBody model={model} resourceDisplayName={resourceDisplayName}
-                        idPrefix={props.idPrefix} />
+        <MainBlock
+            title={resourceDisplayName}
+            className="h-100"
+            header={computeHeader()}
+            bodyClassName="h-100" bodyPadding={0} color={props.blockColor}
+            style={{ pointerEvents: isReloading ? "none" : "auto" }}
+        >
+            <ul className={`list-group list-group-flush
+                            ${isReloading ? "opacity-50 pe-none" : ""}`}>
+                <ListBody
+                    model={model}
+                    resourceDisplayName={resourceDisplayName}
+                    idPrefix={props.idPrefix}
+                />
             </ul>
         </MainBlock>
     );
 };
 
 interface ListBodyProps<
-        TListModel extends IHasCustomerListModel<TBasicModel, TAuthorizationModel>,
-        TBasicModel extends IHasCustomerBasicModel<TAuthorizationModel>,
-        TAuthorizationModel extends IHasStatsExistingAuthorizationModel> {
-    model: TListModel,
+        TList extends IHasCustomerListModel<TList, TBasic, TAuthorization>,
+        TBasic extends IHasCustomerBasicModel<TAuthorization>,
+        TAuthorization extends IHasStatsExistingAuthorizationModel> {
+    model: TList,
     resourceDisplayName: string,
     idPrefix: string;
 }
 
 const ListBody = <
-            TListModel extends IHasCustomerListModel<TBasicModel, TAuthorizationModel>,
-            TBasicModel extends IHasCustomerBasicModel<TAuthorizationModel>,
+            TList extends IHasCustomerListModel<TList, TBasic, TAuthorizationModel>,
+            TBasic extends IHasCustomerBasicModel<TAuthorizationModel>,
             TAuthorizationModel extends IHasStatsExistingAuthorizationModel>
-        (props: ListBodyProps<TListModel, TBasicModel, TAuthorizationModel>) => {
+        (props: ListBodyProps<TList, TBasic, TAuthorizationModel>) => {
     const { model, resourceDisplayName } = props;
     if (!model.items.length) {
         return (
@@ -218,7 +211,7 @@ const ListBody = <
             {/* Route */}
             <Link to={resource.detailRoute}
                     className="btn btn-outline-primary btn-sm m-2 flex-shrink-0">
-                <i className="bi bi-eye"></i>
+                <i className="bi bi-info-circle"></i>
             </Link>
         </li>
     ));
@@ -234,16 +227,21 @@ export const ConsultantList = (props: Props) => {
     const service = useMemo(useConsultantService, []);
 
     return (
-        <HasCustomerList resourceType="consultant" blockColor="primary" idPrefix="TV"
-                customerId={props.customerId} isInitialLoading={props.isInitialLoading}
-                onInitialLoadingFinished={props.onInitialLoadingFinished}
-                initializeModel={(requestDto, initialData) => {
-                    return new ConsultantListModel(initialData.consultant, requestDto);
-                }}
-                onLoadAsync={async (model, setModel) => {
-                    const responseDto = await service.getListAsync(model.toRequestDto());
-                    setModel(model => model.fromListResponseDto(responseDto));
-                }} />
+        <HasCustomerList
+            resourceType="consultant"
+            blockColor="primary"
+            idPrefix="TV"
+            customerId={props.customerId}
+            isInitialLoading={props.isInitialLoading}
+            onInitialLoadingFinished={props.onInitialLoadingFinished}
+            initializeModel={(requestDto, initialData) => {
+                return new ConsultantListModel(initialData.consultant, requestDto);
+            }}
+            onLoadAsync={async (model, setModel) => {
+                const responseDto = await service.getListAsync(model.toRequestDto());
+                setModel(model => model.fromListResponseDto(responseDto));
+            }}
+        />
     );
 };
 
@@ -251,16 +249,21 @@ export const OrderList = (props: Props) => {
     const service = useMemo(useOrderService, []);
 
     return (
-        <HasCustomerList resourceType="order" blockColor="success" idPrefix="BL"
-                customerId={props.customerId} isInitialLoading={props.isInitialLoading}
-                onInitialLoadingFinished={props.onInitialLoadingFinished}
-                initializeModel={(requestDto, initialData) => {
-                    return new OrderListModel(initialData.order, requestDto);
-                }}
-                onLoadAsync={async (model, setModel) => {
-                    const responseDto = await service.getListAsync(model.toRequestDto());
-                    setModel(model => model.fromListResponseDto(responseDto));
-                }} />
+        <HasCustomerList
+            resourceType="order"
+            blockColor="success"
+            idPrefix="BL"
+            customerId={props.customerId}
+            isInitialLoading={props.isInitialLoading}
+            onInitialLoadingFinished={props.onInitialLoadingFinished}
+            initializeModel={(requestDto, initialData) => {
+                return new OrderListModel(initialData.order, requestDto);
+            }}
+            onLoadAsync={async (model, setModel) => {
+                const responseDto = await service.getListAsync(model.toRequestDto());
+                setModel(model => model.fromListResponseDto(responseDto));
+            }}
+        />
     );
 };
 
@@ -268,15 +271,20 @@ export const TreatmentList = (props: Props) => {
     const service = useMemo(useTreatmentService, []);
 
     return (
-        <HasCustomerList resourceType="treatment" blockColor="danger" idPrefix="LT"
-                customerId={props.customerId} isInitialLoading={props.isInitialLoading}
-                onInitialLoadingFinished={props.onInitialLoadingFinished}
-                initializeModel={(requestDto, initialData) => {
-                    return new TreatmentListModel(initialData.order, requestDto);
-                }}
-                onLoadAsync={async (model, setModel) => {
-                    const responseDto = await service.getListAsync(model.toRequestDto());
-                    setModel(model => model.fromListResponseDto(responseDto));
-                }} />
+        <HasCustomerList
+            resourceType="treatment"
+            blockColor="danger"
+            idPrefix="LT"
+            customerId={props.customerId}
+            isInitialLoading={props.isInitialLoading}
+            onInitialLoadingFinished={props.onInitialLoadingFinished}
+            initializeModel={(requestDto, initialData) => {
+                return new TreatmentListModel(initialData.order, requestDto);
+            }}
+            onLoadAsync={async (model, setModel) => {
+                const responseDto = await service.getListAsync(model.toRequestDto());
+                setModel(model => model.fromListResponseDto(responseDto));
+            }}
+        />
     );
 };

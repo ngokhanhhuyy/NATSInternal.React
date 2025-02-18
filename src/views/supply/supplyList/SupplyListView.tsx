@@ -76,14 +76,8 @@ const SupplyListView = () => {
                         resourceType="supply"
                         isReloading={isReloading}
                         model={model}
-                        onMonthYearChanged={monthYear => {
-                            setModel(model => model.from({ monthYear }));
-                        }}
-                        onSortingByFieldChanged={sortingByField => {
-                            setModel(model => model.from({ sortingByField }));
-                        }}
-                        onSortingByAscendingChanged={sortingByAscending => {
-                            setModel(model => model.from({ sortingByAscending }));
+                        onChanged={(changedData) => {
+                            setModel(model => model.from(changedData));
                         }}
                     />
                 </div>

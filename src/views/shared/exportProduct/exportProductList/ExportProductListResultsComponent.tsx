@@ -107,7 +107,7 @@ const Item = <
             {/* Action button */}
             <Link className="btn btn-outline-primary btn-sm flex-shrink-0 mx-2"
                     to={model.detailRoute}>
-                <i className="bi bi-eye"></i>
+                <i className="bi bi-info-circle"></i>
             </Link>
         </li>
     );

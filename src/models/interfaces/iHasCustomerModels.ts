@@ -2,9 +2,10 @@ import type { CustomerBasicModel } from "../customerModels";
 
 declare global {
     interface IHasCustomerListModel<
+                TList extends IHasStatsListModel<TList, TBasic, TAuthorization>,
                 TBasic extends IHasCustomerBasicModel<TAuthorization>,
                 TAuthorization extends IHasStatsExistingAuthorizationModel>
-            extends IHasStatsListModel<TBasic, TAuthorization> {
+            extends IHasStatsListModel<TList, TBasic, TAuthorization> {
         readonly customerId: number | undefined;
     }
     
@@ -21,7 +22,8 @@ declare global {
         readonly customer: CustomerBasicModel;
     }
     
-    interface IHasCustomerUpsertModel extends IHasStatsUpsertModel {
+    interface IHasCustomerUpsertModel<TUpsert extends object>
+            extends IHasStatsUpsertModel<TUpsert> {
         readonly customer: CustomerBasicModel | null;
     }
 }

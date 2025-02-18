@@ -41,10 +41,11 @@ const ProductDetail = ({ id, onInitialLoadingFinished }: Props) => {
             try {
                 const responseDto = await service.getDetailAsync(id);
                 setModel(new ProductDetailModel(responseDto));
+                onInitialLoadingFinished();
             } catch (error) {
                 if (error instanceof NotFoundError) {
                     await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(-1);
+                    await navigate(routeGenerator.getProductListRoutePath());
                     return;
                 }
 
@@ -52,7 +53,7 @@ const ProductDetail = ({ id, onInitialLoadingFinished }: Props) => {
             }
         };
 
-        loadAsync().finally(onInitialLoadingFinished);
+        loadAsync();
     }, []);
 
     // Functions.
@@ -104,7 +105,7 @@ const ProductDetail = ({ id, onInitialLoadingFinished }: Props) => {
 
             {/* Action buttons */}
             <div className="actions-buttons d-flex justify-content-center
-                        align-items-center">
+                            align-items-center">
                 {/* Edit button */}
                 {model.authorization.canEdit && (
                     <Link className="btn btn-outline-primary btn-sm me-2"
