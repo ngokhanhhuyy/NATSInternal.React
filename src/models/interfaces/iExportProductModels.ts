@@ -6,12 +6,12 @@ declare global {
     }
 
     interface IExportProductListModel<
-            TList extends object,
+            TList extends IHasStatsListModel<TList, TBasic, TAuthorization>,
             TBasic extends IHasCustomerBasicModel<TAuthorization>,
             TAuthorization extends IHasStatsExistingAuthorizationModel>
         extends
             IHasProductListModel<TList, TBasic, TAuthorization>,
-            IHasCustomerListModel<TBasic, TAuthorization> { }
+            IHasCustomerListModel<TList, TBasic, TAuthorization> { }
     
     interface IExportProductDetailModel<
                 TItem extends IHasProductDetailItemModel,
@@ -39,7 +39,7 @@ declare global {
                 TPhoto extends IUpsertPhotoModel<TPhoto>>
             extends
                 IHasProductUpsertModel<TUpsert, TUpsertItem, TPhoto>,
-                IHasCustomerUpsertModel {
+                IHasCustomerUpsertModel<TUpsert> {
         readonly productAmountBeforeVat: number;
         readonly productVatAmount: number;
         readonly productAmountAfterVat: number;

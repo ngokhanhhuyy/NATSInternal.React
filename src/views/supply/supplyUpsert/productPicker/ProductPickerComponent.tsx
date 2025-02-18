@@ -25,12 +25,11 @@ interface Props {
     isInitialLoading: boolean;
     onInitialLoadingFinished(): void;
     pickedItems: SupplyUpsertItemModel[];
-    onChanged(index: number, changedData: Partial<SupplyUpsertItemModel>): void;
     onPicked(product: ProductBasicModel): void | Promise<void>;
 }
 
 // Component.
-const ProductPicker = ({ pickedItems, onChanged, onPicked, ...props }: Props) => {
+const ProductPicker = ({ pickedItems, onPicked, ...props }: Props) => {
     // Dependencies.
     const alertModalStore = useAlertModalStore();
     const productService = useMemo(useProductService, []);
@@ -107,15 +106,6 @@ const ProductPicker = ({ pickedItems, onChanged, onPicked, ...props }: Props) =>
     const nextButtonClassName = nextButtonDisabled ? "opacity-25" : "";
 
     // Callbacks.
-    const handlePicked = (product: ProductBasicModel) => {
-        const index = pickedItems.findIndex(i => i.product.id === product.id);
-        if (index >= 0) {
-            onChanged(index, { quantity: pickedItems[index].quantity + 1 });
-        } else {
-            onPicked(product);
-        }
-    };
-
     const handlePreviousPageButtonClicked = () => {
         setModel(model => model.from({ page: model.page - 1 }));
     };
@@ -233,7 +223,7 @@ const ProductPicker = ({ pickedItems, onChanged, onPicked, ...props }: Props) =>
                         productsModel={model.items}
                         productsModelResultsPerPage={model.resultsPerPage}
                         supplyItemsModel={pickedItems}
-                        onPicked={handlePicked}
+                        onPicked={onPicked}
                     />
                 </div>
             </FormContext.Provider>

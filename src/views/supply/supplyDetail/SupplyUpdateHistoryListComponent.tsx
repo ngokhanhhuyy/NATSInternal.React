@@ -79,7 +79,7 @@ const SupplyUpdateHistory = ({ model }: { model: SupplyUpdateHistoryModel }) => 
                         </div>
 
                         {/* UpdatedUser */}
-                        <div className={`${columnClassName}`}>
+                        <div className={columnClassName}>
                             <span className="fw-bold">Nhân viên chỉnh sửa</span>
                             <Link to={model.updatedUser.detailRoute}>
                                 {model.updatedUser.fullName}
@@ -96,7 +96,7 @@ const SupplyUpdateHistory = ({ model }: { model: SupplyUpdateHistoryModel }) => 
                                 <span>{model.oldStatsDateTime.dateTime}</span>
                             </div>
 
-                            <div className={`${columnClassName}`}>
+                            <div className={columnClassName}>
                                 <span className="fw-bold">Thời gian nhập hàng (mới)</span>
                                 <span>{model.newStatsDateTime.dateTime}</span>
                             </div>
@@ -111,7 +111,7 @@ const SupplyUpdateHistory = ({ model }: { model: SupplyUpdateHistoryModel }) => 
                                 {model.oldNote || <span className="opacity-50">Để trống</span>}
                             </div>
 
-                            <div className={`${columnClassName}`}>
+                            <div className={columnClassName}>
                                 <span className="fw-bold">Ghi chú (mới)</span>
                                 {model.newNote || <span className="opacity-50">Để trống</span>}
                             </div>
@@ -135,7 +135,7 @@ const SupplyUpdateHistory = ({ model }: { model: SupplyUpdateHistoryModel }) => 
                                 </ol>
                             </div>
 
-                            <div className={`${columnClassName}`}>
+                            <div className={columnClassName}>
                                 <span className="fw-bold">Danh sách sản phẩm (mới)</span>
                                 <ol>
                                     {model.newItems.map((item, index) => (

@@ -118,7 +118,7 @@ module.exports = {
       "Allow-Control-Allow-Headers": "Content-Type,Authorization",
     },
     client: {
-      // webSocketURL: "wss://frontend.khanhhuy.dev/ws",
+      webSocketURL: "wss://frontend.khanhhuy.dev/ws",
     },
     proxy: [
       {

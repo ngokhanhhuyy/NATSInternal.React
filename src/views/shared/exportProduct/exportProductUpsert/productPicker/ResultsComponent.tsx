@@ -25,7 +25,7 @@ const Results = <TUpsertItem extends IExportProductUpsertItemModel<TUpsertItem>>
     const className = isReloading ? "opacity-50 pe-none" : "";
 
     const isPicked = (product: ProductBasicModel) => {
-        return !pickedItemsListModel.map(i => i.product!.id).includes(product.id);
+        return pickedItemsListModel.map(i => i.product!.id).includes(product.id);
     };
 
     return (
@@ -41,7 +41,9 @@ const Results = <TUpsertItem extends IExportProductUpsertItemModel<TUpsertItem>>
                 )) : (
                     <li className="list-group-item bg-transparent d-flex
                                     justify-content-center align-items-center">
-                        <span className="opacity-50">Không tìm thấy kết quả</span>
+                        <span className="opacity-50">
+                            Không tìm thấy kết quả
+                        </span>
                     </li>
                 )}
         </ul>
@@ -53,22 +55,6 @@ const ResultItem = ({ model, isPicked, onPicked }: ResultItemProps) => {
     const amountUtility = useMemo(useAmountUtility, []);
 
     // Computed.
-    const computePickButtonClassName = (): string => {
-        if (isPicked) {
-            return "btn-outline-primary";
-        }
-        
-        return "btn-outline-success";
-    };
-
-    const computePickButtonIconClassName = (): string => {
-        if (isPicked) {
-            return "bi bi-check2";
-        }
-        
-        return "bi bi-plus-lg";
-    };
-
     const thumbnailStyle = useMemo((): React.CSSProperties => ({
         width: "55px",
         height: "55px",
@@ -95,29 +81,28 @@ const ResultItem = ({ model, isPicked, onPicked }: ResultItemProps) => {
 
                 {/* Price */}
                 <div className="product-detail">
-                    <span className="bg-success-subtle text-success
-                                px-2 py-1 rounded small">
+                    <span className="bg-success-subtle text-success px-2 py-1 rounded small">
                         <i className="bi bi-cash-coin me-1"></i>
                         {amountUtility.getDisplayText(model.defaultPrice)}
                     </span>
 
                     {/* Stocking quantity */}
                     <span className="bg-primary-subtle text-primary
-                                px-2 py-1 rounded small ms-2">
+                                    px-2 py-1 rounded small ms-2">
                         <i className="bi bi-archive me-1"></i>
-                        {model.stockingQuantity}
-                        {model.unit.toLocaleLowerCase()}
+                        {model.stockingQuantity} {model.unit.toLocaleLowerCase()}
                     </span>
                 </div>
             </div>
             
             {/* Pick button */}
-            <button className={`btn btn-outline-primary btn-sm
-                                ${computePickButtonClassName()}`}
-                    type="button"
-                    onClick={onPicked}>
-                <i className={computePickButtonIconClassName()}></i>
-            </button>
+            {!isPicked && (
+                <button className="btn btn-outline-success btn-sm"
+                        type="button"
+                        onClick={onPicked}>
+                    <i className="bi bi-plus-lg"></i>
+                </button>
+            )}
         </li>
     );
 };

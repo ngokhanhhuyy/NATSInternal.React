@@ -23,9 +23,10 @@ import MainBlock from "@/views/layouts/MainBlockComponent";
 
 // Child components.
 import ProductPicker from "./productPicker/ProductPickerComponent";
-import SupplyItemList from "./SupplyItemListComponent";
+import SupplyPickedItemList from "./SupplyPickedItemListComponent";
 import SupplyItemInputModal from "./itemInputModal/SupplyItemInputModalComponent";
 
+// Types.
 type ChangedData = Partial<SupplyUpsertItemModel>;
 type ModalPromiseResolve = (changedData: ChangedData | PromiseLike<ChangedData>) => void;
 
@@ -44,7 +45,7 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
         productPicker: true
     }));
     const [model, setModel] = useState(() => new SupplyUpsertModel());
-    const [modalModel, setModalModel] = useState<SupplyUpsertItemModel | null>(null);
+    const [modalModel, setModalModel] = useState<SupplyUpsertItemModel | null>(() => null);
     const modalPromiseResolve = useRef<ModalPromiseResolve | null>(null);
 
     // Effect.
@@ -195,17 +196,6 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
                             }));
                         }}
                         pickedItems={model.items}
-                        onChanged={(index, changedData) => {
-                            setModel(model => model.from({
-                                items: model.items.map((evaluatingItem, evaluatingIndex) => {
-                                    if (evaluatingIndex !== index) {
-                                        return evaluatingItem;
-                                    }
-
-                                    return evaluatingItem.from(changedData);
-                                })
-                            }));
-                        }}
                         onPicked={async (product) => {
                             const newItem = new SupplyUpsertItemModel(product);
                             const changedData = await openItemModalAsync(newItem);
@@ -218,7 +208,7 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
     
                 {/* Supply items */}
                 <div className="col col-lg-6 col-12">
-                    <SupplyItemList
+                    <SupplyPickedItemList
                         model={model.items}
                         modelState={modelState}
                         onEdit={async (index) => {

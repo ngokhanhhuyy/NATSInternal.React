@@ -16,6 +16,7 @@ interface ChangedData {
 // Props.
 interface ExportProductItemInputModalProps<
         TUpsertItem extends IExportProductUpsertItemModel<TUpsertItem>> {
+    resourceType: string;
     model: IExportProductUpsertItemModel<TUpsertItem> | null;
     onSaved: (changedData: Partial<TUpsertItem>) => void;
     onCancel: () => void;
@@ -29,7 +30,8 @@ interface ExportProductItemInputModalBodyProps {
 }
 
 // Component.
-const ProductExportItemInputModal = <TUpsertItem extends IExportProductUpsertItemModel<TUpsertItem>>
+const ExportProductItemInputModal = <
+            TUpsertItem extends IExportProductUpsertItemModel<TUpsertItem>>
         (props: ExportProductItemInputModalProps<TUpsertItem>) => {
     // Model and states.
     const [changedData, setChangedData] = useState<ChangedData>(() => ({
@@ -42,7 +44,7 @@ const ProductExportItemInputModal = <TUpsertItem extends IExportProductUpsertIte
 
     // Effect.
     useEffect(() => {
-        modalController.current = new Modal("#exportProductItemInputModal");
+        modalController.current = new Modal(`#${modalId}`);
         return () => {
             modalController.current?.dispose();
             modalController.current = null;
@@ -64,6 +66,7 @@ const ProductExportItemInputModal = <TUpsertItem extends IExportProductUpsertIte
     }, [props.model]);
 
     // Computed.
+    const modalId = useMemo(() => `${props.resourceType}ItemInputModal`, []);
     const style = useMemo<React.CSSProperties>(() => ({
         top: "50%",
         left: "50%",
@@ -110,7 +113,7 @@ const ProductExportItemInputModal = <TUpsertItem extends IExportProductUpsertIte
                 productAmountPerUnit: changedData.productAmountPerUnit
             } : undefined,
             ...changedData.vatPercentagePerUnit != null ? {
-                vatAmountPerUnit: changedData.vatPercentagePerUnit
+                vatPercentagePerUnit: changedData.vatPercentagePerUnit
             } : undefined,
             ...changedData.quantity != null ? {
                 quantity: changedData.quantity
@@ -119,10 +122,14 @@ const ProductExportItemInputModal = <TUpsertItem extends IExportProductUpsertIte
     };
 
     return (
-        <div className="modal fade p-3" id="supplyItemInputModal"
-                data-bs-backdrop="static" data-bs-keyboard="false"
-                tabIndex={-1}
-                aria-labelledby="staticBackdropLabel">
+        <div
+            className="modal fade p-3"
+            id={modalId}
+            data-bs-backdrop="static"
+            data-bs-keyboard="false"
+            tabIndex={-1}
+            aria-labelledby="staticBackdropLabel"
+        >
             <div className="modal-dialog" style={style}>
                 <div className="modal-content">
                     <div className="modal-header d-flex justify-content-between">
@@ -177,8 +184,21 @@ const Body = (props: ExportProductItemInputModalBodyProps) => {
         return names.filter(n => n).join(" ");
     };
 
-    const computeProductAmountPerUnitMessageClassName = (): string | undefined => {
+    const computeProductAmountPerUnitMessageClassName = (): string => {
         return props.modelState.messageClass("productAmountPerUnit") ?? "d-none";
+    };
+
+    const computeVatPercentagePerUnitInputClassName = (): string => {
+        const names = [
+            "form-control",
+            props.modelState.inputClassName("vatPercentagePerUnit")
+        ];
+
+        return names.filter(n => n).join(" ");
+    };
+
+    const computeVatPercentagePerUnitMessageClassName = (): string => {
+        return props.modelState.messageClass("vatPercentagePerUnit") ?? "d-none";
     };
 
     const computeQuantityInputClassName = (): string => {
@@ -189,7 +209,7 @@ const Body = (props: ExportProductItemInputModalBodyProps) => {
         return names.filter(n => n).join(" ");
     };
 
-    const computeQuantityMessageClassName = (): string | undefined => {
+    const computeQuantityMessageClassName = (): string => {
         return props.modelState.messageClass("quantity") ?? "d-none";
     };
 
@@ -209,6 +229,23 @@ const Body = (props: ExportProductItemInputModalBodyProps) => {
         }
 
         props.onChanged({ ...props.model, productAmountPerUnit });
+    };
+
+    const handleVatPercentagePerUnitChanged = (event: React.FormEvent<HTMLInputElement>) => {
+        const value = (event.target as HTMLInputElement).value;
+
+        if (!value) {
+            props.onChanged({ ...props.model, vatPercentagePerUnit: null });
+            return;
+        }
+
+        const vatPercentagePerUnit = parseInt(value);
+        if (Number.isNaN(vatPercentagePerUnit)) {
+            event.preventDefault();
+            return;
+        }
+
+        props.onChanged({ ...props.model, vatPercentagePerUnit });
     };
 
     const handleQuantityChanged = (event: React.FormEvent<HTMLInputElement>) => {
@@ -235,7 +272,6 @@ const Body = (props: ExportProductItemInputModalBodyProps) => {
                 <Label text="Giá tiền mỗi đơn vị (vnđ)" required />
                 <input
                     type="number"
-                    name="items[i].productAmountPerUnit"
                     className={computeProductAmountPerUnitInputClassName()}
                     min={0}
                     value={props.model.productAmountPerUnit?.toString() ?? ""}
@@ -243,6 +279,21 @@ const Body = (props: ExportProductItemInputModalBodyProps) => {
                 />
                 <span className={computeProductAmountPerUnitMessageClassName()}>
                     {props.modelState.getMessage("productAmountPerUnit")}
+                </span>
+            </div>
+
+            <div className="col col-12">
+                <Label text="Thuế VAT mỗi đơn vị (%)" required />
+                <input
+                    type="number"
+                    className={computeVatPercentagePerUnitInputClassName()}
+                    min={0}
+                    max={1000}
+                    value={props.model.vatPercentagePerUnit?.toString() ?? ""}
+                    onChange={handleVatPercentagePerUnitChanged}
+                />
+                <span className={computeVatPercentagePerUnitMessageClassName()}>
+                    {props.modelState.getMessage("vatPercentagePerUnit")}
                 </span>
             </div>
 
@@ -265,4 +316,4 @@ const Body = (props: ExportProductItemInputModalBodyProps) => {
     );
 };
 
-export default ProductExportItemInputModal;
+export default ExportProductItemInputModal;

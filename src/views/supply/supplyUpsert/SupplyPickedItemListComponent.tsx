@@ -40,11 +40,13 @@ const SupplyItemList = (props: SupplyItemListProps) => {
     }, [modelState.hasError("items")]);
 
     return (
-        <MainBlock title={blockTitle}
-                color={blockColor}
-                className="h-100"
-                bodyPadding="0"
-                bodyClassName="d-flex justify-content-center align-items-start">
+        <MainBlock
+            title={blockTitle}
+            color={blockColor}
+            className="h-100"
+            bodyPadding="0"
+            bodyClassName="d-flex justify-content-center align-items-start"
+        >
             {model.length > 0 ? (
                 <ul className="list-group list-group-flush w-100">
                     {model.map((item, index) => (
@@ -85,7 +87,9 @@ const SupplyItem = ({ index, model, onEdit, onUnpicked }: SupplyItemProps) => {
         width: "100%"
     }), []);
 
-    const productAmount = model.productAmountPerUnit * model.quantity;
+    const computeTotalAmountText = () => {
+        return amountUtility.getDisplayText(model.productAmountPerUnit * model.quantity);
+    };
     
     if (model.hasBeenDeleted) {
         return null;
@@ -128,7 +132,7 @@ const SupplyItem = ({ index, model, onEdit, onUnpicked }: SupplyItemProps) => {
                         Tổng: 
                     </span>
                     <span>
-                        {amountUtility.getDisplayText(productAmount)}
+                        {computeTotalAmountText()}
                     </span>
                 </div>
             </div>

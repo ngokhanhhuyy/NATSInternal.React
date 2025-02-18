@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, SetStateAction } from "react";
+import React, { useState, useRef, useMemo, useEffect, SetStateAction } from "react";
 import { useNavigate } from "react-router-dom";
 import type { ProductBasicModel } from "@/models/product/productBasicModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
@@ -16,10 +16,20 @@ import DeleteButton from "@/views/form/DeleteButtonComponent";
 
 // Child components.
 import CustomerPicker from "../../customerPicker/CustomerPickerComponent";
-import ExportProductPicker from "./productPicker/ExportProductPickerComponent";
+import ProductPicker from "./productPicker/ProductPicker";
+import PickedItemList from "./PickedItemListComponent";
 import Information from "./InformationComponent";
 import Summary from "./SummaryComponent";
+import ExportProductItemInputModal from "./itemInputModal/ItemInputModalComponent";
 
+// Types.
+type ItemChangedData<
+        TUpsertItem extends IExportProductUpsertItemModel<TUpsertItem>>
+    = Partial<TUpsertItem>;
+type ModalPromiseResolve<
+        TUpsertItem extends IExportProductUpsertItemModel<TUpsertItem>>
+    = (changedData: ItemChangedData<TUpsertItem> | PromiseLike<ItemChangedData<TUpsertItem>>)
+    => void;
 // Props.
 interface ExportProductUpsertViewProps<
         TUpsert extends IExportProductUpsertModel<TUpsert, TUpsertItem, TUpsertPhoto>,
@@ -61,12 +71,14 @@ const ExportProductUpsertView = <
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
     const [model, setModel] = useState(() => props.initializeModel());
-    const [initialLoadingState, setInitialLoadingState] = useState(() => ({
+    const [initialLoadingStates, setInitialLoadingStates] = useState(() => ({
         upsertForm: true,
         customerPickerList: true,
         productPickerList: true
     }));
     const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
+    const [modalModel, setModalModel] = useState<TUpsertItem | null>(() => null);
+    const modalPromiseResolve = useRef<ModalPromiseResolve<TUpsertItem> | null>(null);
 
     // Effect.
     useEffect(() => {
@@ -94,18 +106,18 @@ const ExportProductUpsertView = <
         };
 
         loadAsync().finally(() => {
-            if (initialLoadingState.upsertForm) {
-                setInitialLoadingState(state => ({ ...state, upsertForm: false }));
+            if (initialLoadingStates.upsertForm) {
+                setInitialLoadingStates(states => ({ ...states, upsertForm: false }));
             }
         });
     }, []);
 
     useEffect(() => {
-        const { upsertForm, customerPickerList, productPickerList } = initialLoadingState;
+        const { upsertForm, customerPickerList, productPickerList } = initialLoadingStates;
         if (!upsertForm && !customerPickerList && !productPickerList) {
             onInitialLoadingFinished();
         }
-    }, [initialLoadingState]);
+    }, [initialLoadingStates]);
 
     // Computed.
     const stepNames = useMemo<string[]>(() => {
@@ -129,40 +141,33 @@ const ExportProductUpsertView = <
     };
 
     // Callbacks.
-    const handleChanged = (index: number, changedData: Partial<TUpsertItem>) => {
-        const items = model.items
-            .map((evaluatingItem, evaluatingIndex) => {
-                if (index === evaluatingIndex) {
-                    return evaluatingItem.from(changedData);
-                }
-
-                return evaluatingItem;
-            });
-        setModel(model => model.from({ items } as Partial<TUpsert>));
+    const openItemModalAsync = async (item: TUpsertItem) => {
+        setModalModel(item);
+        return new Promise<Partial<TUpsertItem>>(resolve => {
+            return modalPromiseResolve.current = resolve;
+        });
     };
 
-    const handlePicked = (product: ProductBasicModel) => {
-        const item = model.items.find(i => i.product.id === product.id);
-        if (!item) {
-            setModel(model => model.from({
-                items: [
-                    ...model.items,
-                    props.initializeItemModel(product)
-                ]
-            } as Partial<TUpsert>));
-        } else {
-            setModel(model => model.from({
-                items: model.items.map(evaluatingItem => {
-                    if (evaluatingItem.product.id === product.id) {
-                        return evaluatingItem.from({
-                            quantity: evaluatingItem.quantity + 1
-                        } as Partial<TUpsertItem>);
-                    }
+    const handlePicked = async (product: ProductBasicModel) => {
+        const newItem = props.initializeItemModel(product);
+        const changedData = await openItemModalAsync(newItem);
+        setModel(model => model?.from({
+            items: [ ...model.items, newItem.from(changedData) ]
+        } as Partial<TUpsert>));
+    };
 
+    const handleEdit = async (index: number) => {
+        const item = model.items[index];
+        const changedData = await openItemModalAsync(item);
+        setModel(model => model.from({
+            items: model.items.map((evaluatingItem, evaluatingIndex) => {
+                if (evaluatingIndex !== index) {
                     return evaluatingItem;
-                })
-            } as Partial<TUpsert>));
-        }
+                }
+
+                return evaluatingItem.from(changedData);
+            })
+        } as Partial<TUpsert>));
     };
 
     const handleUnpicked = (index: number) => {
@@ -174,25 +179,20 @@ const ExportProductUpsertView = <
     };
 
     return (
-        <UpsertViewContainer isInitialLoading={isInitialLoading} modelState={modelState}
-                submittingAction={() => props.submitAsync(model)}
-                onSubmissionSucceeded={async (submittedId) => {
-                    await navigate(props.getDetailRoute(routeGenerator, submittedId));
-                }}
-                deletingAction={() => props.deleteAsync()}
-                onDeletionSucceeded={async () => {
-                    await navigate(props.getListRoute(routeGenerator));
-                }}>
+        <UpsertViewContainer
+            isInitialLoading={isInitialLoading}
+            modelState={modelState}
+            submittingAction={() => props.submitAsync(model)}
+            onSubmissionSucceeded={async (submittedId) => {
+                await navigate(props.getDetailRoute(routeGenerator, submittedId));
+            }}
+            deletingAction={() => props.deleteAsync()}
+            onDeletionSucceeded={async () => {
+                await navigate(props.getListRoute(routeGenerator));
+            }}
+        >
             {/* Step bar and error summary */}
             <div className="row g-3 justify-content-center">
-                {/* ResourceAccess */}
-                {/* <div className="col col-12" v-if="!props.isForCreating">
-                    <ResourceAccess :resource-type="resourceType"
-                        :resource-primary-id="model.id"
-                        accessMode="Update"
-                    />
-                </div> */}
-
                 {/* Step bar */}
                 <div className="col col-12=">
                     <div className="row g-0 w-100 bg-white px-2 py-2
@@ -231,10 +231,10 @@ const ExportProductUpsertView = <
                 {/* Customer selector */}
                 <div className={`col col-12 ${currentStepIndex === 1 ? "" : "d-none"}`}>
                     <CustomerPicker
-                        isInitialLoading={initialLoadingState.upsertForm}
+                        isInitialLoading={initialLoadingStates.customerPickerList}
                         onInitialLoadingFinished={() => {
-                            setInitialLoadingState((state) => ({
-                                ...state,
+                            setInitialLoadingStates((states) => ({
+                                ...states,
                                 customerPickerList: false
                             }));
                         }}
@@ -246,17 +246,31 @@ const ExportProductUpsertView = <
                 </div>
 
                 {/* Product selector */}
-                <div className={`col col-12 ${currentStepIndex === 2 ? "" : "d-none"}`}>
-                    <ExportProductPicker
+                <div className={`col col-lg-6 col-12 pe-lg-2 pe-0 pb-lg-0 pb-3
+                                ${currentStepIndex === 2 ? "" : "d-none"}`}>
+                    <ProductPicker
+                        modelState={modelState}
+                        isInitialLoading={initialLoadingStates.productPickerList}
                         onInitialLoadingFinished={() => {
-                            setInitialLoadingState(state => ({
-                                ...state,
+                            setInitialLoadingStates(states => ({
+                                ...states,
                                 productPickerList: false
                             }));
                         }}
                         pickedItems={model.items}
-                        onChanged={handleChanged}
                         onPicked={handlePicked}
+                        onUnpicked={handleUnpicked}
+                    />
+                </div>
+
+                {/* Picked items */}
+                <div className={`col col-lg-6 col-12 ps-lg-2 ps-0
+                                ${currentStepIndex === 2 ? "" : "d-none"}`}>
+                    {/* List */}
+                    <PickedItemList
+                        model={model.items}
+                        modelState={modelState}
+                        onEdit={handleEdit}
                         onUnpicked={handleUnpicked}
                     />
                 </div>
@@ -271,6 +285,18 @@ const ExportProductUpsertView = <
                     />
                 </div>
             </div>
+
+            {/* Item input modal */}
+            <ExportProductItemInputModal
+                resourceType={props.resourceType}
+                model={modalModel}
+                onCancel={() => setModalModel(null)}
+                onSaved={(changedData) => {
+                    modalPromiseResolve.current?.(changedData);
+                    setModalModel(null);
+                    modalPromiseResolve.current = null;
+                }}
+            />
 
             {/* Action buttons */}
             <div className="row g-3 justify-content-end">
