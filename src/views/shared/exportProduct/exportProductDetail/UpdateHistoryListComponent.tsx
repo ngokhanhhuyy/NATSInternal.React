@@ -86,7 +86,7 @@ const UpdateHistory = <
                         </div>
 
                         {/* UpdatedUser */}
-                        <div className={`${columnClassName} mt-md-0 mt-3`}>
+                        <div className={columnClassName}>
                             <span className="fw-bold">Nhân viên chỉnh sửa</span>
                             <Link to={model.updatedUser.detailRoute}>
                                 {model.updatedUser.fullName}

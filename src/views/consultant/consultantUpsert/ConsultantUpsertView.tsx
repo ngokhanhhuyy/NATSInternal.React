@@ -93,12 +93,12 @@ const ConsultantUpsertView = ({ id }: { id?: number }) => {
     }, [id]);
 
     // Callback.
-    const handleSubmissionAsync = async (): Promise<void> => {
+    const handleSubmissionAsync = async (): Promise<number> => {
         if (id == null) {
-            const createdId = await service.createAsync(model.toRequestDto());
-            setModel(model => model.from({ id: createdId }));
+            return await service.createAsync(model.toRequestDto());
         } else {
             await service.updateAsync(model.id, model.toRequestDto());
+            return model.id;
         }
     };
 
@@ -106,8 +106,8 @@ const ConsultantUpsertView = ({ id }: { id?: number }) => {
         await service.deleteAsync(model.id);
     };
 
-    const handleSucceededSubmissionAsync = async (): Promise<void> => {
-        await navigate(routeGenerator.getConsultantDetailRoutePath(id ?? model.id));
+    const handleSucceededSubmissionAsync = async (submissionResult: number): Promise<void> => {
+        await navigate(routeGenerator.getConsultantDetailRoutePath(submissionResult));
     };
 
     const handleSucceededDeletionAsync = async (): Promise<void> => {
@@ -181,8 +181,8 @@ const ConsultantUpsertView = ({ id }: { id?: number }) => {
                                         maxLength={255}
                                         style={{ minHeight: "150px" }}
                                         value={model.updatedReason}
-                                        onValueChanged={note => {
-                                            setModel(model => model.from({ note }));
+                                        onValueChanged={updatedReason => {
+                                            setModel(model => model.from({ updatedReason }));
                                         }}
                                         placeholder="Lý do chỉnh sửa"
                                     />

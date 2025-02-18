@@ -22,7 +22,8 @@ import UpsertViewContainer from "@/views/layouts/UpsertViewContainerComponent";
 import MainBlock from "@/views/layouts/MainBlockComponent";
 
 // Child components.
-import ProductPicker from "./productPicker/ProductPickerComponent";
+import ProductPicker
+    from "@/views/shared/hasProduct/upsert/productPicker/ProductPickerComponent";
 import SupplyPickedItemList from "./SupplyPickedItemListComponent";
 import SupplyItemInputModal from "./itemInputModal/SupplyItemInputModalComponent";
 

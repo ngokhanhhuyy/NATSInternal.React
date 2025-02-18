@@ -9,20 +9,24 @@ interface InputProps {
 }
 
 function Input({ modelErrorState, value, onValueChanged, propertyName }: InputProps) {
-    // Memo.
+    // Computed.
     const className = useMemo<string | undefined>(() => {
         return `form-control ${modelErrorState.inputClassName(propertyName)}`;
     }, [modelErrorState]);
 
-    // Functions.
+    // Callback.
     function onInput(event: React.ChangeEvent<HTMLInputElement>): void {
         onValueChanged(event.target.value);
     }
     
     return (
-        <input type={propertyName === "userName" ? "text" : "password"}
-                className={className} placeholder=""
-                value={value} onInput={onInput} />
+        <input
+            type={propertyName === "userName" ? "text" : "password"}
+            autoCapitalize="off"
+            className={className}
+            placeholder=""
+            value={value} onInput={onInput}
+        />
     );
 }
 

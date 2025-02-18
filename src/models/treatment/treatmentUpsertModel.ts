@@ -31,8 +31,9 @@ export class TreatmentUpsertModel
             statsDateTime: this.statsDateTime
                 .fromDateTimeResponseDto(responseDto.statsDateTime),
             serviceAmountBeforeVat: responseDto.serviceAmountBeforeVat,
-            serviceVatPercentage: responseDto.serviceVatAmount /
-                responseDto.serviceAmountBeforeVat * 100,
+            serviceVatPercentage: responseDto.serviceAmountBeforeVat === 0
+                ? 0
+                : responseDto.serviceVatAmount / responseDto.serviceAmountBeforeVat * 100,
             note: responseDto.note ?? "",
             customer: new CustomerBasicModel(responseDto.customer),
             items: responseDto.items?.map(i => new TreatmentUpsertItemModel(i)) ?? [],
@@ -83,7 +84,7 @@ export class TreatmentUpsertModel
     
     public toRequestDto(): RequestDtos.Treatment.Upsert {
         return {
-            statsDateTime: this.statsDateTime.toString(),
+            statsDateTime: this.statsDateTime.toRequestDto(),
             serviceAmountBeforeVat: this.serviceAmountBeforeVat,
             serviceVatFactor: this.serviceVatPercentage / 100,
             note: this.note || null,

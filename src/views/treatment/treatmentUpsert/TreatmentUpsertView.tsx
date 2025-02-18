@@ -91,8 +91,15 @@ const TreatmentUpsertView = ({ id }: { id?: number }) => {
                     }}
                     v-model="model.serviceVatPercentage"
                     suffix="%" min={0} max={100}
+                    disabled={model.serviceAmountBeforeVat === 0}
                 />
                 <ValidationMessage name="serviceVatAmount" />
+                {model.serviceAmountBeforeVat === 0 && (
+                    <span className="text-secondary opacity-50">
+                        * <b>Thuế dịch vụ</b> chỉ có thể được sửa khi&nbsp;
+                        <b>giá dịch vụ</b> lớn hơn 0.
+                    </span>
+                )}
             </div>
         </>
     );

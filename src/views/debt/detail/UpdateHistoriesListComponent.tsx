@@ -149,7 +149,7 @@ const UpdateHistoryItem = <TUpdateHistory extends IDebtUpdateHistoryModel>
                     )}
 
                     {/* Note */}
-                    {isNoteVisible() && (
+                    {model.oldNote != model.newNote && (
                         <div className="row g-3">
                             <div className={columnClassName}>
                                 <Label text="Ghi chú (cũ)" />

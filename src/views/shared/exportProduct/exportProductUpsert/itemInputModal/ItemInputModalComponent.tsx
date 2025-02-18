@@ -90,6 +90,19 @@ const ExportProductItemInputModal = <
             };
         }
 
+        // Validate VatPercentagePerUnit.
+        if (changedData.vatPercentagePerUnit == null) {
+            errors = {
+                ...errors,
+                vatPercentagePerUnit: ["Phần trăm VAT mỗi sản phẩm không được bỏ trống."]
+            };
+        } else if (changedData.vatPercentagePerUnit < 0) {
+            errors = {
+                ...errors,
+                vatPercentagePerUnit: ["Phần trăm VAT mỗi sản phẩm phải lớn hơn hoặc bằng 0."]
+            };
+        }
+
         // Validate Quantity.
         if (changedData.quantity == null) {
             errors = {

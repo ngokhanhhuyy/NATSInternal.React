@@ -22,34 +22,18 @@ const CustomerDebtOperations = ({ model }: { model: CustomerDetailModel }) => {
 
     // Header.
     const header = (() => {
-        if (model) {
-            return (
-                <>
-                    <Link to={routeGenerator.getDebtIncurrenceCreateRoutePath()}
-                            className="btn btn-primary btn-sm me-2">
-                        <i className="bi bi-plus-lg me-1"></i>
-                        <span>Ghi nợ</span>
-                    </Link>
-                    <Link to={routeGenerator.getDebtIncurrenceCreateRoutePath()}
-                            className="btn btn-success btn-sm">
-                        <i className="bi bi-plus-lg me-1"></i>
-                        <span>Trả nợ</span>
-                    </Link>
-                </>
-            );
-        }
-
         return (
             <>
-                <button type="button"
-                        className="btn btn-primary btn-sm me-2 placeholder disabled">
-                    <i className="bi bi-plus-lg me-1 opacity-0"></i>
-                    <span className="opacity-0">Ghi nợ</span>
-                </button>
-                <button type="button" className="btn btn-success btn-sm placeholder disabled">
-                    <i className="bi bi-plus-lg me-1 opacity-0"></i>
-                    <span className="opacity-0">Trả nợ</span>
-                </button>
+                <Link to={routeGenerator.getDebtIncurrenceCreateRoutePath()}
+                        className="btn btn-primary btn-sm me-2">
+                    <i className="bi bi-plus-lg me-1"></i>
+                    <span>Ghi nợ</span>
+                </Link>
+                <Link to={routeGenerator.getDebtPaymentCreateRoutePath()}
+                        className="btn btn-success btn-sm">
+                    <i className="bi bi-plus-lg me-1"></i>
+                    <span>Trả nợ</span>
+                </Link>
             </>
         );
     })();

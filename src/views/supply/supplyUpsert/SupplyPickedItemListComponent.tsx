@@ -26,6 +26,9 @@ interface SupplyItemProps {
 const SupplyItemList = (props: SupplyItemListProps) => {
     const { model, modelState, onEdit, onUnpicked } = props;
 
+    // Dependency.
+    const amountUtility = useMemo(useAmountUtility, []);
+
     // Computed.
     const blockTitle = useMemo<string>(() => {
         if (modelState.hasError("items")) {
@@ -38,6 +41,16 @@ const SupplyItemList = (props: SupplyItemListProps) => {
     const blockColor = useMemo<"primary" | "danger">(() => {
         return modelState.hasError("items") ? "danger" : "primary";
     }, [modelState.hasError("items")]);
+
+    const computeAmountTexts = (): string => {
+        const amount = model.reduce((total, currentItem) => {
+            return total + (currentItem.productAmountPerUnit * currentItem.quantity);
+        }, 0);
+
+        return amountUtility.getDisplayText(amount);
+    };
+
+    const computedAmountTexts = computeAmountTexts();
 
     return (
         <MainBlock
@@ -58,10 +71,17 @@ const SupplyItemList = (props: SupplyItemListProps) => {
                             key={index}
                         />
                     ))}
+                    <li className="list-group-item d-flex justify-content-end
+                                    align-items-center small bg-transparent">
+                        <span className="fw-bold me-3">Tổng cộng:</span>
+                        <span className="text-primary">
+                            {computedAmountTexts}
+                        </span>
+                    </li>
                 </ul>
             ) : (
                 <span className="opacity-50 align-self-center p-4">
-                    Chưa chọn sản phẩm
+                    Chưa chọn sản phẩm nào
                 </span>
             )}
         </MainBlock>

@@ -64,7 +64,7 @@ const PickedItemList = <TUpsertItem extends IExportProductUpsertItemModel<TUpser
             className="h-100"
             bodyPadding={0}
         >
-            <ul className="list-group list-group-flush">
+            <ul className="list-group list-group-flush h-100">
                 {model.length
                     ? (
                         <>
@@ -91,7 +91,7 @@ const PickedItemList = <TUpsertItem extends IExportProductUpsertItemModel<TUpser
                         </>
                     ) : (
                         <li className="list-group-item d-flex justify-content-center
-                                        align-items-center p-3 bg-transparent">
+                                        align-items-center p-3 bg-transparent h-100">
                             <span className="opacity-50">
                                 Chưa chọn sản phẩm nào
                             </span>

@@ -16,7 +16,8 @@ import DeleteButton from "@/views/form/DeleteButtonComponent";
 
 // Child components.
 import CustomerPicker from "../../customerPicker/CustomerPickerComponent";
-import ProductPicker from "./productPicker/ProductPicker";
+import ProductPicker
+    from "@/views/shared/hasProduct/upsert/productPicker/ProductPickerComponent";
 import PickedItemList from "./PickedItemListComponent";
 import Information from "./InformationComponent";
 import Summary from "./SummaryComponent";
@@ -249,7 +250,6 @@ const ExportProductUpsertView = <
                 <div className={`col col-lg-6 col-12 pe-lg-2 pe-0 pb-lg-0 pb-3
                                 ${currentStepIndex === 2 ? "" : "d-none"}`}>
                     <ProductPicker
-                        modelState={modelState}
                         isInitialLoading={initialLoadingStates.productPickerList}
                         onInitialLoadingFinished={() => {
                             setInitialLoadingStates(states => ({
@@ -259,7 +259,6 @@ const ExportProductUpsertView = <
                         }}
                         pickedItems={model.items}
                         onPicked={handlePicked}
-                        onUnpicked={handleUnpicked}
                     />
                 </div>
 

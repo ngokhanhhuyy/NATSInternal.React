@@ -38,11 +38,14 @@ const Item = ({ model }: { model: ConsultantUpdateHistoryModel }) => {
     return (
         <>
             <h2 className="accordion-header">
-                <button className="accordion-button collapsed" type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#flush-collapseOne"
-                        aria-expanded="false"
-                        aria-controls="flush-collapseOne">
+                <button
+                    className="accordion-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#flush-collapseOne"
+                    aria-expanded="false"
+                    aria-controls="flush-collapseOne"
+                    >
                     {updatedReasonText}
                 </button>
             </h2>
@@ -62,15 +65,10 @@ const Item = ({ model }: { model: ConsultantUpdateHistoryModel }) => {
                         {/* UpdatedUser */}
                         <div className={columnClassName}>
                             <span className="fw-bold">Nhân viên chỉnh sửa</span>
-                            <div className="d-flex justify-content-start
-                                        align-items-center">
-                                <img className="img-thumbnail rounded-circle avatar me-2"
-                                        src={model.updatedUser.avatarUrl} />
-                                <Link to={model.updatedUser.detailRoute}
-                                        className="user-fullname">
-                                    {model.updatedUser.fullName}
-                                </Link>
-                            </div>
+                            <Link to={model.updatedUser.detailRoute}
+                                    className="user-fullname">
+                                {model.updatedUser.fullName}
+                            </Link>
                         </div>
                     </div>
 
@@ -136,7 +134,7 @@ const Item = ({ model }: { model: ConsultantUpdateHistoryModel }) => {
 
 const Field = ({ text }: { text: string }) => {
     if (!text) {
-        return <span className="opacity-50 text-primary">Để trống</span>;
+        return <span className="opacity-50 text-secondary">Để trống</span>;
     }
 
     return <span className="text-primary" >{text}</span>;
