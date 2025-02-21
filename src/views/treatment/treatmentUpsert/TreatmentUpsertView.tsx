@@ -18,7 +18,7 @@ import ExportProductUpsertView
 // Component.
 const TreatmentUpsertView = ({ id }: { id?: number }) => {
     // Dependencies.
-    const service = useMemo(useTreatmentService, []);
+    const service = useTreatmentService();
     const amountUtility = useMemo(useAmountUtility, []);
 
     // Computed.
@@ -93,13 +93,13 @@ const TreatmentUpsertView = ({ id }: { id?: number }) => {
                     suffix="%" min={0} max={100}
                     disabled={model.serviceAmountBeforeVat === 0}
                 />
-                <ValidationMessage name="serviceVatAmount" />
                 {model.serviceAmountBeforeVat === 0 && (
-                    <span className="text-secondary opacity-50">
+                    <span className="text-secondary opacity-50 d-block">
                         * <b>Thuế dịch vụ</b> chỉ có thể được sửa khi&nbsp;
                         <b>giá dịch vụ</b> lớn hơn 0.
                     </span>
                 )}
+                <ValidationMessage name="serviceVatAmount" />
             </div>
         </>
     );
@@ -111,7 +111,7 @@ const TreatmentUpsertView = ({ id }: { id?: number }) => {
                 <div className={labelColumnClassName}>
                     <Label text="Giá sản phẩm" />
                 </div>
-                <div className={`col ${getProductAmountClassName(model)}`}>
+                <div className={`col text-primary ${getProductAmountClassName(model)}`}>
                     <span>
                         {amountUtility.getDisplayText(model.productAmountAfterVat)}
                     </span>
@@ -128,7 +128,7 @@ const TreatmentUpsertView = ({ id }: { id?: number }) => {
                 <div className={labelColumnClassName}>
                     <Label text="Giá dịch vụ" />
                 </div>
-                <div className={`col ${getServiceAmountClassName(model)}`}>
+                <div className={`col text-primary ${getServiceAmountClassName(model)}`}>
                     <span>
                         {amountUtility.getDisplayText(model.serviceAmountAfterVat)}
                     </span>

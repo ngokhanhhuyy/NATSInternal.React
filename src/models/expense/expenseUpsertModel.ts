@@ -7,18 +7,18 @@ import { StatsDateTimeInputModel } from "../dateTime/statsDateTimeInputModel";
 export class ExpenseUpsertModel
         extends AbstractClonableModel<ExpenseUpsertModel>
         implements
-            IHasStatsUpsertModel,
+            IHasStatsUpsertModel<ExpenseUpsertModel>,
             IHasMultiplePhotoUpsertModel<ExpenseUpsertPhotoModel> {
-    public id: number = 0;
-    public amount: number = 0;
-    public statsDateTime: StatsDateTimeInputModel = new StatsDateTimeInputModel();
-    public category: ExpenseCategory = ExpenseCategory.Equipment;
-    public note: string = "";
-    public payeeName: string = "";
-    public photos: ClonableArrayModel<ExpenseUpsertPhotoModel> = new ClonableArrayModel();
-    public updatedReason: string = "";
-    public readonly canSetStatsDateTime: boolean | undefined;
-    public readonly canDelete: boolean | undefined;
+    public readonly id: number = 0;
+    public readonly amount: number = 0;
+    public readonly statsDateTime: StatsDateTimeInputModel = new StatsDateTimeInputModel();
+    public readonly category: ExpenseCategory = ExpenseCategory.Equipment;
+    public readonly note: string = "";
+    public readonly payeeName: string = "";
+    public readonly photos: ClonableArrayModel<ExpenseUpsertPhotoModel> = new ClonableArrayModel();
+    public readonly updatedReason: string = "";
+    public readonly canSetStatsDateTime: boolean = false;
+    public readonly canDelete: boolean = false;
     
     public fromDetailResponseDto(detail: ResponseDtos.Expense.Detail): ExpenseUpsertModel {
         let photos = this.photos;
@@ -28,6 +28,7 @@ export class ExpenseUpsertModel
         }
 
         return this.from({
+            id: detail.id,
             amount: detail.amountAfterVat,
             statsDateTime: this.statsDateTime.fromDateTimeResponseDto(detail.statsDateTime),
             category: detail.category,

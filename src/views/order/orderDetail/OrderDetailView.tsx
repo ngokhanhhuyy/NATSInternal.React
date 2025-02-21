@@ -9,7 +9,7 @@ import ExportProductDetailView from
 // Component.
 const OrderDetailView = ({ id }: { id: number }) => {
     // Dependency.
-    const service = useMemo(useOrderService, []);
+    const service = useOrderService();
 
     // Callbacks.
     const initialLoadAsync = async () => {

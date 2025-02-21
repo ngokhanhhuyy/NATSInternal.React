@@ -19,7 +19,7 @@ import Results from "@/views/shared/hasStatsList/HasStatsListResultsComponent";
 const ConsultantListView = () => {
     // Dependencies.
     const alertModalStore = useAlertModalStore();
-    const service = useMemo(useConsultantService, []);
+    const service = useConsultantService();
     
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished, initialData } = useViewStates();

@@ -83,13 +83,13 @@ const Summary = <
                         <span className="fw-bold">Ngày đặt hàng</span>
                     </div>
                     <div className="col">
-                        {model.statsDateTime.displayText
-                            ? (
-                                <span className="text-primary">
-                                    {model.statsDateTime.displayText}
-                                </span>
-                            ) : <span className="opacity-50">Chưa nhập ngày đặt hàng</span>
-                        }
+                        {model.statsDateTime.displayText ? (
+                            <span className="text-primary">
+                                {model.statsDateTime.displayText}
+                            </span>
+                        ) : (
+                            <span className="opacity-50">Chưa nhập ngày đặt hàng</span>
+                        )}
                     </div>
                 </div>
                 
@@ -113,7 +113,7 @@ const Summary = <
                     <div className={labelColumnClassName}>
                         <span className="fw-bold">Tổng giá</span>
                     </div>
-                    <div className={`col ${amountAfterVatClassName}`}>
+                    <div className={`col text-primary ${amountAfterVatClassName}`}>
                         <span>
                             {amountUtility.getDisplayText(model.amountAfterVat)}
                         </span>&nbsp;

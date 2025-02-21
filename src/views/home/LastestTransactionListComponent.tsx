@@ -11,7 +11,7 @@ import MainBlock from "../layouts/MainBlockComponent";
 // Component.
 const LastestTransactionList = () => {
     // Dependencies.
-    const service = useMemo(useStatsService, []);
+    const service = useStatsService();
 
     // Model and states.
     const [model, setModel] = useState<LastestTransactionModel[]>(() => []);

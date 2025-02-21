@@ -19,7 +19,7 @@ import Results from "../supplyList/ResultsComponent";
 const SupplyListView = () => {
     // Dependencies.
     const alertModalStore = useAlertModalStore();
-    const service = useMemo(useSupplyService, []);
+    const service = useSupplyService();
 
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished, initialData } = useViewStates();

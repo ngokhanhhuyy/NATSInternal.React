@@ -130,7 +130,8 @@ const ExportProductItemInputModal = <
             } : undefined,
             ...changedData.quantity != null ? {
                 quantity: changedData.quantity
-            } : undefined
+            } : undefined,
+            hasBeenChanged: true
         } as Partial<TUpsertItem>);
     };
 

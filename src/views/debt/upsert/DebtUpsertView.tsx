@@ -56,7 +56,7 @@ const DebtUpsertView = <TUpsert extends IDebtUpsertModel<TUpsert>>
     const navigate = useNavigate();
     const alertModalStore = useAlertModalStore();
     const initialDataStore = useInitialDataStore();
-    const routeGenerator = useMemo(useRouteGenerator, []);
+    const routeGenerator = useRouteGenerator();
 
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();

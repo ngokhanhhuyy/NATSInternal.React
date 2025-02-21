@@ -23,7 +23,7 @@ const ConsultantDetailView = ({ id }: { id: number }) => {
     // Dependencies.
     const navigate = useNavigate();
     const alertModalStore = useAlertModalStore();
-    const service = useMemo(useConsultantService, []);
+    const service = useConsultantService();
     const amountUtility = useMemo(useAmountUtility, []);
     
     // Model and states.

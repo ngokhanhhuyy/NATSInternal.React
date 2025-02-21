@@ -26,7 +26,7 @@ interface CustomerListProps {
 // Component.
 const CustomerList = (props: CustomerListProps) => {
     // Dependencies.
-    const service = useMemo(useCustomerService, []);
+    const service = useCustomerService();
     const initialData = useInitialDataStore(store => store.data.customer);
     const getSubmissionErrorConfirmationAsync = useAlertModalStore(store => {
         return store.getSubmissionErrorConfirmationAsync;

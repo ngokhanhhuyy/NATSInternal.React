@@ -11,7 +11,7 @@ import ExportProductDetailView from
 // Component.
 const TreatmentDetailView = ({ id }: { id: number }) => {
     // Dependency.
-    const service = useMemo(useTreatmentService, []);
+    const service = useTreatmentService();
     const amountUtility = useMemo(useAmountUtility, []);
 
     // Callbacks.

@@ -5,6 +5,7 @@ import { useCustomerService } from "@/services/customerService";
 import { Gender } from "@/services/dtos/enums";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
 import { useRouteGenerator } from "@/router/routeGenerator";
 import { NotFoundError } from "@/errors";
 
@@ -38,12 +39,13 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
     // Dependencies.
     const navigate = useNavigate();
     const alertModelStore = useAlertModalStore();
-    const customerService = useMemo(useCustomerService, []);
-    const routeGenerator = useMemo(useRouteGenerator, []);
+    const customerService = useCustomerService();
+    const routeGenerator = useRouteGenerator();
     
     // Internal states.
     const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
     const [model, setModel] = useState(() => new CustomerUpsertModel());
+    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model);
     
     // Computed.
     const blockTitle = useMemo<string>(() => {
@@ -62,17 +64,23 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
                     const canCreate = await customerService.getCreatingPermissionAsync();
                     if (!canCreate) {
                         await alertModelStore.getUnauthorizationConfirmationAsync();
-                        await navigate(-1);
+                        await navigate(routeGenerator.getCustomerListRoutePath());
                     }
+                    
+                    setOriginalModel(model);
                     return;
                 }
     
                 const responseDto = await customerService.getDetailAsync(props.id);
-                setModel(model => model.fromResponseDto(responseDto));
+                setModel(model => {
+                    const loadedModel = model.fromResponseDto(responseDto);
+                    setOriginalModel(loadedModel);
+                    return loadedModel;
+                });
             } catch (error) {
                 if (error instanceof NotFoundError) {
                     await alertModelStore.getNotFoundConfirmationAsync();
-                    await navigate(-1);
+                    await navigate(routeGenerator.getCustomerListRoutePath());
                     return;
                 }
                 
@@ -82,7 +90,8 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
 
         initialLoadAsync().finally(onInitialLoadingFinished);
     }, []);
-
+    
+    // Computed.
     const genderOptions = useMemo(() => [
         { value: Gender[Gender.Male], displayName: "Nam" },
         { value: Gender[Gender.Female], displayName: "Nữ" }
@@ -111,11 +120,15 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
     }, []);
 
     return (
-        <UpsertViewContainer modelState={modelState} isInitialLoading={isInitialLoading}
-                submittingAction={handleSubmissionAsync}
-                onSubmissionSucceeded={handleSucceededSubmissionAsync}
-                deletingAction={handleDeletionAsync}
-                onDeletionSucceeded={handleSucceededDeletionAsync}>
+        <UpsertViewContainer
+            modelState={modelState}
+            isInitialLoading={isInitialLoading}
+            submittingAction={handleSubmissionAsync}
+            onSubmissionSucceeded={handleSucceededSubmissionAsync}
+            deletingAction={handleDeletionAsync}
+            onDeletionSucceeded={handleSucceededDeletionAsync}
+            isModelDirty={isModelDirty}
+        >
             <div className="row g-3 justify-content-end">
                 <div className="col col-12">
                     <MainBlock

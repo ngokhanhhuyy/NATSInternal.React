@@ -25,9 +25,9 @@ interface MainListProps {
 // Component.
 const MainList = ({ isInitialLoading, onInitialLoadingFinished }: MainListProps) => {
     // Dependencies.
-    const productService = useMemo(useProductService, []);
-    const brandService = useMemo(useBrandService, []);
-    const productCategoryService = useMemo(useProductCategoryService, []);
+    const productService = useProductService();
+    const brandService = useBrandService();
+    const productCategoryService = useProductCategoryService();
     const productInitialResponseDto = useInitialDataStore(store => store.data.product);
     const alertModalStore = useAlertModalStore();
     const navigate = useNavigate();

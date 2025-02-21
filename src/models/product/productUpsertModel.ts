@@ -39,14 +39,14 @@ export class ProductUpsertModel
             categoryOptions: ResponseDtos.ProductCategory.Minimal[],
             brandOptions: ResponseDtos.Brand.Minimal[],
             detail?: ResponseDtos.Product.Detail): ProductUpsertModel {
-        let newModel: ProductUpsertModel = this.from({
+        const newModel: ProductUpsertModel = this.from({
             brandOptions: brandOptions?.map(dto => new BrandMinimalModel(dto)) ?? [],
             categoryOptions: categoryOptions
                 ?.map(dto => new ProductCategoryMinimalModel(dto)) ?? []
         });
 
         if (detail) {
-            newModel = this.from({
+            return newModel.from({
                 id: detail.id,
                 name: detail.name,
                 description: detail.description ?? "",

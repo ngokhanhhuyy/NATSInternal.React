@@ -13,7 +13,6 @@ interface Props extends React.ComponentPropsWithoutRef<"input"> {
 
 // Component.
 const MoneyInput = (props: Props) => {
-    const { value, onValueChanged, ...rest } = props;
 
     // Dependencies.
     const formContext = useContext(FormContext);
@@ -28,7 +27,7 @@ const MoneyInput = (props: Props) => {
     const [tempValue, setTempValue] = useState<string>(() => {
         const prefix = props.prefix ?? "";
         const suffix = props.suffix ?? "";
-        return prefix + value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + suffix;
+        return prefix + props.value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + suffix;
     });
     const inputElement = useRef<HTMLInputElement>(null!);
 
@@ -36,8 +35,9 @@ const MoneyInput = (props: Props) => {
     useEffect(() => {
         const prefix = props.prefix ?? "";
         const suffix = props.suffix ?? "";
-        setTempValue(prefix + value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + suffix);
-    }, [props.prefix, props.suffix, value]);
+        const formattedValue = props.value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        setTempValue(prefix + formattedValue + suffix);
+    }, [props.prefix, props.suffix, props.value]);
 
     useEffect(() => {
         resetCaret();
@@ -46,7 +46,7 @@ const MoneyInput = (props: Props) => {
     // Computed.
     const computeClassName = (): string => {
         const classNames: (string | null | undefined)[] = ["form-control", props.className];
-        if (props.name) {
+        if (props.name && !props.disabled && modelState?.inputClassName(props.name)) {
             classNames.push(modelState?.inputClassName(props.name));
         }
 
@@ -81,8 +81,7 @@ const MoneyInput = (props: Props) => {
         }
 
         // Add thousand-separators back.
-        const formattedNumber = valueAsString
-            .replaceAll(/\B(?=(\d{3})+(?!\d))/g, " ");
+        const formattedNumber = valueAsString.replaceAll(/\B(?=(\d{3})+(?!\d))/g, " ");
         const formattedValue = (props.prefix ?? "") + formattedNumber + (props.suffix ?? "");
 
         // Reflect the formatted value.
@@ -96,8 +95,8 @@ const MoneyInput = (props: Props) => {
         const parsedValue = getNumber(inputElement.value);
 
         // Reflect the changed value to the passed value.
-        if (value != parsedValue) {
-            onValueChanged(parsedValue);
+        if (props.value != parsedValue) {
+            props.onValueChanged(parsedValue);
         }
     };
 
@@ -110,8 +109,8 @@ const MoneyInput = (props: Props) => {
         // Reflect the changed value to the passed value on enter keystroke.
         if (isEnterKey) {
             const parsedValue = getNumber(inputElement.value);
-            if (value != parsedValue) {
-                onValueChanged(parsedValue);
+            if (props.value != parsedValue) {
+                props.onValueChanged(parsedValue);
             }
 
         // Intercept event when the keystroke is not to edit the value.
@@ -147,9 +146,9 @@ const MoneyInput = (props: Props) => {
 
     return (
         <input
+            {...props}
             type={type}
             name={props.name}
-            {...rest}
             value={tempValue}
             onInput={onInput} onBeforeInput={resetCaret}
             onKeyDown={onKeyDown} onKeyUp={resetCaret}

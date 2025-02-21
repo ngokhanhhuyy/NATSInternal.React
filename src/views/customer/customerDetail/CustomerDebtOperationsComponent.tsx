@@ -129,7 +129,7 @@ const List = ({ model }: { model: CustomerDetailModel }) => {
 
 const ListItem = ({ model }: { model: CustomerDebtOperationModel }) => {
     // Dependencies.
-    const routeGenerator = useMemo(useRouteGenerator, []);
+    const routeGenerator = useRouteGenerator();
 
     // Computed.
     const iconClassName = model.operation === DebtOperationType.DebtPayment

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserListModel } from "@/models/user/userListModel";
 import { useUserService } from "@/services/userService";
@@ -32,9 +32,15 @@ const MainList = ({ isInitialLoading, onInitialLoadingFinished }: MainListProps)
         return new UserListModel(initialData.user, initialData.role.allAsOptions);
     });
     const [isReloading, setReloading] = useState<boolean>(false);
+    const [forceUpdate, setForceUpdate] = useState<number>(() => 0);
     const modelState = useModelState();
 
-    const loadAsync = useCallback(async (): Promise<void> => {
+    const onPaginationPageButtonClicked = async (page: number): Promise<void> => {
+        setModel(model => model.from({ page }));
+    };
+
+    // Callbacks.
+    const loadAsync = async (): Promise<void> => {
         modelState.resetErrors();
         if (!isInitialLoading) {
             setReloading(true);
@@ -61,24 +67,33 @@ const MainList = ({ isInitialLoading, onInitialLoadingFinished }: MainListProps)
 
             setReloading(false);
         }
-    }, [model]);
-
-    const onPaginationPageButtonClicked = async (page: number): Promise<void> => {
-        setModel(model => model.from({ page }));
     };
 
     // Effect.
     useEffect(() => {
-        loadAsync().then();
-    }, [model.page]);
+        loadAsync();
+    }, [model.sortingByField, model.sortingByAscending, model.roleId, model.page, forceUpdate]);
 
     return (
         <div className="row g-3">
             {/* List filters */}
             <div className="col col-12">
-                <Filters model={model} setModel={setModel} modelState={modelState}
-                        isInitialLoading={isInitialLoading} isReloading={isReloading}
-                        onSearchButtonClicked={loadAsync}/>
+                <Filters
+                    model={model}
+                    onChanged={(changedData) => {
+                        setModel(model => model.from(changedData));
+                    }}
+                    modelState={modelState}
+                    isInitialLoading={isInitialLoading}
+                    isReloading={isReloading}
+                    onSearchButtonClicked={(searchContent) => {
+                        setModel(model => model.from({
+                            content: searchContent,
+                            page: 1
+                        }));
+                        setForceUpdate(forceUpdate => forceUpdate + 1);
+                    }}
+                />
             </div>
 
             {/* List items */}
@@ -87,9 +102,12 @@ const MainList = ({ isInitialLoading, onInitialLoadingFinished }: MainListProps)
             {/* Pagination */}
             {model.pageCount > 1 && (
                 <div className="col col-12 d-flex flex-row justify-content-center mb-5">
-                    <MainPaginator page={model.page} pageCount={model.pageCount}
-                            isReloading={isReloading}
-                            onClick={onPaginationPageButtonClicked}/>
+                    <MainPaginator
+                        page={model.page}
+                        pageCount={model.pageCount}
+                        isReloading={isReloading}
+                        onClick={onPaginationPageButtonClicked}
+                    />
                 </div>
             )}
         </div>

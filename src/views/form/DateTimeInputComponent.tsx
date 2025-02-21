@@ -11,7 +11,9 @@ export interface DateTimeInputProps
 }
 
 // Component.
-const DateTimeInput = ({ name, value, onValueChanged, ...rest }: DateTimeInputProps) => {
+const DateTimeInput = (props: DateTimeInputProps) => {
+    const { name, value, onValueChanged, disabled, ...rest } = props;
+
     // Dependency.
     const formContext = useContext(FormContext);
 
@@ -27,8 +29,8 @@ const DateTimeInput = ({ name, value, onValueChanged, ...rest }: DateTimeInputPr
 
     const computedClassName = useMemo<string>(() => {
         const names: (string | null | undefined)[] = ["form-control"];
-        if (name) {
-            names.push(modelState?.inputClassName(name));
+        if (name && !disabled && modelState?.inputClassName(name)) {
+            names.push(modelState.inputClassName(name));
         }
 
         return names.filter(n => n != null).join(" ");

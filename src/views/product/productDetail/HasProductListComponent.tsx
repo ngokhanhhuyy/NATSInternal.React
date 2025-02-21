@@ -188,7 +188,7 @@ interface Props {
 
 const SupplyList = ({productId, isInitialLoading, onInitialLoadingFinished}: Props) => {
     // Dependencies.
-    const service = useMemo(useSupplyService, []);
+    const service = useSupplyService();
 
     return (
         <HasProductList
@@ -207,7 +207,7 @@ const SupplyList = ({productId, isInitialLoading, onInitialLoadingFinished}: Pro
 
 const OrderList = ({productId, isInitialLoading, onInitialLoadingFinished}: Props) => {
     // Dependencies.
-    const service = useMemo(useOrderService, []);
+    const service = useOrderService();
 
     return (
         <HasProductList
@@ -226,7 +226,7 @@ const OrderList = ({productId, isInitialLoading, onInitialLoadingFinished}: Prop
 
 const TreatmentList = ({productId, isInitialLoading, onInitialLoadingFinished}: Props) => {
     // Dependencies.
-    const service = useMemo(useTreatmentService, []);
+    const service = useTreatmentService();
 
     return (
         <HasProductList

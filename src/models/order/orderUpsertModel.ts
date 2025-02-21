@@ -70,7 +70,7 @@ export class OrderUpsertModel
         return {
             statsDateTime: this.statsDateTime.toRequestDto(),
             note: this.note || null,
-            customerId: (this.customer && this.customer.id) ?? 0,
+            customerId: this.customer?.id ?? 0,
             items: this.items.map(i => i.toRequestDto()),
             photos: this.photos.map(p => p.toRequestDto()),
             updatedReason: this.updatedReason || null

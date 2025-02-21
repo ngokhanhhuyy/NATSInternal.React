@@ -36,7 +36,7 @@ const DebtList = <TListModel extends DebtIncurrenceListModel | DebtPaymentListMo
     const getSubmissionErrorConfirmationAsync = useAlertModalStore(store => {
         return store.getSubmissionErrorConfirmationAsync;
     });
-    const routeGenerator = useMemo(useRouteGenerator, []);
+    const routeGenerator = useRouteGenerator();
 
     // Model and states.
     const [model, setModel] = useState(() => {

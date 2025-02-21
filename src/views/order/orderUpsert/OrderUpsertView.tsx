@@ -11,7 +11,7 @@ import ExportProductUpsertView
 // Component.
 const OrderUpsertView = ({ id }: { id?: number }) => {
     // Dependencies.
-    const service = useMemo(useOrderService, []);
+    const service = useOrderService();
 
     // Callbacks.
     const initialLoadAsync = async (

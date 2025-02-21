@@ -30,22 +30,14 @@ const SupplyUpdateHistory = ({ model }: { model: SupplyUpdateHistoryModel }) => 
     const amountUtility = useMemo(useAmountUtility, []);
     
     // Computed.
-    const columnClassName = useMemo<string>(() => {
-        return "col col-md-6 col-12 d-flex flex-column";
-    }, []);
+    const columnClassName = "col col-md-6 col-12 d-flex flex-column";
+    const avatarStyle: React.CSSProperties = {
+        width: 35,
+        height: 35
+    };
     
     const computeStatsDateTimeVisibility = (): boolean => {
         return model.oldStatsDateTime != model.newStatsDateTime;
-    };
-    
-    const computeNoteVisibility = (): boolean => {
-        return model.oldNote != model.newNote;
-    };
-    
-    const computeItemsVisibility = (): boolean => {
-        const oldItemsJson = JSON.stringify(model.oldItems);
-        const newItemsJson = JSON.stringify(model.newItems);
-        return oldItemsJson != newItemsJson;
     };
 
     const computeItemMainText = (item: SupplyItemUpdateHistoryModel): string => {
@@ -59,11 +51,14 @@ const SupplyUpdateHistory = ({ model }: { model: SupplyUpdateHistoryModel }) => 
     return (
         <div className="accordion-item">
             <h2 className="accordion-header">
-                <button className="accordion-button collapsed" type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#flush-collapseOne"
-                        aria-expanded="false"
-                        aria-controls="flush-collapseOne">
+                <button
+                    className="accordion-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#flush-collapseOne"
+                    aria-expanded="false"
+                    aria-controls="flush-collapseOne"
+                >
                     {model.updatedReason}
                 </button>
             </h2>
@@ -81,9 +76,16 @@ const SupplyUpdateHistory = ({ model }: { model: SupplyUpdateHistoryModel }) => 
                         {/* UpdatedUser */}
                         <div className={columnClassName}>
                             <span className="fw-bold">Nhân viên chỉnh sửa</span>
-                            <Link to={model.updatedUser.detailRoute}>
-                                {model.updatedUser.fullName}
-                            </Link>
+                            <div className="d-flex justify-content-start align-items-center">
+                                <img className="img-thumbnail rounded-circle avatar me-2"
+                                    src={model.updatedUser.avatarUrl}
+                                    style={avatarStyle}
+                                />
+                                <Link to={model.updatedUser.detailRoute}
+                                        className="user-fullname">
+                                    {model.updatedUser.fullName}
+                                </Link>
+                            </div>
                         </div>
                     </div>
 
@@ -104,22 +106,38 @@ const SupplyUpdateHistory = ({ model }: { model: SupplyUpdateHistoryModel }) => 
                     )}
 
                     {/* Note */}
-                    {computeNoteVisibility() && (
+                    {model.newNote != model.oldNote && (
                         <div className="row g-3">
                             <div className={columnClassName}>
                                 <span className="fw-bold">Ghi chú (cũ)</span>
-                                {model.oldNote || <span className="opacity-50">Để trống</span>}
+                                {model.oldNote ? (
+                                    <span className="text-primary">
+                                        {model.oldNote}
+                                    </span>
+                                ) : (
+                                    <span className="text-secondary opacity-50">
+                                        Để trống
+                                    </span>
+                                )}
                             </div>
 
                             <div className={columnClassName}>
                                 <span className="fw-bold">Ghi chú (mới)</span>
-                                {model.newNote || <span className="opacity-50">Để trống</span>}
+                                {model.newNote ? (
+                                    <span className="text-primary">
+                                        {model.newNote}
+                                    </span>
+                                ) : (
+                                    <span className="text-secondary opacity-50">
+                                        Để trống
+                                    </span>
+                                )}
                             </div>
                         </div>
                     )}
 
                     {/* Items */}
-                    {computeItemsVisibility() && (
+                    {JSON.stringify(model.oldItems) != JSON.stringify(model.newItems) && (
                         <div className="row g-3">
                             <div className={columnClassName}>
                                 <span className="fw-bold">Danh sách sản phẩm (cũ)</span>

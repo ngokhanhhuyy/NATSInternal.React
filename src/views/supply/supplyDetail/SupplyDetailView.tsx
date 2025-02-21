@@ -19,7 +19,7 @@ const SupplyDetailView = ({ id }: { id: number }) => {
     // Dependencies.
     const navigate = useNavigate();
     const alertModalStore = useAlertModalStore();
-    const service = useMemo(useSupplyService, []);
+    const service = useSupplyService();
     
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished } = useViewStates();

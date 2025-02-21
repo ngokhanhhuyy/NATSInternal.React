@@ -66,39 +66,6 @@ const DebtPaymentListView = React.lazy(() => import("@/views/debt/list/DebtPayme
 const DebtPaymentDetailView = React.lazy(() => import("@/views/debt/detail/DebtPaymentDetailView"));
 const DebtPaymentUpsertView = React.lazy(() => import("@/views/debt/upsert/DebtPaymentUpsertView"));
 
-// import HomeView from "@/views/home/HomeView";
-
-// // User views.
-// import UserListView from "@/views/user/userList/UserListView";
-// import UserProfileView from "@/views/user/userProfile/UserProfileView";
-// import UserCreateView from "@/views/user/userUpsert/userCreate/UserCreateView";
-// import UserUpdateView from "@/views/user/userUpsert/userUpdate/UserUpdateView";
-// import UserPasswordChangeView from "@/views/user/userPasswordChange/UserPasswordChangeView";
-// import UserPasswordResetView from "@/views/user/userPasswordReset/UserPasswordResetView";
-
-// // Customer views.
-// import CustomerListView from "@/views/customer/customerList/CustomerListView";
-// import CustomerDetailView from "@/views/customer/customerDetail/CustomerDetailView";
-// import CustomerUpsertView from "@/views/customer/customerUpsert/CustomerUpsertView";
-
-// // Product views.
-// import ProductListView from "@/views/product/productList/ProductListView";
-// import ProductDetailView from "@/views/product/productDetail/ProductDetailView";
-// import ProductUpsertView from "@/views/product/productUpsert/ProductUpsertView";
-// import BrandUpsertView from "@/views/product/brandUpsert/BrandUpsertView";
-// import ProductCategoryUpsertView
-//     from "@/views/product/productCategoryUpsert/ProductCategoryUpsertView";
-
-// // Consultant views.
-// import ConsultantListView from "@/views/consultant/consultantList/ConsultantListView";
-// import ConsultantDetailView from "@/views/consultant/consultantDetail/ConsultantDetailView";
-// import ConsultantUpsertView from "@/views/consultant/consultantUpsert/ConsultantUpsertView";
-
-// // Supply views.
-// import SupplyListView from "@/views/supply/supplyList/SupplyListView";
-// import SupplyDetailView from "@/views/supply/supplyDetail/SupplyDetailView";
-// import SupplyUpsertView from "@/views/supply/supplyUpsert/SupplyUpsertView";
-
 // Services dependencies.
 const routeGenerator = useRouteGenerator();
 
@@ -147,7 +114,7 @@ const routes: Routes = {
         path: /^\/users\/?$/,
         element: async () => <UserListView />,
         meta: {
-            pageTitle: "Danh sách nnhân viên",
+            pageTitle: "Danh sách nhân viên",
             breadcrumbItems: [
                 { text: "Danh sách nhân viên" },
             ]
@@ -215,7 +182,7 @@ const routes: Routes = {
         path: /^\/customers\/?$/,
         element: async () => <CustomerListView />,
         meta: {
-            pageTitle: "Danh sách khách hànghàng",
+            pageTitle: "Danh sách khách hàng",
             breadcrumbItems: [
                 { text: "Khách hàng" },
             ],

@@ -8,7 +8,7 @@ import DebtDetailView from "./DebtDetailView";
 // Component.
 const DebtIncurrenceDetailView = ({ id }: { id: number }) => {
     // Dependencies.
-    const service = useMemo(useDebtIncurrenceService, []);
+    const service = useDebtIncurrenceService();
 
     return (
         <DebtDetailView

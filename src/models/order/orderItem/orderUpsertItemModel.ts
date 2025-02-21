@@ -39,8 +39,7 @@ export class OrderUpsertItemModel
         return {
             id: this.id,
             productAmountPerUnit: this.productAmountPerUnit,
-            vatAmountPerUnit: this.productAmountPerUnit + this.productAmountPerUnit *
-                this.vatPercentagePerUnit,
+            vatAmountPerUnit: this.productAmountPerUnit * (this.vatPercentagePerUnit / 100),
             quantity: this.quantity,
             productId: this.productId,
             hasBeenChanged: this.hasBeenChanged,

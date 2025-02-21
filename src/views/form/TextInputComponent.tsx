@@ -9,7 +9,7 @@ interface TextInputProps extends ComponentPropsWithoutRef<"input"> {
 }
 
 function TextInputComponent(props: TextInputProps) {
-    const { className, type, regex, name, value, onValueChanged, ...rest } = props;
+    const { className, type, regex, name, value, onValueChanged, disabled, ...rest } = props;
     
     // Dependency.
     const formContext = useContext(FormContext);
@@ -21,7 +21,7 @@ function TextInputComponent(props: TextInputProps) {
     // Computed.
     const getComputedClassName = () => {
         const classNames: (string | null | undefined)[] = ["form-control", className];
-        if (name && modelState?.inputClassName(name)) {
+        if (name && !disabled && modelState?.inputClassName(name)) {
             classNames.push(modelState.inputClassName(name));
         }
         

@@ -37,7 +37,7 @@ const CustomerPicker = (props: CustomerPickerProps) => {
     // Dependency.
     const initialResponseDto = useInitialDataStore(store => store.data.customer);
     const alertModalStore = useAlertModalStore();
-    const service = useMemo(useCustomerService, []);
+    const service = useCustomerService();
 
     // Model.
     const [isReloading, setReloading] = useState<boolean>(false);

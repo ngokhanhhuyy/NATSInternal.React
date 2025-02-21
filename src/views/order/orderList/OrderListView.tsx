@@ -9,7 +9,7 @@ import ExportProductListView
 // Component.
 const OrderListView = () => {
     // Dependencies.
-    const service = useMemo(useOrderService, []);
+    const service = useOrderService();
 
     return (
         <ExportProductListView

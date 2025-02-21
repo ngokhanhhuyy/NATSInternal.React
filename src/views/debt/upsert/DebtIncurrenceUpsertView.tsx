@@ -9,7 +9,7 @@ import DebtUpsertView from "./DebtUpsertView";
 // Component.
 const DebtIncurrenceUpsertView = ({ id }: { id?: number }) => {
     // Dependencies.
-    const service = useMemo(useDebtIncurrenceService, []);
+    const service = useDebtIncurrenceService();
     
     return (
         <DebtUpsertView

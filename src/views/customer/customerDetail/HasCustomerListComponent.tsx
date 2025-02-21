@@ -224,7 +224,7 @@ interface Props {
 }
 
 export const ConsultantList = (props: Props) => {
-    const service = useMemo(useConsultantService, []);
+    const service = useConsultantService();
 
     return (
         <HasCustomerList
@@ -246,7 +246,7 @@ export const ConsultantList = (props: Props) => {
 };
 
 export const OrderList = (props: Props) => {
-    const service = useMemo(useOrderService, []);
+    const service = useOrderService();
 
     return (
         <HasCustomerList
@@ -268,7 +268,7 @@ export const OrderList = (props: Props) => {
 };
 
 export const TreatmentList = (props: Props) => {
-    const service = useMemo(useTreatmentService, []);
+    const service = useTreatmentService();
 
     return (
         <HasCustomerList

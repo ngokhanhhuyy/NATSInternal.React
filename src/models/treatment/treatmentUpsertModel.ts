@@ -88,7 +88,7 @@ export class TreatmentUpsertModel
             serviceAmountBeforeVat: this.serviceAmountBeforeVat,
             serviceVatFactor: this.serviceVatPercentage / 100,
             note: this.note || null,
-            customerId: this.customer?.id ?? null,
+            customerId: this.customer?.id ?? 0,
             therapistId: this.therapist?.id ?? null,
             updatedReason: this.updatedReason || null,
             items: this.items.map(i => i.toRequestDto()),

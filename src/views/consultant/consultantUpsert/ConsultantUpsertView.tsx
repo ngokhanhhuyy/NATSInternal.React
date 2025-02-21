@@ -5,6 +5,7 @@ import { ConsultantUpsertModel } from "@/models/consultant/consultantUpsertModel
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
 import { useInitialDataStore } from "@/stores/initialDataStore";
 import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
 import { useRouteGenerator } from "@/router/routeGenerator";
 import { NotFoundError } from "@/errors";
 
@@ -30,8 +31,8 @@ const ConsultantUpsertView = ({ id }: { id?: number }) => {
     const navigate = useNavigate();
     const alertModalStore = useAlertModalStore();
     const initialData = useInitialDataStore(store => store.data.consultant);
-    const service = useMemo(useConsultantService, []);
-    const routeGenerator = useMemo(useRouteGenerator, []);
+    const service = useConsultantService();
+    const routeGenerator = useRouteGenerator();
 
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
@@ -40,6 +41,7 @@ const ConsultantUpsertView = ({ id }: { id?: number }) => {
         consultantForm: true,
         customerPicker: true
     }));
+    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model, ["updatedReason"]);
 
     // Effect
     useEffect(() => {
@@ -49,21 +51,28 @@ const ConsultantUpsertView = ({ id }: { id?: number }) => {
                     const authorization = initialData.creatingAuthorization;
                     if (!authorization) {
                         await alertModalStore.getUnauthorizationConfirmationAsync();
-                        await navigate(-1);
+                        await navigate(routeGenerator.getConsultantListRoutePath());
                         return;
                     }
 
                     setModel(model => {
-                        return model.fromCreatingAuthorizationResponseDto(authorization);
+                        const loadedModel = model
+                            .fromCreatingAuthorizationResponseDto(authorization);
+                        setOriginalModel(loadedModel);
+                        return loadedModel;
                     });
                 } else {
                     const responseDto = await service.getDetailAsync(id);
-                    setModel(model => model.fromDetailResponseDto(responseDto));
+                    setModel(model => {
+                        const loadedModel = model.fromDetailResponseDto(responseDto);
+                        setOriginalModel(loadedModel);
+                        return loadedModel;
+                    });
                 }
             } catch (error) {
                 if (error instanceof NotFoundError) {
                     await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(-1);
+                    await navigate(routeGenerator.getConsultantListRoutePath());
                     return;
                 }
 
@@ -83,7 +92,7 @@ const ConsultantUpsertView = ({ id }: { id?: number }) => {
         }
     }, [initialLoadingState]);
 
-    // Memo.
+    // Computed.
     const blockTitle = useMemo<string>(() => {
         if (id == null) {
             return "Tạo tư vấn mới";
@@ -115,27 +124,24 @@ const ConsultantUpsertView = ({ id }: { id?: number }) => {
     };
 
     return (
-        <UpsertViewContainer isInitialLoading={isInitialLoading} modelState={modelState}
+        <UpsertViewContainer
+            isInitialLoading={isInitialLoading}
+            modelState={modelState}
             submittingAction={handleSubmissionAsync}
             onSubmissionSucceeded={handleSucceededSubmissionAsync}
             deletingAction={handleDeletionAsync}
             onDeletionSucceeded={handleSucceededDeletionAsync}
+            isModelDirty={isModelDirty}
         >
             <div className="row g-3">
-                {/* Resource access */}
-                {/* <div className="col col-12" v-if="!props.isForCreating">
-                    <ResourceAccess resourceType="Consultant" resource-primary-id="model.id"
-                            access-mode="Update" />
-                </div> */}
-
-                {/* Consultant information */}
                 <div className="col col-12">
                     <MainBlock title={blockTitle} closeButton bodyPadding={[0, 2, 2, 2]}>
                         <div className="row g-3">
                             {/* StatsDateTime */}
                             <div className="col col-md-6 col-12">
                                 <Label text="Ngày thanh toán" />
-                                <StatsDateTimeInput name="statsDateTime"
+                                <StatsDateTimeInput
+                                    name="statsDateTime"
                                     disabled={!model.canSetStatsDateTime}
                                     value={model.statsDateTime}
                                     onValueChanged={statsDateTime => {
@@ -148,7 +154,8 @@ const ConsultantUpsertView = ({ id }: { id?: number }) => {
                             {/* Amount */}
                             <div className="col col-md-6 col-12">
                                 <Label text="Số tiền thanh toán" required />
-                                <MoneyInput name="amount"
+                                <MoneyInput
+                                    name="amount"
                                     suffix=" đồng"
                                     value={model.amountBeforeVat}
                                     onValueChanged={amountBeforeVat => {
@@ -161,7 +168,8 @@ const ConsultantUpsertView = ({ id }: { id?: number }) => {
                             {/* Note */}
                             <div className="col col-12">
                                 <Label text="Ghi chú" />
-                                <TextAreaInput name="note"
+                                <TextAreaInput
+                                    name="note"
                                     maxLength={255}
                                     style={{ minHeight: "150px" }}
                                     placeholder="Ghi chú ..."
@@ -177,7 +185,8 @@ const ConsultantUpsertView = ({ id }: { id?: number }) => {
                             {id != null && (
                                 <div className="col col-12">
                                     <Label text="Lý do chỉnh sửa" required />
-                                    <TextAreaInput name="updatedReason"
+                                    <TextAreaInput
+                                        name="updatedReason"
                                         maxLength={255}
                                         style={{ minHeight: "150px" }}
                                         value={model.updatedReason}
@@ -195,7 +204,8 @@ const ConsultantUpsertView = ({ id }: { id?: number }) => {
 
                 {/* Customer picker */}
                 <div className="col col-12">
-                    <CustomerPicker isInitialLoading={initialLoadingState.customerPicker}
+                    <CustomerPicker
+                        isInitialLoading={initialLoadingState.customerPicker}
                         onInitialLoadingFinished={() => setInitialLoadingState(state => ({
                             ...state,
                             customerPicker: false

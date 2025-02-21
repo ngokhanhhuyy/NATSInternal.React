@@ -15,8 +15,8 @@ import DebtList from "./debtList/DebtListComponent";
 // Component.
 const DebtOverviewView = () => {
     // Dependencies.
-    const debtIncurrenceService = useMemo(useDebtIncurrenceService, []);
-    const debtPaymentService = useMemo(useDebtPaymentService, []);
+    const debtIncurrenceService = useDebtIncurrenceService();
+    const debtPaymentService = useDebtPaymentService();
 
     // States.
     const [initialLoadingState, setInitialLoadingState] = useState(() => ({

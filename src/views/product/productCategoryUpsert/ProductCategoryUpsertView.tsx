@@ -4,6 +4,7 @@ import { useProductCategoryService } from "@/services/productCategoryService";
 import { ProductCategoryUpsertModel }
     from "@/models/product/productCategory/productCategoryUpsertModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
+import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
 import { NotFoundError } from "@/errors";
@@ -24,12 +25,13 @@ const ProductCategoryUpsertView = ({ id }: { id?: number }) => {
     // Dependencies.
     const navigate = useNavigate();
     const alertModalStore = useAlertModalStore();
-    const service = useMemo(useProductCategoryService, []);
-    const routeGenerator = useMemo(useRouteGenerator, []);
+    const service = useProductCategoryService();
+    const routeGenerator = useRouteGenerator();
 
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
     const [model, setModel] = useState(() => new ProductCategoryUpsertModel());
+    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model);
 
     // Effect.
     useEffect(() => {
@@ -41,6 +43,8 @@ const ProductCategoryUpsertView = ({ id }: { id?: number }) => {
                         await alertModalStore.getUnauthorizationConfirmationAsync();
                         await navigate(routeGenerator.getProductListRoutePath());
                     }
+
+                    setOriginalModel(model);
                 } else {
                     const responseDto = await service.getDetailAsync(id);
                     if (!responseDto.authorization.canEdit) {
@@ -48,40 +52,38 @@ const ProductCategoryUpsertView = ({ id }: { id?: number }) => {
                         return;
                     }
 
-                    setModel(m => m.fromResponseDto(responseDto));
+                    setModel(model => model.fromResponseDto(responseDto));
                 }
             } catch (error) {
                 if (error instanceof NotFoundError) {
                     await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(-1);
+                    await navigate(routeGenerator.getProductListRoutePath());
                     return;
                 }
 
                 throw error;
-            } finally {
-                onInitialLoadingFinished();
             }
         };
 
-        initialLoadAsync().then();
+        initialLoadAsync().finally(onInitialLoadingFinished);
     }, []);
 
-    // Memo.
+    // Computed.
     const isForCreating = useMemo<boolean>(() => id == null, [id]);
 
     // Callback.
-    const handleSubmissionAsync = async (): Promise<void> => {
+    const handleSubmissionAsync = async (): Promise<number> => {
         if (isForCreating) {
-            const id = await service.createAsync(model.toRequestDto());
-            setModel(m => m.from({ id }));
+            return await service.createAsync(model.toRequestDto());
         } else {
             await service.updateAsync(model.id, model.toRequestDto());
+            return model.id;
         }
     };
 
-    const handleDeletionAsync = useCallback(async (): Promise<void> => {
+    const handleDeletionAsync = async (): Promise<void> => {
         await service.deleteAsync(model.id);
-    }, [model.id]);
+    };
 
     const handleSucceededAsync = useCallback(async (): Promise<void> => {
         await navigate(routeGenerator.getProductListRoutePath());
@@ -95,6 +97,7 @@ const ProductCategoryUpsertView = ({ id }: { id?: number }) => {
             onSubmissionSucceeded={handleSucceededAsync}
             deletingAction={handleDeletionAsync}
             onDeletionSucceeded={handleSucceededAsync}
+            isModelDirty={isModelDirty}
         >
             <div className="row g-3 justify-content-end">
                 <div className="col col-12">

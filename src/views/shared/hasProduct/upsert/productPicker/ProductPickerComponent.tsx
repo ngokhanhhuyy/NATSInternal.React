@@ -32,9 +32,9 @@ const ProductPicker = <TUpsertItem extends IHasProductUpsertItemModel<TUpsertIte
         ({ pickedItems, onPicked, ...props }: Props<TUpsertItem>) => {
     // Dependencies.
     const alertModalStore = useAlertModalStore();
-    const productService = useMemo(useProductService, []);
-    const brandService = useMemo(useBrandService, []);
-    const productCategoryService = useMemo(useProductCategoryService, []);
+    const productService = useProductService();
+    const brandService = useBrandService();
+    const productCategoryService = useProductCategoryService();
 
     // Model and states.
     const [model, setModel] = useState(() => {

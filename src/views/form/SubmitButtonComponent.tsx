@@ -11,17 +11,21 @@ interface SubmitButtonProps extends Omit<React.ComponentPropsWithoutRef<"button"
 // Component.
 const SubmitButton = ({ children }: SubmitButtonProps) => {
     const formContext = useContext(FormContext);
+    
+    // Computed.
+    const isDisabled = formContext?.isSubmitting
+        || formContext?.isDeleting
+        || (formContext && !formContext.isModelDirty);
 
     return (
         <button
             type="submit"
             className="btn btn-primary"
-            disabled={formContext?.isSubmitting || formContext?.isDeleting}
+            disabled={!!isDisabled}
         >
-            {children}
-            {!children && (
+            {children ?? (
                 <>
-                    <i className="bi bi-floppy mx-2"></i>
+                    <i className="bi bi-floppy mx-2" />
                     <span className="me-2">Lưu</span>
                 </>
             )}

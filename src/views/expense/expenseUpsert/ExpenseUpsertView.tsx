@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useExpenseService } from "@/services/expenseService";
 import { ExpenseCategory } from "@/services/dtos/enums";
@@ -6,6 +6,7 @@ import { ExpenseUpsertModel } from "@/models/expense/expenseUpsertModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
 import { useInitialDataStore } from "@/stores/initialDataStore";
+import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
 import { useRouteGenerator } from "@/router/routeGenerator";
 import { NotFoundError } from "@/errors";
 
@@ -30,12 +31,13 @@ const ExpenseUpsertView = ({ id }: { id?: number }) => {
     const navigate = useNavigate();
     const alertModalStore = useAlertModalStore();
     const initialData = useInitialDataStore(store => store.data);
-    const service = useMemo(useExpenseService, []);
-    const routeGenerator = useMemo(useRouteGenerator, []);
+    const service = useExpenseService();
+    const routeGenerator = useRouteGenerator();
 
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
     const [model, setModel] = useState(() => new ExpenseUpsertModel());
+    const dirtyModelChecker = useDirtyModelChecker(model, ["updatedReason"]);
 
     // Effect.
     useEffect(() => {
@@ -45,21 +47,28 @@ const ExpenseUpsertView = ({ id }: { id?: number }) => {
                     const authorization = initialData.consultant.creatingAuthorization;
                     if (!authorization) {
                         await alertModalStore.getUnauthorizationConfirmationAsync();
-                        await navigate(-1);
+                        await navigate(routeGenerator.getExpenseListRoutePath());
                         return;
                     }
 
                     setModel(model => {
-                        return model.fromCreatingAuthorizationResponseDto(authorization);
+                        const loadedModel = model
+                            .fromCreatingAuthorizationResponseDto(authorization);
+                        dirtyModelChecker.setOriginalModel(loadedModel);
+                        return loadedModel;
                     });
                 } else {
                     const detail = await service.getDetailAsync(id);
-                    setModel(model => model.fromDetailResponseDto(detail));
+                    setModel(model => {
+                        const loadedModel = model.fromDetailResponseDto(detail);
+                        dirtyModelChecker.setOriginalModel(loadedModel);
+                        return loadedModel;
+                    });
                 }
             } catch (error) {
                 if (error instanceof NotFoundError) {
                     await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(-1);
+                    await navigate(routeGenerator.getExpenseListRoutePath());
                     return;
                 }
 
@@ -121,6 +130,7 @@ const ExpenseUpsertView = ({ id }: { id?: number }) => {
             onSubmissionSucceeded={handleSucceededSubmissionAsync}
             deletingAction={handleDeletionAsync}
             onDeletionSucceeded={handleSucceededDeletionAsync}
+            isModelDirty={dirtyModelChecker.isModelDirty}
         >
             <div className="row g-3">
                 {/* Expense detail */}
@@ -158,7 +168,7 @@ const ExpenseUpsertView = ({ id }: { id?: number }) => {
                             </div>
     
                             {/* PayeeName */}
-                            <div className="col col-xxl-4 col-md-6 col-12">
+                            <div className="col col-xxl-4 col-lg-6 col-12">
                                 <Label text="Tên người/tổ chức nhận" required />
                                 <TextInput
                                     name="payeeName"
@@ -173,7 +183,7 @@ const ExpenseUpsertView = ({ id }: { id?: number }) => {
                             </div>
     
                             {/* StatsDateTime */}
-                            <div className="col col-12">
+                            <div className="col col-xxl-12 col-lg-6 col-12">
                                 <Label text="Ngày thanh toán" />
                                 <StatsDateTimeInput
                                     name="statsDateTime"

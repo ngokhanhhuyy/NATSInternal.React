@@ -22,7 +22,7 @@ export class ExpenseDetailModel implements
     public readonly payeeName: string;
     public readonly photos: ExpenseDetailPhotoModel[];
     public readonly authorization: ExpenseExistingAuthorizationModel;
-    public readonly updateHistories: ExpenseUpdateHistoryModel[] | null;
+    public readonly updateHistories: ExpenseUpdateHistoryModel[];
     public readonly detailRoute: string;
     public readonly updateRoute: string;
 
@@ -38,8 +38,8 @@ export class ExpenseDetailModel implements
         this.payeeName = responseDto.payee.name;
         this.photos = responseDto.photos?.map(p => new ExpenseDetailPhotoModel(p)) ?? [];
         this.authorization = new ExpenseExistingAuthorizationModel(responseDto.authorization);
-        this.updateHistories = responseDto.updateHistories &&
-            responseDto.updateHistories.map(uh => new ExpenseUpdateHistoryModel(uh));
+        this.updateHistories = responseDto.updateHistories
+            ?.map(uh => new ExpenseUpdateHistoryModel(uh)) ??[];
         this.detailRoute = routeGenerator.getExpenseDetailRoutePath(this.id);
         this.updateRoute = routeGenerator.getExpenseUpdateRoutePath(this.id);
     }

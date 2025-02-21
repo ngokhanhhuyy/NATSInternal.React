@@ -15,6 +15,7 @@ interface Props<TSubmissionResult> {
     deletingAction?: () => Promise<void>;
     onDeletionSucceeded?: () => Promise<void>;
     deletionSucceededModal?: boolean;
+    isModelDirty: boolean;
 }
 
 const UpsertViewContainer = <TSubmissionResult,>(props: Props<TSubmissionResult>) => {
@@ -30,7 +31,11 @@ const UpsertViewContainer = <TSubmissionResult,>(props: Props<TSubmissionResult>
     };
 
     return (
-        <Form className={computeClassName()} modelState={modelState} {...rest}>
+        <Form
+            className={computeClassName()}
+            modelState={modelState}
+            {...rest}
+        >
             {modelState.hasAnyError() && (
                 <div className="row g-3">
                     <div className="col col-12">
@@ -57,8 +62,13 @@ const ErrorBlock = ({modelState}: ErrorBlockProps) => {
 
     return (
         <div className="col col-12">
-            <MainBlock title="Dữ liệu không hợp lệ" color="danger" bodyPadding={[2, 1]}
-                bodyClassName="row gx-3 gy-2" closeButton={false}>
+            <MainBlock
+                title="Dữ liệu không hợp lệ"
+                color="danger"
+                bodyPadding={[2, 1]}
+                bodyClassName="row gx-3 gy-2"
+                closeButton={false}
+            >
                 <div className="col col-12 d-flex flex-column">
                     {errors.length === 1 ? (
                         <span className="text-danger">{errors[0]}</span>

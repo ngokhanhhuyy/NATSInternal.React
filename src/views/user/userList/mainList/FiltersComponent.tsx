@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useState, useMemo } from "react";
 import { type UserListModel } from "@models/user/userListModel";
 import { RoleMinimalModel } from "@models/roleModels";
 import { useRoleUtility } from "@/utilities/roleUtility";
@@ -22,43 +22,50 @@ import { LoadingFiltersBlock } from "@/views/layouts/LoadingView";
 // Props.
 interface Props {
     model: UserListModel;
-    setModel: React.Dispatch<React.SetStateAction<UserListModel>>;
+    onChanged: (changedData: Partial<UserListModel>) => any;
     modelState: IModelState;
     isInitialLoading: boolean;
     isReloading: boolean;
-    onSearchButtonClicked: () => Promise<void>;
+    onSearchButtonClicked: (searchContent: string) => any;
 }
 
 // Dependencies.
 const roleUtility = useRoleUtility();
 
 const Filters = (props: Props) => {
-    const { model, setModel, isInitialLoading, isReloading, onSearchButtonClicked } = props;
+    // States.
+    const [searchContent, setSearchContent] = useState<string>(() => "");
 
     // Computed.
     const blockTitle = useMemo<string>(() => "Danh sách nhân viên", []);
-    const isSearchContentValid = !model.content.length || model.content.length >= 3;
+    const isSearchContentValid = !props.model.content.length
+        || props.model.content.length >= 3;
     const searchContentColumnClassName = !isSearchContentValid ? "pb-0" : "";
 
     // Callbacks.
-    const handleRoleChange = useCallback((role: RoleMinimalModel | null): void => {
-        setModel(model => model.from({
+    const handleRoleChange = (role: RoleMinimalModel | null): void => {
+        props.onChanged({
             roleId: role?.id,
             page: 1
-        }));
-    }, [setModel]);
-
-    const handleContentTextBoxInput = (newContent: string): void => {
-        setModel(model => model.from({
-            content: newContent,
-            page: 1
-        }));
+        });
     };
 
     // Header.
     const header = (
-        <CreatingLink to={model.createRoute} canCreate={model.canCreate}
-                isPlaceholder={isInitialLoading} disabled={isReloading} />
+        <>
+            {props.isReloading && (
+                <div className="spinner-border spinner-border-sm me-2" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+            )}
+            
+            <CreatingLink
+                to={props.model.createRoute}
+                canCreate={props.model.canCreate}
+                isPlaceholder={props.isInitialLoading}
+                disabled={props.isReloading}
+            />
+        </>
     );
 
     // Style.
@@ -91,30 +98,44 @@ const Filters = (props: Props) => {
         }
     `;
 
-    if (isInitialLoading) {
+    if (props.isInitialLoading) {
         return <LoadingFiltersBlock mode="SearchTextBox" />;
     }
 
     return (
-        <MainBlock title={blockTitle} bodyPadding={2} header={header}>
+        <MainBlock
+            title={blockTitle}
+            header={header}
+            bodyPadding={2}
+            bodyClassName={props.isReloading ? "opacity-50 pe-none" : ""}
+        >
             <FormContext.Provider value={null}>
                 <div className="row g-3">
                     {/* Search content */}
                     <div className={`col ${searchContentColumnClassName}`}>
                         <div className="input-group">
-                            <TextInput className="border-end-0" type="text"
-                                    maxLength={255} placeholder="Họ và tên, số điện thoại ..."
-                                    value={model.content}
-                                    onValueChanged={handleContentTextBoxInput} />
+                            <TextInput
+                                className="border-end-0"
+                                type="text"
+                                maxLength={255}
+                                placeholder="Họ và tên, số điện thoại ..."
+                                value={searchContent}
+                                onValueChanged={(searchContent) => {
+                                    setSearchContent(searchContent);
+                                }}
+                            />
 
                             {/* Advance filters / collapse button */}
-                            <button type="button" className="btn btn-outline-primary"
-                                    disabled={isReloading}
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#advanced-filters-container"
-                                    role="button" 
-                                    aria-expanded="false"
-                                    aria-controls="advanced-filters-container">
+                            <button
+                                type="button"
+                                className="btn btn-outline-primary"
+                                disabled={props.isReloading}
+                                data-bs-toggle="collapse"
+                                data-bs-target="#advanced-filters-container"
+                                role="button" 
+                                aria-expanded="false"
+                                aria-controls="advanced-filters-container"
+                            >
                                 <i className="bi bi-sliders" />
                             </button>
                         </div>
@@ -130,23 +151,26 @@ const Filters = (props: Props) => {
 
                     {/* Search button */}
                     <div className="col col-auto">
-                        <button className="btn btn-primary"
-                                type="button"
-                                onClick={onSearchButtonClicked}>
+                        <button
+                            className="btn btn-primary"
+                            type="button"
+                            onClick={() => props.onSearchButtonClicked(searchContent)}
+                        >
                             <i className="bi bi-search"></i>
                             <span className="d-sm-inline d-none ms-2">Tìm kiếm</span>
                         </button>
                     </div>
                 </div>
+
                 <div className="row g-3 collapse" id="advanced-filters-container">
                     {/* Sort by field */}
                     <div className="col col-sm-6 col-12">
                         <Label text="Trường sắp xếp" />
                         <SortingByFieldSelectInput name="sortingByField"
                                 options={(data) => data.user.listSortingOptions}
-                                value={model.sortingByField}
+                                value={props.model.sortingByField}
                                 onValueChanged={(sortingByField) => {
-                                    setModel(model => model.from({ sortingByField}));
+                                    props.onChanged({ sortingByField });
                                 }} />
                         <ValidationMessage name="orderByField" />
                     </div>
@@ -154,13 +178,15 @@ const Filters = (props: Props) => {
                     {/* Sort by direction */}
                     <div className="col col-sm-6 col-12">
                         <Label text="Thứ tự sắp xếp" />
-                        <BooleanSelectInput name="orderByAscending"
-                                trueDisplayName="Từ nhỏ đến lớn"
-                                falseDisplayName="Từ lớn đến nhỏ"
-                                value={model.sortingByAscending}
-                                onValueChanged={(sortingByAscending) => {
-                                    setModel(model => model.from({ sortingByAscending  }));
-                                }}>
+                        <BooleanSelectInput 
+                            name="orderByAscending"
+                            trueDisplayName="Từ nhỏ đến lớn"
+                            falseDisplayName="Từ lớn đến nhỏ"
+                            value={props.model.sortingByAscending}
+                            onValueChanged={(sortingByAscending) => {
+                                props.onChanged({ sortingByAscending });
+                            }}
+                        >
                         </BooleanSelectInput>
                         <ValidationMessage name="orderByAscending" />
                     </div>
@@ -169,9 +195,11 @@ const Filters = (props: Props) => {
                     <div className="col col-12 pb-0">
                         <Label text="Vị trí" />
                         <div className="d-flex flex-row flex-wrap">
-                            <RoleButtons selectedRoleId={model.roleId}
-                                    roleOptions={model.roleOptions}
-                                    onClick={handleRoleChange} />
+                            <RoleButtons
+                                selectedRoleId={props.model.roleId}
+                                roleOptions={props.model.roleOptions}
+                                onClick={handleRoleChange}
+                            />
                         </div>
                     </div>
                 </div>

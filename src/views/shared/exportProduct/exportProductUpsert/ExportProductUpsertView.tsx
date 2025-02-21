@@ -4,6 +4,7 @@ import type { ProductBasicModel } from "@/models/product/productBasicModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
 import { useInitialDataStore } from "@/stores/initialDataStore";
 import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
 import { useRouteGenerator } from "@/router/routeGenerator";
 import { NotFoundError, AuthorizationError } from "@/errors";
 
@@ -67,7 +68,7 @@ const ExportProductUpsertView = <
     const initialData = useInitialDataStore(store => store.data);
     const alertModalStore = useAlertModalStore();
     const navigate = useNavigate();
-    const routeGenerator = useMemo(useRouteGenerator, []);
+    const routeGenerator = useRouteGenerator();
 
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
@@ -80,6 +81,7 @@ const ExportProductUpsertView = <
     const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
     const [modalModel, setModalModel] = useState<TUpsertItem | null>(() => null);
     const modalPromiseResolve = useRef<ModalPromiseResolve<TUpsertItem> | null>(null);
+    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model, ["updatedReason"]);
 
     // Effect.
     useEffect(() => {
@@ -89,6 +91,7 @@ const ExportProductUpsertView = <
                     model,
                     initialData);
                 setModel(loadedModel);
+                setOriginalModel(loadedModel);
             } catch (error) {
                 if (error instanceof NotFoundError) {
                     await alertModalStore.getNotFoundConfirmationAsync();
@@ -191,6 +194,7 @@ const ExportProductUpsertView = <
             onDeletionSucceeded={async () => {
                 await navigate(props.getListRoute(routeGenerator));
             }}
+            isModelDirty={isModelDirty}            
         >
             {/* Step bar and error summary */}
             <div className="row g-3 justify-content-center">

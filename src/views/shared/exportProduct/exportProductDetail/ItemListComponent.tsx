@@ -69,7 +69,7 @@ const Item = <TItem extends IExportProductDetailItemModel>(props: ItemProps<TIte
         const unit = model.product!.unit.toLowerCase();
         const vatAmountPerUnit = model.vatAmountPerUnit;
         const productAmountPerUnit = model.productAmountPerUnit;
-        const vatPercentage = Math.round(vatAmountPerUnit / productAmountPerUnit);
+        const vatPercentage = Math.round(vatAmountPerUnit / productAmountPerUnit * 100);
         return `${amount} × ${quantity} ${unit} (${vatPercentage}% VAT)`;
     };
 

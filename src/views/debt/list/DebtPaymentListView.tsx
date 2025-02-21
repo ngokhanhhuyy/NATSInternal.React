@@ -8,7 +8,7 @@ import DebtListView from "./DebtListView";
 // Component.
 const DebtPaymentListView = () => {
     // Dependencies.
-    const service = useMemo(useDebtPaymentService, []);
+    const service = useDebtPaymentService();
     
     return (
         <DebtListView

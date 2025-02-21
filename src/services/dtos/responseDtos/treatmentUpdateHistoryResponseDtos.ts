@@ -8,13 +8,13 @@ declare global {
             oldServiceAmount: number;
             oldServiceVatAmount: number;
             oldNote: string | null;
-            oldTherapist: ResponseDtos.User.Basic;
+            oldTherapist: ResponseDtos.User.Basic | null;
             oldItems: ItemUpdateHistory[] | null;
             newStatsDateTime: string;
             newServiceAmount: number;
             newServiceVatAmount: number;
             newNote: string | null;
-            newTherapist: ResponseDtos.User.Basic;
+            newTherapist: ResponseDtos.User.Basic | null;
             newItems: ItemUpdateHistory[] | null;
         }>;
 

@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useUserService } from "@/services/userService";
 import { UserCreateModel } from "@/models/user/userCreateModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
+import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useInitialDataStore } from "@/stores/initialDataStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
 import { NotFoundError } from "@/errors";
 
@@ -26,17 +28,15 @@ const UserCreateView = () => {
     const routeGenerator = useMemo(() => useRouteGenerator(), []);
     const navigate = useNavigate();
     const alertModalStore = useAlertModalStore();
+    const initialData = useInitialDataStore(store => store.data);
 
     // Model and states.
-    const {
-        modelState,
-        isInitialLoading,
-        onInitialLoadingFinished,
-        initialData } = useUpsertViewStates();
+    const { modelState, isInitialLoading, onInitialLoadingFinished } = useUpsertViewStates();
     const [model, setModel] = useState(() => {
         const roleOptionsResponseDtos = initialData.role.allAsOptions;
         return new UserCreateModel(roleOptionsResponseDtos);
     });
+    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model);
 
     // Effect.
     useEffect(() => {
@@ -47,6 +47,8 @@ const UserCreateView = () => {
                     await alertModalStore.getUnauthorizationConfirmationAsync();
                     await navigate(routeGenerator.getUserListRoutePath());
                 };
+
+                setOriginalModel(model);
             } catch (error) {
                 if (error instanceof NotFoundError) {
                     await navigate(routeGenerator.getUserListRoutePath());
@@ -60,6 +62,7 @@ const UserCreateView = () => {
         checkPermissionAsync().then(onInitialLoadingFinished);
     }, []);
 
+    // Callbacks.
     const handleSubmissionAsync = async (): Promise<number> => {
         return await userService.createAsync(model.toRequestDto());
     };
@@ -69,10 +72,14 @@ const UserCreateView = () => {
     };
 
     return (
-        <UpsertViewContainer formId="userCreateForm" modelState={modelState}
-                isInitialLoading={isInitialLoading}
-                submittingAction={handleSubmissionAsync}
-                onSubmissionSucceeded={handleSucceededSubmissionAsync}>
+        <UpsertViewContainer
+            formId="userCreateForm"
+            modelState={modelState}
+            isInitialLoading={isInitialLoading}
+            submittingAction={handleSubmissionAsync}
+            onSubmissionSucceeded={handleSucceededSubmissionAsync}
+            isModelDirty={isModelDirty}
+        >
             <div className="row g-3 justify-content-end">
                 <div className="col col-12">
                     <MainBlock title="Tạo nhân viên mới" closeButton

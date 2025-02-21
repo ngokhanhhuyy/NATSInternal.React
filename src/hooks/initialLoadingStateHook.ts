@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { usePageLoadProgressBarStore } from "@/stores/pageLoadProgressBarStore";
 
 export interface InitialLoadingState {
@@ -13,10 +14,14 @@ export interface InitialLoadingState {
 export function useInitialLoadingState(): InitialLoadingState {
     const pageLoadProgressBarStore = usePageLoadProgressBarStore();
 
+    // States.
+    const [isInitialLoading, setInitialLoading] = useState<boolean>(() => true);
+
     return {
-        get isInitialLoading() {
-            return pageLoadProgressBarStore.phase === "waiting";
-        },
-        onInitialLoadingFinished: () => pageLoadProgressBarStore.finish()
+        isInitialLoading,
+        onInitialLoadingFinished: () => {
+            setInitialLoading(false);
+            pageLoadProgressBarStore.finish();
+        }
     };
 }

@@ -11,13 +11,13 @@ export class TreatmentUpdateHistoryModel
     public oldServiceAmount: number;
     public oldVatPercentage: number;
     public oldNote: string | null;
-    public oldTherapist: UserBasicModel;
+    public oldTherapist: UserBasicModel | null;
     public oldItems: TreatmentItemUpdateHistoryModel[];
     public newStatsDateTime: DateTimeDisplayModel;
     public newServiceAmount: number;
     public newVatPercentage: number;
     public newNote: string | null;
-    public newTherapist: UserBasicModel;
+    public newTherapist: UserBasicModel | null;
     public newItems: TreatmentItemUpdateHistoryModel[];
 
     constructor(responseDto: ResponseDtos.Treatment.UpdateHistory) {
@@ -28,14 +28,16 @@ export class TreatmentUpdateHistoryModel
         this.oldServiceAmount = responseDto.oldServiceAmount;
         this.oldVatPercentage = Math.round(responseDto.oldServiceVatAmount * 100);
         this.oldNote = responseDto.oldNote;
-        this.oldTherapist = new UserBasicModel(responseDto.oldTherapist);
+        this.oldTherapist = responseDto.oldTherapist
+            && new UserBasicModel(responseDto.oldTherapist);
         this.oldItems = responseDto.oldItems?.map(i => new TreatmentItemUpdateHistoryModel(i))
             ?? [];
         this.newStatsDateTime =  new DateTimeDisplayModel(responseDto.newStatsDateTime);
         this.newServiceAmount = responseDto.newServiceAmount;
         this.newVatPercentage = Math.round(responseDto.newServiceVatAmount * 100);
         this.newNote = responseDto.newNote;
-        this.newTherapist = new UserBasicModel(responseDto.newTherapist);
+        this.newTherapist = responseDto.newTherapist
+            && new UserBasicModel(responseDto.newTherapist);
         this.newItems = responseDto.newItems?.map(i => new TreatmentItemUpdateHistoryModel(i))
             ?? [];
     }

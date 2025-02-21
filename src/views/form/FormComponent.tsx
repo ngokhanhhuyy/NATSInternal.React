@@ -16,6 +16,7 @@ export interface FormContext {
     isDeleting: boolean;
     delete: () => void;
     modelState: IModelState | null;
+    isModelDirty: boolean;
 }
 
 export const FormContext = createContext<FormContext | null>(null);
@@ -32,25 +33,28 @@ export interface FormProps<TSubmissionResult>
     deletingAction?: () => Promise<void>;
     onDeletionSucceeded?: () => Promise<void>;
     deletionSucceededModal?: boolean;
+    isModelDirty: boolean;
     row?: boolean;
     gutter?: number;
     justifyContentEnd?: boolean;
 }
 
 const Form = <TSubmissionResult,>(props: FormProps<TSubmissionResult>) => {
-    const { modelState,
+    const {
+        modelState,
+        isModelDirty,
         submittingAction,
         onSubmissionSucceeded,
         deletingAction,
-        onDeletionSucceeded } = props;
+        onDeletionSucceeded
+    } = props;
     const submissionSucceededModal = props.submissionSucceededModal ?? true;
     const deletionSucceededModal = props.deletionSucceededModal ?? true;
-    
 
     // Dependencies.
     const navigate = useNavigate();
     const alertModalStore = useAlertModalStore();
-    const routeGenerator = useMemo(useRouteGenerator, []);
+    const routeGenerator = useRouteGenerator();
 
     // State.
     const [isSubmitting, setSubmitting] = useState<boolean>(() => false);
@@ -62,7 +66,8 @@ const Form = <TSubmissionResult,>(props: FormProps<TSubmissionResult>) => {
         isSubmitting,
         isDeleting,
         delete: async () => await handleDeletionAsync(),
-        modelState: props.modelState ?? null
+        modelState: modelState ?? null,
+        isModelDirty: isModelDirty
     }), [props.id, isSubmitting, isDeleting, props.modelState]);
 
     // Computed.
@@ -95,6 +100,11 @@ const Form = <TSubmissionResult,>(props: FormProps<TSubmissionResult>) => {
         setSubmitting(true);
 
         try {
+            // if (!isModelDirty) {
+            //     await alertModalStore.getDataUnchangedSubmissionConfirmationAsync();
+            //     return;
+            // }
+
             const submissionResult = await submittingAction();
             modelState?.clearErrors();
             if (submissionSucceededModal ?? true) {
@@ -161,10 +171,13 @@ const Form = <TSubmissionResult,>(props: FormProps<TSubmissionResult>) => {
 
     return (
         <FormContext.Provider value={contextValue}>
-            <form className={computeClassName()} id={props.id}
-                    tabIndex={computeTabIndex()}
-                    onKeyDown={handleKeyPress}
-                    onSubmit={handleSubmissionAsync}>
+            <form
+                className={computeClassName()}
+                id={props.id}
+                tabIndex={computeTabIndex()}
+                onKeyDown={handleKeyPress}
+                onSubmit={handleSubmissionAsync}
+            >
                 {props.children}
             </form>
         </FormContext.Provider>

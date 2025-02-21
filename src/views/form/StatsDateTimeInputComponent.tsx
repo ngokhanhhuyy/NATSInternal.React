@@ -11,30 +11,34 @@ export interface DateTimeInputProps
 }
 
 // Component.
-const StatsDateTimeInput = ({ name, value, onValueChanged, ...rest }: DateTimeInputProps) => {
+const StatsDateTimeInput = (props: DateTimeInputProps) => {
     // Dependencies.
     const formContext = useContext(FormContext);
     const modelState = formContext?.modelState;
 
     // States.
-    const [tempValue, setTempValue] = useState<string>(() => value.dateTime);
+    const [tempValue, setTempValue] = useState<string>(() => props.value.dateTime);
     
     // Effect.
-    useEffect(() => setTempValue(value.dateTime), [value]);
+    useEffect(() => setTempValue(props.value.dateTime), [props.value]);
 
     // Computed.
     const computeInputClassName = () => {
         const names: (string | null | undefined)[] = ["form-control"];
 
-        if (value.isSpecified) {
+        if (props.value.isSpecified) {
             names.push("border-end-0");
         }
 
-        if (name) {
-            names.push(modelState?.inputClassName(name));
+        if (props.name && props.value.isSpecified && modelState?.inputClassName(props.name)) {
+            names.push(modelState?.inputClassName(props.name));
         }
 
         return names.filter(n => n != null).join(" ");
+    };
+
+    const computeButtonIconClassName = (): string => {
+        return `bi bi-${props.value.isSpecified ? "x-lg" : "pencil-square"}`;
     };
 
     // Callback.
@@ -43,7 +47,7 @@ const StatsDateTimeInput = ({ name, value, onValueChanged, ...rest }: DateTimeIn
     };
 
     const handleBlur = (): void => {
-        onValueChanged(value.from({ dateTime: tempValue }));
+        props.onValueChanged(props.value.from({ dateTime: tempValue }));
     };
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>): void => {
@@ -54,28 +58,28 @@ const StatsDateTimeInput = ({ name, value, onValueChanged, ...rest }: DateTimeIn
     };
 
     const toggleEnabled = (): void => {
-        onValueChanged(value.from({ isSpecified: !value.isSpecified }));
+        props.onValueChanged(props.value.from({ isSpecified: !props.value.isSpecified }));
     };
 
     return (
         <>
             <div className="input-group">
-                <input {...rest}
-                    type={value.isSpecified ? "datetime-local" : "text"}
+                <input {...props}
+                    type={props.value.isSpecified ? "datetime-local" : "text"}
                     className={computeInputClassName()}
-                    disabled={!value.isSpecified}
-                    value={value.isSpecified ? tempValue : value.initialDateTime}
+                    disabled={!props.value.isSpecified}
+                    value={props.value.isSpecified ? tempValue : props.value.initialDateTime}
                     onInput={handleInput}
                     onBlur={handleBlur}
                     onKeyDown={handleKeyDown}
                 />
                 
                 <button type="button"
-                        className={`btn btn-${value.isSpecified ? "danger" : "primary"}`}
+                        className={`btn btn-${props.value.isSpecified ? "danger" : "primary"}`}
                         onClick={toggleEnabled}>
-                    <i className={`bi bi-${value.isSpecified ? "x-lg" : "pencil-square"}`} />
+                    <i className={computeButtonIconClassName()} />
                     <span className="d-sm-inline d-none ms-2">
-                        {value.isSpecified ? "Huỷ" : "Sửa"}
+                        {props.value.isSpecified ? "Huỷ" : "Sửa"}
                     </span>
                 </button>
             </div>

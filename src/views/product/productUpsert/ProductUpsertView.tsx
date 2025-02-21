@@ -5,6 +5,7 @@ import { useProductCategoryService } from "@/services/productCategoryService";
 import { useBrandService } from "@/services/brandService";
 import { ProductUpsertModel } from "@/models/product/productUpsertModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
+import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
 import { NotFoundError } from "@/errors";
@@ -24,15 +25,16 @@ import Inputs from "./InputsComponent";
 const ProductUpsertView = ({ id }: { id?: number; }) => {
     // Dependencies.
     const navigate = useNavigate();
-    const productService = useMemo(useProductService, []);
-    const productCategoryService = useMemo(useProductCategoryService, []);
-    const brandService = useMemo(useBrandService, []);
-    const routeGenerator = useMemo(useRouteGenerator, []);
+    const productService = useProductService();
+    const productCategoryService = useProductCategoryService();
+    const brandService = useBrandService();
+    const routeGenerator = useRouteGenerator();
     const alertModalStore = useAlertModalStore();
 
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
     const [model, setModel] = useState(() => new ProductUpsertModel());
+    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model);
 
     // Effect.
     useEffect(() => {
@@ -50,7 +52,11 @@ const ProductUpsertView = ({ id }: { id?: number; }) => {
                     return;
                 }
 
-                setModel(model => model.fromResponseDtos(brandOptions, categoryOptions));
+                setModel(model => {
+                    const loadedModel = model.fromResponseDtos(brandOptions, categoryOptions);
+                    setOriginalModel(model);
+                    return loadedModel;
+                });
             } else {
                 try {
                     const [brandOptions, categoryOptions, detail] = await Promise.all([
@@ -65,10 +71,14 @@ const ProductUpsertView = ({ id }: { id?: number; }) => {
                         return;
                     }
 
-                    setModel(model => model.fromResponseDtos(
-                        brandOptions,
-                        categoryOptions,
-                        detail));
+                    setModel(model => {
+                        const loadedModel = model.fromResponseDtos(
+                            brandOptions,
+                            categoryOptions,
+                            detail);
+                        setOriginalModel(model);
+                        return loadedModel;
+                    });
                 } catch (error) {
                     if (error instanceof NotFoundError) {
                         await alertModalStore.getNotFoundConfirmationAsync();
@@ -76,7 +86,6 @@ const ProductUpsertView = ({ id }: { id?: number; }) => {
                         return;
                     }
                     
-                    console.log(error);
                     throw error;
                 }
             }
@@ -85,7 +94,7 @@ const ProductUpsertView = ({ id }: { id?: number; }) => {
         initialLoadAsync().finally(onInitialLoadingFinished);
     }, []);
 
-    // Memo.
+    // Computed.
     const isForCreating = useMemo(() => id == null, [id]);
     const blockTitle = useMemo<string>(() => {
         if (isForCreating) {
@@ -130,6 +139,7 @@ const ProductUpsertView = ({ id }: { id?: number; }) => {
             deletingAction={handleDeletionAsync}
             onSubmissionSucceeded={handleSucceededSubmissionAsync}
             onDeletionSucceeded={handleSucceededDeletionAsync}
+            isModelDirty={isModelDirty}
         >
             <div className="row g-3">
                 <div className="col col-12">

@@ -23,7 +23,7 @@ const ExpenseListView = () => {
     // Dependencies.
     const alertModalStore = useAlertModalStore();
     const initialData = useInitialDataStore(store => store.data);
-    const service = useMemo(useExpenseService, []);
+    const service = useExpenseService();
 
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished } = useViewStates();

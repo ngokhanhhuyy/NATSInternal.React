@@ -21,9 +21,9 @@ const ProductDetail = ({ id, onInitialLoadingFinished }: Props) => {
     // Dependencies.
     const navigate = useNavigate();
     const alertModalStore = useAlertModalStore();
-    const service = useMemo(useProductService, []);
+    const service = useProductService();
     const amountUtility = useMemo(useAmountUtility, []);
-    const routeGenerator = useMemo(useRouteGenerator, []);
+    const routeGenerator = useRouteGenerator();
 
     // Model and state.
     const [model, setModel] = useState<ProductDetailModel>();

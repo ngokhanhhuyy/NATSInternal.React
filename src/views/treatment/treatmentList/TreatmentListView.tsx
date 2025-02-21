@@ -9,7 +9,7 @@ import ExportProductListView
 // Component.
 const TreatmentListView = () => {
     // Dependencies.
-    const service = useMemo(useTreatmentService, []);
+    const service = useTreatmentService();
 
     return (
         <ExportProductListView

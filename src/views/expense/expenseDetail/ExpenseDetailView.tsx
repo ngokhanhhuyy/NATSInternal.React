@@ -12,13 +12,16 @@ import { NotFoundError } from "@/errors";
 import MainContainer from "@layouts/MainContainerComponent";
 import MainBlock from "@layouts/MainBlockComponent";
 
+// Child component.
+import ExpenseUpdateHistoryList from "./ExpenseUpdateHistoryListComponent";
+
 // Component.
 const ExpenseDetailView = ({ id }: { id: number }) => {
     // Dependencies.
     const getNotFoundConfirmationAsync = useAlertModalStore(store => {
         return store.getNotFoundConfirmationAsync;
     });
-    const service = useMemo(useExpenseService, []);
+    const service = useExpenseService();
     const amountUtility = useMemo(useAmountUtility, []);
 
     // Model and states.
@@ -200,6 +203,13 @@ const ExpenseDetailView = ({ id }: { id: number }) => {
                         </div>
                     </MainBlock>
                 </div>
+
+                {/* UpdateHistories */}
+                {model.updateHistories.length > 0 && (
+                    <div className="col col-12">
+                        <ExpenseUpdateHistoryList model={model.updateHistories} />
+                    </div>
+                )}
             </div>
     
             {/* Action buttons */}

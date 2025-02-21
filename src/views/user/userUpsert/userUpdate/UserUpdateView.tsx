@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useUserService } from "@/services/userService";
 import { UserUpdateModel } from "@/models/user/userUpdateModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
+import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useInitialDataStore } from "@/stores/initialDataStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
 import { NotFoundError } from "@/errors";
 
@@ -26,23 +28,25 @@ const UserUpdateView = ({ id }: { id: number }) => {
     const userService = useMemo(() => useUserService(), []);
     const routeGenerator = useMemo(() => useRouteGenerator(), []);
     const alertModalStore = useAlertModalStore();
+    const initialData = useInitialDataStore(store => store.data);
 
-    // Internal states.
-    const {
-        modelState,
-        isInitialLoading,
-        onInitialLoadingFinished,
-        initialData } = useUpsertViewStates();
+    // Model and states.
+    const { modelState, isInitialLoading, onInitialLoadingFinished } = useUpsertViewStates();
     const [model, setModel] = useState(() => {
         return new UserUpdateModel(initialData.role.allAsOptions);
     });
+    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model);
 
     // Effect.
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const responseDto = await userService.getDetailAsync(id);
-                setModel(model => model.fromResponseDto(responseDto));
+                setModel(model => {
+                    const loadedModel = model.fromResponseDto(responseDto);
+                    setOriginalModel(loadedModel);
+                    return loadedModel;
+                });
             } catch (error) {
                 if (error instanceof NotFoundError) {
                     await alertModalStore.getNotFoundConfirmationAsync();
@@ -51,15 +55,13 @@ const UserUpdateView = ({ id }: { id: number }) => {
                 }
 
                 throw error;
-            } finally {
-                onInitialLoadingFinished();
             }
         };
 
-        fetchData();
+        fetchData().finally(onInitialLoadingFinished);
     }, []);
 
-    // Memo.
+    // Computed.
     const isPersonalInformationBlockRounded = (() => {
         return model.authorization?.canEditUserUserInformation ?? false;
     })();
@@ -95,6 +97,7 @@ const UserUpdateView = ({ id }: { id: number }) => {
             onSubmissionSucceeded={handleSucceededSubmissionAsync}
             deletingAction={handleDeletionAsync}
             onDeletionSucceeded={handleSucceededDeletionAsync}
+            isModelDirty={isModelDirty}
         >
             <div className="row g-3">
                 <div className="col col-12 justify-content-end">

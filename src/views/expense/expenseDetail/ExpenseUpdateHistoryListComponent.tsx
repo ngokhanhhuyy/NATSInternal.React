@@ -1,77 +1,63 @@
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
+import { type ExpenseUpdateHistoryModel }
+    from "@/models/expense/expenseUpdateHistory/expenseUpdateHistoryModel";
 import { useAmountUtility } from "@/utilities/amountUtility";
 
 // Layout component.
 import MainBlock from "@/views/layouts/MainBlockComponent";
 
-// Form component.
-import Label from "@/views/form/LabelComponent";
-
-// Props.
-interface Props<TUpdateHistory extends IDebtUpdateHistoryModel> {
-    model: TUpdateHistory[];
-}
-
 // Component.
-const UpdateHistoriesList = <TUpdateHistory extends IDebtUpdateHistoryModel>
-        ({ model }: Props<TUpdateHistory>) => {
+const ExpenseUpdateHistoryList = ({ model }: { model: ExpenseUpdateHistoryModel[] }) => {
     return (
         <MainBlock
             title="Lịch sử chỉnh sửa"
-            className="h-100"
             bodyPadding={0}
+            className="h-100"
             bodyClassName="overflow-hidden"
         >
             <div className="accordion accordion-flush" id="updateHistory">
-                <div className="accordion-item">
-                    {model.map((updateHistory, index) => (
-                        <UpdateHistoryItem
-                            model={updateHistory}
-                            index={index}
-                            key={index}
-                        />
-                    ))}
-                </div>
+                {model.map((updateHistory, index) => (
+                    <SupplyUpdateHistory model={updateHistory} index={index} key={index} />
+                ))}
             </div>
         </MainBlock>
     );
 };
 
-const UpdateHistoryItem = <TUpdateHistory extends IDebtUpdateHistoryModel>
-        ({ model, index }: { model: TUpdateHistory, index: number }) => {
+const SupplyUpdateHistory = (props: { model: ExpenseUpdateHistoryModel; index: number }) => {
+    const { model, index } = props;
+
     // Dependencies.
     const amountUtility = useMemo(useAmountUtility, []);
-
+    
     // Computed.
     const columnClassName = "col col-md-6 col-12 d-flex flex-column";
     const avatarStyle: React.CSSProperties = {
         width: 35,
         height: 35
     };
+    
+    const computeStatsDateTimeVisibility = (): boolean => {
+        return model.oldStatsDateTime.toString() != model.newStatsDateTime.toString();
+    };
 
     return (
-        <>
+        <div className="accordion-item">
             <h2 className="accordion-header">
                 <button
                     className="accordion-button collapsed"
                     type="button"
                     data-bs-toggle="collapse"
-                    data-bs-target={`#flush-collapse${index}`}
+                    data-bs-target={`#flush-collapse-${index}`}
                     aria-expanded="false"
-                    aria-controls={`#flush-collapse${index}`}
+                    aria-controls={`flush-collapse-${index}`}
                 >
-                    {model.updatedReason ? (
-                        <span>{model.updatedReason}</span>
-                    ) : (
-                        <span className="opacity-50">
-                            Không có lý do chỉnh sửa
-                        </span>
-                    )}
+                    {model.updatedReason}
                 </button>
             </h2>
             <div
-                id={`flush-collapse${index}`}
+                id={`flush-collapse-${index}`}
                 className="accordion-collapse collapse"
                 data-bs-parent="#updateHistory"
             >
@@ -80,7 +66,7 @@ const UpdateHistoryItem = <TUpdateHistory extends IDebtUpdateHistoryModel>
                     <div className="row g-3">
                         {/* UpdatedDateTime */}
                         <div className={columnClassName}>
-                            <Label text="Thời gian chỉnh sửa" />
+                            <span className="fw-bold">Thời gian chỉnh sửa</span>
                             <span className="text-primary">
                                 {model.updatedDateTime.toString()}
                             </span>
@@ -88,7 +74,7 @@ const UpdateHistoryItem = <TUpdateHistory extends IDebtUpdateHistoryModel>
 
                         {/* UpdatedUser */}
                         <div className={columnClassName}>
-                            <Label text="Nhân viên chỉnh sửa" />
+                            <span className="fw-bold">Nhân viên chỉnh sửa</span>
                             <div className="d-flex justify-content-start align-items-center">
                                 <img className="img-thumbnail rounded-circle avatar me-2"
                                     src={model.updatedUser.avatarUrl}
@@ -104,36 +90,36 @@ const UpdateHistoryItem = <TUpdateHistory extends IDebtUpdateHistoryModel>
 
                     {/* Data Comparison */}
                     {/* StatsDateTime */}
-                    {model.oldStatsDateTime != model.oldStatsDateTime && (
+                    {computeStatsDateTimeVisibility() && (
                         <div className="row g-3">
                             <div className={columnClassName}>
-                                <Label text="Thời gian thống kê (cũ)" />
+                                <span className="fw-bold">Thời gian nhập hàng (cũ)</span>
                                 <span className="text-primary">
                                     {model.oldStatsDateTime.dateTime}
                                 </span>
                             </div>
 
                             <div className={columnClassName}>
-                                <Label text="Thời gian thống kê (mới)" />
+                                <span className="fw-bold">Thời gian nhập hàng (mới)</span>
                                 <span className="text-primary">
                                     {model.newStatsDateTime.dateTime}
                                 </span>
                             </div>
                         </div>
                     )}
-
+                    
                     {/* Amount */}
-                    {model.oldAmount != model.newAmount && (
+                    {model.newAmount != model.oldAmount && (
                         <div className="row g-3">
                             <div className={columnClassName}>
-                                <Label text="Giá tiền (cũ)" />
+                                <span className="fw-bold">Giá tiền (cũ)</span>
                                 <span className="text-primary">
                                     {amountUtility.getDisplayText(model.oldAmount)}
                                 </span>
                             </div>
 
                             <div className={columnClassName}>
-                                <Label text="Giá tiền (mới)" />
+                                <span className="fw-bold">Giá tiền (mới)</span>
                                 <span className="text-primary">
                                     {amountUtility.getDisplayText(model.newAmount)}
                                 </span>
@@ -142,12 +128,14 @@ const UpdateHistoryItem = <TUpdateHistory extends IDebtUpdateHistoryModel>
                     )}
 
                     {/* Note */}
-                    {model.oldNote != model.newNote && (
+                    {model.newNote != model.oldNote && (
                         <div className="row g-3">
                             <div className={columnClassName}>
-                                <Label text="Ghi chú (cũ)" />
+                                <span className="fw-bold">Ghi chú (cũ)</span>
                                 {model.oldNote ? (
-                                    <span className="text-primary">{model.oldNote}</span>
+                                    <span className="text-primary">
+                                        {model.oldNote}
+                                    </span>
                                 ) : (
                                     <span className="text-secondary opacity-50">
                                         Để trống
@@ -156,9 +144,11 @@ const UpdateHistoryItem = <TUpdateHistory extends IDebtUpdateHistoryModel>
                             </div>
 
                             <div className={columnClassName}>
-                                <Label text="Ghi chú (mới)" />
+                                <span className="fw-bold">Ghi chú (mới)</span>
                                 {model.newNote ? (
-                                    <span className="text-primary">{model.newNote}</span>
+                                    <span className="text-primary">
+                                        {model.newNote}
+                                    </span>
                                 ) : (
                                     <span className="text-secondary opacity-50">
                                         Để trống
@@ -169,8 +159,8 @@ const UpdateHistoryItem = <TUpdateHistory extends IDebtUpdateHistoryModel>
                     )}
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
-export default UpdateHistoriesList;
+export default ExpenseUpdateHistoryList;

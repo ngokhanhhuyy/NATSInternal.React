@@ -20,7 +20,7 @@ const UpdateHistoryList = <
         >
             <div className="accordion accordion-flush" id="updateHistory">
                 {model.map((updateHistory, index) => (
-                    <UpdateHistory model={updateHistory} key={index} />
+                    <UpdateHistory model={updateHistory} index={index} key={index} />
                 ))}
             </div>
         </MainBlock>
@@ -30,15 +30,17 @@ const UpdateHistoryList = <
 const UpdateHistory = <
         TUpdateHistory extends IExportProductUpdateHistoryModel<TItemUpdateHistory>,
         TItemUpdateHistory extends IExportProductItemUpdateHistoryModel>
-    ({ model }: { model: TUpdateHistory }) =>
+    ({ model, index }: { model: TUpdateHistory; index: number }) =>
 {
     // Dependencies.
     const amountUtility = useMemo(useAmountUtility, []);
     
     // Computed.
-    const columnClassName = useMemo<string>(() => {
-        return "col col-md-6 col-12 d-flex flex-column";
-    }, []);
+    const columnClassName = "col col-md-6 col-12 d-flex flex-column";
+    const avatarStyle: React.CSSProperties = {
+        width: 35,
+        height: 35
+    };
     
     const computeStatsDateTimeVisibility = (): boolean => {
         return model.oldStatsDateTime != model.newStatsDateTime;
@@ -59,38 +61,58 @@ const UpdateHistory = <
     };
 
     const computeItemSubText = (item: TItemUpdateHistory): string => {
-        const itemAmountText = amountUtility.getDisplayText(item.productAmountPerUnit);
-        return `${itemAmountText} + ${item.vatAmountPerUnit}% VAT`;
+        let text = amountUtility.getDisplayText(item.productAmountPerUnit);
+        if (item.productAmountPerUnit > 0) {
+            const itemVatPercentagePerUnit =
+                (item.vatAmountPerUnit / item.productAmountPerUnit) * 100;
+            text += ` + ${itemVatPercentagePerUnit}% VAT`;
+        }
+        return text;
     };
 
     return (
         <div className="accordion-item">
             <h2 className="accordion-header">
-                <button className="accordion-button collapsed" type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#flush-collapseOne"
-                        aria-expanded="false"
-                        aria-controls="flush-collapseOne">
+                <button
+                    className="accordion-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target={`#flush-collapse-${index}`}
+                    aria-expanded="false"
+                    aria-controls={`flush-collapse-${index}`}
+                >
                     {model.updatedReason}
                 </button>
             </h2>
-            <div id="flush-collapseOne" className="accordion-collapse collapse"
-                    data-bs-parent="#updateHistory">
+            <div
+                id={`flush-collapse-${index}`}
+                className="accordion-collapse collapse"
+                data-bs-parent="#updateHistory"
+            >
                 <div className="accordion-body">
                     {/* UpdatedDateTime and Updater */}
                     <div className="row g-3">
                         {/* UpdatedDateTime */}
                         <div className={columnClassName}>
                             <span className="fw-bold">Thời gian chỉnh sửa</span>
-                            <span>{model.updatedDateTime.toString()}</span>
+                            <span className="text-primary">
+                                {model.updatedDateTime.toString()}
+                            </span>
                         </div>
 
                         {/* UpdatedUser */}
                         <div className={columnClassName}>
                             <span className="fw-bold">Nhân viên chỉnh sửa</span>
-                            <Link to={model.updatedUser.detailRoute}>
-                                {model.updatedUser.fullName}
-                            </Link>
+                            <div className="d-flex justify-content-start align-items-center">
+                                <img className="img-thumbnail rounded-circle avatar me-2"
+                                    src={model.updatedUser.avatarUrl}
+                                    style={avatarStyle}
+                                />
+                                <Link to={model.updatedUser.detailRoute}
+                                        className="user-fullname">
+                                    {model.updatedUser.fullName}
+                                </Link>
+                            </div>
                         </div>
                     </div>
 
@@ -99,13 +121,17 @@ const UpdateHistory = <
                     {computeStatsDateTimeVisibility() && (
                         <div className="row g-3">
                             <div className={columnClassName}>
-                                <span className="fw-bold">Thời gian thanh toán (cũ)</span>
-                                <span>{model.oldStatsDateTime.dateTime}</span>
+                                <span className="fw-bold">Thời gian nhập hàng (cũ)</span>
+                                <span className="text-primary">
+                                    {model.oldStatsDateTime.dateTime}
+                                </span>
                             </div>
 
-                            <div className={`mt-md-0 mt-3 ${columnClassName}`}>
-                                <span className="fw-bold">Thời gian thanh toán (mới)</span>
-                                <span>{model.newStatsDateTime.dateTime}</span>
+                            <div className={columnClassName}>
+                                <span className="fw-bold">Thời gian nhập hàng (mới)</span>
+                                <span className="text-primary">
+                                    {model.newStatsDateTime.dateTime}
+                                </span>
                             </div>
                         </div>
                     )}
@@ -115,12 +141,24 @@ const UpdateHistory = <
                         <div className="row g-3">
                             <div className={columnClassName}>
                                 <span className="fw-bold">Ghi chú (cũ)</span>
-                                {model.oldNote || <span className="opacity-50">Để trống</span>}
+                                {model.oldNote ? (
+                                    <span className="text-primary">{model.oldNote}</span>
+                                ) : (
+                                    <span className="text-secondary opacity-50">
+                                        Để trống
+                                    </span>
+                                )}
                             </div>
 
-                            <div className={`${columnClassName} mt-md-0 mt-3`}>
+                            <div className={columnClassName}>
                                 <span className="fw-bold">Ghi chú (mới)</span>
-                                {model.newNote || <span className="opacity-50">Để trống</span>}
+                                {model.newNote ? (
+                                    <span className="text-primary">{model.newNote}</span>
+                                ) : (
+                                    <span className="text-secondary opacity-50">
+                                        Để trống
+                                    </span>
+                                )}
                             </div>
                         </div>
                     )}
@@ -142,7 +180,7 @@ const UpdateHistory = <
                                 </ol>
                             </div>
 
-                            <div className={`mt-md-0 mt-3 ${columnClassName}`}>
+                            <div className={columnClassName}>
                                 <span className="fw-bold">Danh sách sản phẩm (mới)</span>
                                 <ol>
                                     {model.newItems.map((item, index) => (

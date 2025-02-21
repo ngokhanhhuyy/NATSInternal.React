@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useUserService } from "@/services/userService";
 import { UserPasswordResetModel } from "@/models/user/userPasswordResetModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
+import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
 import { NotFoundError } from "@/errors";
@@ -28,6 +29,7 @@ const UserPasswordResetView = ({ id }: { id: number }) => {
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
     const [model, setModel] = useState(() => new UserPasswordResetModel(id));
+    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model);
 
     // Effect.
     useEffect(() => {
@@ -36,12 +38,14 @@ const UserPasswordResetView = ({ id }: { id: number }) => {
                 const canReset = await userService.getResetPasswordPermissionAsync(id);
                 if (!canReset) {
                     await alertModalStore.getUnauthorizationConfirmationAsync();
-                    await navigate(-1);
+                    await navigate(routeGenerator.getUserListRoutePath());
                 }
+
+                setOriginalModel(model);
             } catch (error) {
                 if (error instanceof NotFoundError) {
                     await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(-1);
+                    await navigate(routeGenerator.getUserListRoutePath());
                     return;
                 }
 
@@ -62,10 +66,14 @@ const UserPasswordResetView = ({ id }: { id: number }) => {
     };
 
     return (
-        <UpsertViewContainer formId="userCreateForm" modelState={modelState}
-                isInitialLoading={isInitialLoading}
-                submittingAction={handleSubmissionAsync}
-                onSubmissionSucceeded={handleSucceededSubmissionAsync}>
+        <UpsertViewContainer
+            formId="userCreateForm"
+            modelState={modelState}
+            isInitialLoading={isInitialLoading}
+            submittingAction={handleSubmissionAsync}
+            onSubmissionSucceeded={handleSucceededSubmissionAsync}
+            isModelDirty={isModelDirty}
+        >
             <div className="row g-3">
                 <div className="col col-12">
                     <MainBlock title="Đặt lại mật khẩu" bodyClassName="row g-3" closeButton>
@@ -73,12 +81,15 @@ const UserPasswordResetView = ({ id }: { id: number }) => {
                         <div className="col col-sm-6 col-12">
                             <div className="form-group">
                                 <Label text="Mật khẩu mới" required />
-                                <PasswordInput name="newPassword"
-                                        placeholder="Mật khẩu mới" maxLength={20}
-                                        value={model.newPassword}
-                                        onValueChanged={newPassword => {
-                                            setModel(m => m.from({ newPassword }));
-                                        }} />
+                                <PasswordInput
+                                    name="newPassword"
+                                    placeholder="Mật khẩu mới"
+                                    maxLength={20}
+                                    value={model.newPassword}
+                                    onValueChanged={newPassword => {
+                                        setModel(m => m.from({ newPassword }));
+                                    }}
+                                />
                                 <ValidationMessage name="newPassword" />
                             </div>
                         </div>
@@ -87,12 +98,15 @@ const UserPasswordResetView = ({ id }: { id: number }) => {
                         <div className="col col-sm-6 col-12">
                             <div className="form-group">
                                 <Label text="Mật khẩu xác nhận" required />
-                                <PasswordInput name="confirmationPassword"
-                                        placeholder="Mật khẩu xác nhận" maxLength={20}
-                                        value={model.confirmationPassword}
-                                        onValueChanged={confirmationPassword => {
-                                            setModel(m => m.from({ confirmationPassword }));
-                                        }} />
+                                <PasswordInput
+                                    name="confirmationPassword"
+                                    placeholder="Mật khẩu xác nhận"
+                                    maxLength={20}
+                                    value={model.confirmationPassword}
+                                    onValueChanged={confirmationPassword => {
+                                        setModel(m => m.from({ confirmationPassword }));
+                                    }}
+                                />
                                 <ValidationMessage name="confirmationPassword" />
                             </div>
                         </div>

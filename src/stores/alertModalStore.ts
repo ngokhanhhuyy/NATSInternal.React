@@ -9,9 +9,10 @@ export type Mode =
     | "connectionErrorNotification"
     | "submissionErrorNotification"
     | "submissionSuccessNotification"
+    | "dataUnchangedSubmissionNotification"
     | "unauthorizationConfirmation"
-    | "undefinedErrorNotification"
-    | "fileTooLargeConfirmation";
+    | "fileTooLargeConfirmation"
+    | "undefinedErrorNotification";
 
 export interface IAlertModalStore {
     errors: IModelStateErrors | null;
@@ -20,6 +21,7 @@ export interface IAlertModalStore {
     discardingConfirmationResolve: ((value: PromiseLike<boolean> | boolean) => void) | null;
     submissionErrorConfirmationResolve: ((value: PromiseLike<void> | void) => void) | null;
     submissionSuccessConfirmationResolve: ((value: PromiseLike<void> | void) => void) | null;
+    dataUnchangedSubmissionConfirmationResolve: ((value: PromiseLike<void> | void) => void) | null;
     unauthorizationConfirmationResolve: ((value: PromiseLike<void> | void) => void) | null;
     fileTooLargeConfirmationResolve: ((value: PromiseLike<void> | void) => void) | null;
     undefinedErrorConfirmationResolve: ((value: PromiseLike<void> | void) => void) | null;
@@ -29,6 +31,7 @@ export interface IAlertModalStore {
     getDiscardingConfirmationAsync(): Promise<boolean>;
     getSubmissionSuccessConfirmationAsync(): Promise<void>;
     getSubmissionErrorConfirmationAsync(errors?: IModelStateErrors): Promise<void>;
+    getDataUnchangedSubmissionConfirmationAsync(): Promise<void>;
     getUnauthorizationConfirmationAsync(): Promise<void>;
     getFileTooLargeConfirmationAsync(): Promise<void>;
     getUndefinedErrorConfirmationAsync(): Promise<void>;
@@ -42,6 +45,7 @@ export const useAlertModalStore = create<IAlertModalStore>((set, get) => {
         discardingConfirmationResolve: null,
         submissionErrorConfirmationResolve: null,
         submissionSuccessConfirmationResolve: null,
+        dataUnchangedSubmissionConfirmationResolve: null,
         unauthorizationConfirmationResolve: null,
         fileTooLargeConfirmationResolve: null,
         undefinedErrorConfirmationResolve: null,
@@ -53,6 +57,7 @@ export const useAlertModalStore = create<IAlertModalStore>((set, get) => {
                 discardingConfirmationResolve: null,
                 submissionErrorConfirmationResolve: null,
                 submissionSuccessConfirmationResolve: null,
+                dataUnchangedSubmissionConfirmationResolve: null,
                 unauthorizationConfirmationResolve: null,
                 fileTooLargeConfirmationResolve: null,
                 undefinedErrorConfirmationResolve: null,
@@ -75,7 +80,6 @@ export const useAlertModalStore = create<IAlertModalStore>((set, get) => {
                 };
                 set({ notFoundConfirmationResolve: computedResolve });
             });
-            return;
         },
         async getDiscardingConfirmationAsync(): Promise<boolean> {
             return await new Promise<boolean>(resolve => {
@@ -103,20 +107,23 @@ export const useAlertModalStore = create<IAlertModalStore>((set, get) => {
             });
         },
         async getSubmissionSuccessConfirmationAsync(): Promise<void> {
-            await new Promise(resolve => set({ submissionSuccessConfirmationResolve: resolve }));
-            return;
+            await new Promise(resolve => set({
+                submissionSuccessConfirmationResolve: resolve
+            }));
+        },
+        async getDataUnchangedSubmissionConfirmationAsync(): Promise<void> {
+            await new Promise(resolve => set({
+                dataUnchangedSubmissionConfirmationResolve: resolve
+            }));
         },
         async getUnauthorizationConfirmationAsync(): Promise<void> {
             await new Promise(resolve => set({ unauthorizationConfirmationResolve: resolve }));
-            return;
         },
         async getUndefinedErrorConfirmationAsync(): Promise<void> {
             await new Promise(resolve => set({ undefinedErrorConfirmationResolve: resolve }));
-            return;
         },
         async getFileTooLargeConfirmationAsync(): Promise<void> {
             await new Promise(resolve => set({ fileTooLargeConfirmationResolve: resolve }));
-            return;
         },
     };
 });

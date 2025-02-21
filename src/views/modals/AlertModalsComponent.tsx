@@ -4,22 +4,42 @@ import { Modal as BootstrapModal } from "bootstrap";
 
 const AlertModals = () => (
     <>
-        <Modal mode="deletingConfirmation"
-                resolveGetter={(store => store.deletingConfirmationResolve)} />
-        <Modal mode="notFoundNotification"
-                resolveGetter={(store => store.notFoundConfirmationResolve)} />
-        <Modal mode="discardingConfirmation"
-                resolveGetter={(store => store.discardingConfirmationResolve)} />
-        <Modal mode="submissionErrorNotification"
-                resolveGetter={(store => store.submissionErrorConfirmationResolve)} />
-        <Modal mode="submissionSuccessNotification"
-                resolveGetter={(store => store.submissionSuccessConfirmationResolve)} />
-        <Modal mode="unauthorizationConfirmation"
-                resolveGetter={(store => store.unauthorizationConfirmationResolve)} />
-        <Modal mode="undefinedErrorNotification"
-                resolveGetter={(store => store.undefinedErrorConfirmationResolve)} />
-        <Modal mode="fileTooLargeConfirmation"
-                resolveGetter={(store => store.fileTooLargeConfirmationResolve)} />
+        <Modal
+            mode="deletingConfirmation"
+            resolveGetter={(store) => store.deletingConfirmationResolve}
+        />
+        <Modal
+            mode="notFoundNotification"
+            resolveGetter={(store) => store.notFoundConfirmationResolve}
+        />
+        <Modal
+            mode="discardingConfirmation"
+            resolveGetter={(store) => store.discardingConfirmationResolve}
+        />
+        <Modal
+            mode="submissionErrorNotification"
+            resolveGetter={(store) => store.submissionErrorConfirmationResolve}
+        />
+        <Modal
+            mode="submissionSuccessNotification"
+            resolveGetter={(store) => store.submissionSuccessConfirmationResolve}
+        />
+        <Modal
+            mode="dataUnchangedSubmissionNotification"
+            resolveGetter={(store) => store.dataUnchangedSubmissionConfirmationResolve}
+        />
+        <Modal
+            mode="unauthorizationConfirmation"
+            resolveGetter={(store) => store.unauthorizationConfirmationResolve}
+        />
+        <Modal
+            mode="undefinedErrorNotification"
+            resolveGetter={(store) => store.undefinedErrorConfirmationResolve}
+        />
+        <Modal
+            mode="fileTooLargeConfirmation"
+            resolveGetter={(store) => store.fileTooLargeConfirmationResolve}
+        />
     </>
 );
 
@@ -89,10 +109,13 @@ const Modal = <TResolve extends Resolve<TResult>, TResult>(
                         </h1>
 
                         {elements.buttons.cancelButton && (
-                            <button type="button" className="btn-close"
-                                    data-bs-dismiss="modal" aria-label="Close"
-                                    onClick={onCancelButtonClicked}>
-                            </button>
+                            <button
+                                type="button"
+                                className="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"
+                                onClick={onCancelButtonClicked}
+                            />
                         )}
                     </div>
 
@@ -228,6 +251,18 @@ function getElementContent(mode: Mode): ElementsContent {
                 iconClassName: "bi bi-exclamation-circle-fill fs-1 text-success",
                 buttons: {
                     okButton: { text: "Xác nhận", className: "btn btn-primary" }
+                }
+            };
+        case "dataUnchangedSubmissionNotification":
+            return {
+                title: "Dữ liệu không có sự thay đổi",
+                content: [
+                    "Dữ liệu không có sự thay đổi.",
+                    "Hãy nhập dữ liệu mới nhất trước khi lưu."
+                ],
+                iconClassName: "bi bi-exclamation-triangle-fill fs-1 text-warning",
+                buttons: {
+                    okButton: { text: "Đã hiểu", className: "btn btn-primary" }
                 }
             };
         case "unauthorizationConfirmation":

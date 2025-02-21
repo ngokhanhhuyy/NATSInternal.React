@@ -4,6 +4,7 @@ import { useBrandService } from "@/services/brandService";
 import { BrandUpsertModel } from "@/models/product/brand/brandUpsertModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
 import { useRouteGenerator } from "@/router/routeGenerator";
 import { NotFoundError } from "@/errors";
 
@@ -24,13 +25,14 @@ const BrandUpsertView = ({ id }: { id?: number }) => {
     // Dependencies.
     const navigate = useNavigate();
     const alertModalStore = useAlertModalStore();
-    const service = useMemo(useBrandService, []);
-    const routeGenerator = useMemo(useRouteGenerator, []);
+    const service = useBrandService();
+    const routeGenerator = useRouteGenerator();
 
     // Model.
     const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
     const [model, setModel] = useState<BrandUpsertModel>(() => new BrandUpsertModel());
-
+    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model);
+    
     // Effect.
     useEffect(() => {
         const initialLoadAsync = async () => {
@@ -41,6 +43,8 @@ const BrandUpsertView = ({ id }: { id?: number }) => {
                         await alertModalStore.getUnauthorizationConfirmationAsync();
                         await navigate(routeGenerator.getProductListRoutePath());
                     }
+
+                    setOriginalModel(model);
                 } else {
                     const responseDto = await service.getDetailAsync(id);
                     if (!responseDto.authorization.canEdit) {
@@ -48,26 +52,28 @@ const BrandUpsertView = ({ id }: { id?: number }) => {
                         return;
                     }
 
-                    setModel(m => m.fromResponseDto(responseDto));
+                    setModel(model => {
+                        const loadedModel = model.fromResponseDto(responseDto);
+                        setOriginalModel(loadedModel);
+                        return loadedModel;
+                    });
                 }
             } catch (error) {
                 if (error instanceof NotFoundError) {
                     await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(-1);
+                    await navigate(routeGenerator.getProductListRoutePath());
                     return;
                 }
 
                 throw error;
-            } finally {
-                onInitialLoadingFinished();
             }
         };
 
-        initialLoadAsync().then();
+        initialLoadAsync().finally(onInitialLoadingFinished);
     }, []);
 
     // Computed.
-    const isForCreating = useMemo(() => id == null, []);
+    const isForCreating = useMemo(() => id == null, [id]);
 
     // Callback.
     const handleSubmissionAsync = async (): Promise<number> => {
@@ -95,6 +101,7 @@ const BrandUpsertView = ({ id }: { id?: number }) => {
             onSubmissionSucceeded={handleSucceededAsync}
             deletingAction={handleDeletionAsync}
             onDeletionSucceeded={handleSucceededAsync}
+            isModelDirty={isModelDirty}
         >
             <div className="row g-3 justify-content-end">
                 <div className="col col-12">

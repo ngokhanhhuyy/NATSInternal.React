@@ -1,9 +1,10 @@
-import React, { useRef, useState, useMemo, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSupplyService } from "@/services/supplyService";
 import { SupplyUpsertModel } from "@/models/supply/supplyUpsertModel";
 import { SupplyUpsertItemModel } from "@/models/supply/supplyItem/supplyUpsertItemModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
+import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
 import { NotFoundError } from "@/errors";
@@ -36,8 +37,8 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
     // Depdencies.
     const navigate = useNavigate();
     const alertModalStore = useAlertModalStore();
-    const service = useMemo(useSupplyService, []);
-    const routeGenerator = useMemo(useRouteGenerator, []);
+    const service = useSupplyService();
+    const routeGenerator = useRouteGenerator();
 
     // Model and states.
     const {isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
@@ -48,6 +49,7 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
     const [model, setModel] = useState(() => new SupplyUpsertModel());
     const [modalModel, setModalModel] = useState<SupplyUpsertItemModel | null>(() => null);
     const modalPromiseResolve = useRef<ModalPromiseResolve | null>(null);
+    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model, ["updatedReason"]);
 
     // Effect.
     useEffect(() => {
@@ -55,17 +57,29 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
             try {
                 if (id == null) {
                     const authorization = await service.getCreatingAuthorizationAsync();
+                    if (!authorization) {
+                        await navigate(routeGenerator.getSupplyListRoutePath());
+                        return;
+                    }
+
                     setModel(model => {
-                        return model.fromCreatingAuthorizationResponseDto(authorization);
+                        const loadedModel = model
+                            .fromCreatingAuthorizationResponseDto(authorization);
+                        setOriginalModel(loadedModel);
+                        return loadedModel;
                     });
                 } else {
                     const detailResponseDto = await service.getDetailAsync(id);
-                    setModel(m => m.fromDetailResponseDto(detailResponseDto));
+                    setModel(model => {
+                        const loadedModel = model.fromDetailResponseDto(detailResponseDto);
+                        setOriginalModel(loadedModel);
+                        return loadedModel;
+                    });
                 }
             } catch (error) {
                 if (error instanceof NotFoundError) {
                     await alertModalStore.getSubmissionErrorConfirmationAsync();
-                    await navigate(-1);
+                    await navigate(routeGenerator.getSupplyListRoutePath());
                     return;
                 }
                 
@@ -115,68 +129,83 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
     };
 
     return (
-        <UpsertViewContainer modelState={modelState} isInitialLoading={isInitialLoading}
-                submittingAction={handleSubmissionAsync}
-                onSubmissionSucceeded={handleSucceededSubmissionAsync}
-                deletingAction={handleDeletionAsync}
-                onDeletionSucceeded={handleSucceededDeletionAsync}>
+        <UpsertViewContainer
+            modelState={modelState}
+            isInitialLoading={isInitialLoading}
+            submittingAction={handleSubmissionAsync}
+            onSubmissionSucceeded={handleSucceededSubmissionAsync}
+            deletingAction={handleDeletionAsync}
+            onDeletionSucceeded={handleSucceededDeletionAsync}
+            isModelDirty={isModelDirty}
+        >
             <div className="row g-3">
                 {/* Supply detail */}
                 <div className="col col-12">
-                    <MainBlock title="Thông tin đơn nhập hàng" closeButton
-                            bodyPadding={[0, 2, 2, 2]}>
+                    <MainBlock
+                        title="Thông tin đơn nhập hàng"
+                        closeButton
+                        bodyPadding={[0, 2, 2, 2]}
+                    >
                         <div className="row g-3">
                             {/* SuppliedDateTime */}
                             {model.canSetStatsDateTime && (
-                                <div className="col col-md-6 col-12">
+                                <div className="col col-xl-6 col-md-8 col-12">
                                     <Label text="Ngày giờ nhập hàng" required />
-                                    <StatsDateTimeInput name="suppliedDateTime"
-                                            disabled={initialLoadingState.supplyForm}
-                                            value={model.statsDateTime}
-                                            onValueChanged={statsDateTime => {
-                                                setModel(m => m.from({ statsDateTime }));
-                                            }} />
+                                    <StatsDateTimeInput
+                                        name="suppliedDateTime"
+                                        disabled={initialLoadingState.supplyForm}
+                                        value={model.statsDateTime}
+                                        onValueChanged={statsDateTime => {
+                                            setModel(m => m.from({ statsDateTime }));
+                                        }}
+                                    />
                                     <ValidationMessage name="suppliedDateTime" />
                                 </div>
                             )}
                             
                             {/* ShipmentFee */}
-                            <div className="col col-md-6 col-12">
+                            <div className="col col-xl-6 col-md-4 col-12">
                                 <Label text="Phí vận chuyển" />
-                                <MoneyInput name="shipmentFee" suffix=" vnđ"
-                                        disabled={initialLoadingState.supplyForm}
-                                        value={model.shipmentFee}
-                                        onValueChanged={shipmentFee => {
-                                            setModel(m => m.from({ shipmentFee }));
-                                        }} />
+                                <MoneyInput
+                                    name="shipmentFee"
+                                    suffix=" vnđ"
+                                    disabled={initialLoadingState.supplyForm}
+                                    value={model.shipmentFee}
+                                    onValueChanged={shipmentFee => {
+                                        setModel(m => m.from({ shipmentFee }));
+                                    }}
+                                />
                                 <ValidationMessage name="shipmentFee" />
                             </div>
     
                             {/* Note */}
                             <div className="col col-12">
                                 <Label text="Ghi chú" />
-                                <TextAreaInput name="note"
-                                        disabled={initialLoadingState.supplyForm}
-                                        value={model.note}
-                                        onValueChanged={note => {
-                                            setModel(m => m.from({ note }));
-                                        }}
-                                        placeholder="Ghi chú ..."
-                                        v-model="model.note" />
+                                <TextAreaInput
+                                    name="note"
+                                    disabled={initialLoadingState.supplyForm}
+                                    value={model.note}
+                                    onValueChanged={note => {
+                                        setModel(m => m.from({ note }));
+                                    }}
+                                    placeholder="Ghi chú ..."
+                                />
                                 <ValidationMessage name="note" />
                             </div>
     
                             {/* UpdateReason */}
                             {id != null && (
-                                <div className="col col-12 mt-3">
+                                <div className="col col-12">
                                     <Label text="Lý do chỉnh sửa" required />
-                                    <TextAreaInput name="updatedReason"
-                                            disabled={initialLoadingState.supplyForm}
-                                            placeholder="Lý do chỉnh sửa ..."
-                                            value={model.updatedReason}
-                                            onValueChanged={updatedReason => {
-                                                setModel(m => m.from({ updatedReason }));
-                                            }} />
+                                    <TextAreaInput
+                                        name="updatedReason"
+                                        disabled={initialLoadingState.supplyForm}
+                                        placeholder="Lý do chỉnh sửa ..."
+                                        value={model.updatedReason}
+                                        onValueChanged={updatedReason => {
+                                            setModel(m => m.from({ updatedReason }));
+                                        }}
+                                    />
                                     <ValidationMessage name="updatedReason" />
                                 </div>
                             )}

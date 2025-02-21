@@ -9,7 +9,7 @@ const Breadcrumb = () => {
     const location = useLocation();
     const breadcrumbStore = useBreadcrumbStore();
     const items = useMemo(() => breadcrumbStore.items ?? [], [breadcrumbStore.items]);
-    const routeGenerator = useMemo(useRouteGenerator, []);
+    const routeGenerator = useRouteGenerator();
 
     const homeIconClassName = useMemo<string>(() => {
         if (location.pathname !== "/") {
