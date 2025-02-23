@@ -1,14 +1,17 @@
 import React from "react";
 import Form from "../form/FormComponent";
 import type { IModelState } from "@/hooks/modelStateHook";
-import MainBlock from "@layouts/MainBlockComponent";
+
+// Layout component.
+import MainContainer from "./MainContainerComponent";
+import MainBlock from "./MainBlockComponent";
 
 // Props.
 interface Props<TSubmissionResult> {
     children: React.ReactNode | React.ReactNode[];
     modelState: IModelState;
     formId?: string;
-    isInitialLoading?: boolean;
+    isInitialLoading: boolean;
     submittingAction: () => Promise<TSubmissionResult>;
     onSubmissionSucceeded: (submissionResult: TSubmissionResult) => Promise<void>;
     submissionSucceededModal?: boolean;
@@ -21,30 +24,19 @@ interface Props<TSubmissionResult> {
 const UpsertViewContainer = <TSubmissionResult,>(props: Props<TSubmissionResult>) => {
     const { children, modelState, isInitialLoading, ...rest } = props;
 
-    const computeClassName = () => {
-        const classNames = ["container-fluid d-flex flex-column px-2 pb-1"];
-        if (isInitialLoading) {
-            classNames.push("d-none");
-        }
-
-        return classNames.join(" ");
-    };
-
     return (
-        <Form
-            className={computeClassName()}
-            modelState={modelState}
-            {...rest}
-        >
-            {modelState.hasAnyError() && (
-                <div className="row g-3">
-                    <div className="col col-12">
-                        <ErrorBlock modelState={modelState}/>
+        <Form {...rest} className="m-0 p-0" modelState={modelState}>
+            <MainContainer isInitialLoading={isInitialLoading}>
+                {modelState.hasAnyError() && (
+                    <div className="row g-3">
+                        <div className="col col-12">
+                            <ErrorBlock modelState={modelState}/>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {children}
+                {children}
+            </MainContainer>
         </Form>
     );
 };

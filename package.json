@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "@microsoft/signalr": "^8.0.7",
+    "apexcharts": "^4.5.0",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
     "maska": "^3.0.4",

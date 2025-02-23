@@ -43,6 +43,7 @@ export default defineConfig({
         // include: ["src/**/*", "src/services/**/*", "src/views/layouts/**/*"],
     },
     server: {
+        allowedHosts: ["frontend.khanhhuy.dev"],
         strictPort: true,
         port: 5173, // Development server port
         proxy: {

@@ -104,7 +104,7 @@ interface Params {
 const routes: Routes = {
     home: {
         path: /^\/$/,
-        element: async () => <HomeView/>,
+        element: async () => <HomeView />,
         meta: {
             pageTitle: "Trang chủ",
             breadcrumbItems: []
@@ -122,10 +122,9 @@ const routes: Routes = {
     },
     userProfile: {
         path: /^\/users\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => {
-            const { id } = params;
-            return <UserProfileView id={parseInt(id)} />;
-        },
+        element: async ({ params }) => (
+            <UserProfileView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Hồ sơ nhân viên",
             breadcrumbItems: [
@@ -147,7 +146,9 @@ const routes: Routes = {
     },
     userUpdate: {
         path: /^\/users\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => <UserUpdateView id={parseInt(params.id as string)} />,
+        element: async ({ params }) => (
+            <UserUpdateView id={parseInt(params.id as string)} />
+        ),
         meta: {
             pageTitle: "Chỉnh sửa nhân viên",
             breadcrumbItems: [
@@ -169,7 +170,9 @@ const routes: Routes = {
     },
     userPasswordReset: {
         path: /^\/users\/(?<id>\d+)\/resetPassword\/?$/,
-        element: async ({ params }) => <UserPasswordResetView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <UserPasswordResetView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Đặt lại mật khẩu",
             breadcrumbItems: [
@@ -190,7 +193,9 @@ const routes: Routes = {
     },
     customerDetail: {
         path: /^\/customers\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => <CustomerDetailView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <CustomerDetailView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Hồ sơ khách hàng",
             breadcrumbItems: [
@@ -204,7 +209,9 @@ const routes: Routes = {
     },
     customerCreate: {
         path: /^\/customers\/create\/?$/,
-        element: async () => <CustomerUpsertView isForCreating={true} />,
+        element: async () => (
+            <CustomerUpsertView isForCreating={true} />
+        ),
         meta: {
             pageTitle: "Tạo khách hàng mới",
             breadcrumbItems: [
@@ -219,7 +226,10 @@ const routes: Routes = {
     customerUpdate: {
         path: /^\/customers\/(?<id>\d+)\/update\/?$/,
         element: async ({ params }) => (
-            <CustomerUpsertView isForCreating={false} id={parseInt(params.id)} />
+            <CustomerUpsertView
+                isForCreating={false}
+                id={parseInt(params.id)}
+            />
         ),
         meta: {
             pageTitle: "Chỉnh sửa khách hàng",
@@ -244,7 +254,9 @@ const routes: Routes = {
     },
     productDetail: {
         path: /^\/products\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => <ProductDetailView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <ProductDetailView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chi tiết sản phẩm",
             breadcrumbItems: [
@@ -266,7 +278,9 @@ const routes: Routes = {
     },
     productUpdate: {
         path: /^\/products\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => <ProductUpsertView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <ProductUpsertView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chi tiết sản phẩm",
             breadcrumbItems: [
@@ -288,7 +302,9 @@ const routes: Routes = {
     },
     brandUpdate: {
         path: /^\/products\/brands\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => <BrandUpsertView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <BrandUpsertView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chỉnh sửa thương hiệu",
             breadcrumbItems: [
@@ -310,7 +326,9 @@ const routes: Routes = {
     },
     productCategoryUpdate: {
         path: /^\/products\/categories\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => <ProductCategoryUpsertView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <ProductCategoryUpsertView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chỉnh sửa phân loại sản phẩm",
             breadcrumbItems: [
@@ -331,7 +349,9 @@ const routes: Routes = {
     },
     consultantDetail: {
         path: /^\/consultants\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => <ConsultantDetailView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <ConsultantDetailView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chi tiết tư vấn",
             breadcrumbItems: [
@@ -353,7 +373,9 @@ const routes: Routes = {
     },
     consultantUpdate: {
         path: /^\/consultants\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => <ConsultantUpsertView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <ConsultantUpsertView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chỉnh sửa tư vấn",
             breadcrumbItems: [
@@ -374,7 +396,9 @@ const routes: Routes = {
     },
     supplyDetail: {
         path: /^\/supplies\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => <SupplyDetailView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <SupplyDetailView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chi tiết đơn nhập hàng",
             breadcrumbItems: [
@@ -402,7 +426,9 @@ const routes: Routes = {
     },
     supplyUpdate: {
         path: /^\/supplies\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => <SupplyUpsertView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <SupplyUpsertView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chỉnh sửa đơn nhập hàng",
             breadcrumbItems: [
@@ -426,7 +452,9 @@ const routes: Routes = {
     },
     expenseDetail: {
         path: /^\/expenses\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => <ExpenseDetailView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <ExpenseDetailView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chi tiết chi phí",
             breadcrumbItems: [
@@ -451,7 +479,9 @@ const routes: Routes = {
     },
     expenseUpdate: {
         path: /^\/expenses\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => <ExpenseUpsertView id={parseInt(params.id)} />,
+        element: async ({ params }) =>(
+            <ExpenseUpsertView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chỉnh sửa chi phí",
             breadcrumbItems: [
@@ -475,7 +505,9 @@ const routes: Routes = {
     },
     orderDetail: {
         path: /^\/orders\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => <OrderDetailView id={parseInt(params.id)} />,
+        element: async ({ params }) =>(
+            <OrderDetailView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chi tiết đơn bán lẻ",
             breadcrumbItems: [
@@ -497,7 +529,9 @@ const routes: Routes = {
     },
     orderUpdate: {
         path: /^\/orders\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => <OrderUpsertView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <OrderUpsertView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chỉnh sửa đơn bán lẻ",
             breadcrumbItems: [
@@ -518,7 +552,9 @@ const routes: Routes = {
     },
     treatmentDetail: {
         path: /^\/treatments\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => <TreatmentDetailView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <TreatmentDetailView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chi tiết liệu trình",
             breadcrumbItems: [
@@ -546,7 +582,9 @@ const routes: Routes = {
     },
     treatmentUpdate: {
         path: /^\/treatments\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => <TreatmentUpsertView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <TreatmentUpsertView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chỉnh sửa liệu trình",
             breadcrumbItems: [
@@ -579,7 +617,9 @@ const routes: Routes = {
     },
     debtIncurrenceDetailView: {
         path: /^\/debts\/incurrences\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => <DebtIncurrenceDetailView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <DebtIncurrenceDetailView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Danh sách khoản ghi nợ",
             breadcrumbItems: [
@@ -609,7 +649,9 @@ const routes: Routes = {
     },
     debtIncurrenceUpdateView: {
         path: /^\/debts\/incurrences\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => <DebtIncurrenceUpsertView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <DebtIncurrenceUpsertView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chỉnh sửa khoản ghi nợ",
             breadcrumbItems: [
@@ -635,7 +677,9 @@ const routes: Routes = {
     },
     debtPaymentDetailView: {
         path: /^\/debts\/payments\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => <DebtPaymentDetailView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <DebtPaymentDetailView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Danh sách khoản trả nợ",
             breadcrumbItems: [
@@ -665,7 +709,9 @@ const routes: Routes = {
     },
     debtPaymentUpdateView: {
         path: /^\/debts\/payments\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => <DebtPaymentUpsertView id={parseInt(params.id)} />,
+        element: async ({ params }) => (
+            <DebtPaymentUpsertView id={parseInt(params.id)} />
+        ),
         meta: {
             pageTitle: "Chỉnh sửa khoản trả nợ",
             breadcrumbItems: [
@@ -690,50 +736,62 @@ const HomeRoutes = () => {
     const initialData = useInitialDataStore(state => state.data);
 
     // States.
-    const [view, setView] = useState<React.ReactNode | undefined>();
+    const [firstView, setFirstView] = useState<React.ReactNode | null>(<LoadingView />);
+    const [secondView, setSecondView] = useState<React.ReactNode | null>(null);
+    const [currentViewKey, setCurrentViewKey] = useState<1 | 2>(1);
 
     useEffect(() => {
-        setView(null);
+        pageLoadProgressBarStore.start();
+        const matchedPair = Object
+            .entries(routes)
+            .map(([viewName, route]) => ({ viewName, route }))
+            .find(pair => pair.route.path.test(location.pathname));
+
+        if (!matchedPair) {
+            navigate(routeGenerator.getHomeRoutePath(), { replace: true });
+            return;
+        }
+
+        const route = matchedPair.route;
+        const match = location.pathname.match(route.path);
+        const params: Params = match?.groups ?? {};
+        route.element({ params, alertModalStore, initialData }).then(element => {
+            if (currentViewKey === 1) {
+                setSecondView(element);
+                setCurrentViewKey(2);
+            } else {
+                setFirstView(element);
+                setCurrentViewKey(1);
+            }
+
+            if (route.meta.breadcrumbItems) {
+                let breadcrumbItems: BreadcrumbItem[];
+                if (typeof route.meta.breadcrumbItems === "function") {
+                    breadcrumbItems = route.meta.breadcrumbItems(params);
+                } else {
+                    breadcrumbItems = route.meta.breadcrumbItems;
+                }
+                breadcrumbStore.setItems(breadcrumbItems);
+                document.title = route.meta.pageTitle ?? "";
+            }
+        });
     }, [location.pathname]);
 
     useEffect(() => {
-        if (view == null) {
-            pageLoadProgressBarStore.start();
-            const route = Object
-                .values(routes)
-                .find(route => route.path.test(location.pathname));
-
-            if (!route) {
-                setView(undefined);
-                navigate(routeGenerator.getHomeRoutePath(), { replace: true });
-                return;
+        if (pageLoadProgressBarStore.phase === "finishing") {
+            if (currentViewKey === 1) {
+                setSecondView(null);
+            } else {
+                setFirstView(null);
             }
-
-            const match = location.pathname.match(route.path);
-            const params: Params = match?.groups ?? {};
-            route.element({ params, alertModalStore, initialData }).then(element => {
-                setView(element);
-                if (route.meta.breadcrumbItems) {
-                    let breadcrumbItems: BreadcrumbItem[];
-                    if (typeof route.meta.breadcrumbItems === "function") {
-                        breadcrumbItems = route.meta.breadcrumbItems(params);
-                    } else {
-                        breadcrumbItems = route.meta.breadcrumbItems;
-                    }
-                    breadcrumbStore.setItems(breadcrumbItems);
-                    document.title = route.meta.pageTitle ?? "";
-                }
-            });
         }
-    }, [view]);
+    }, [pageLoadProgressBarStore.phase]);
 
     return (
-        <>
-            {(view === null || pageLoadProgressBarStore.phase === "waiting") && <LoadingView/>}
-            <Suspense>
-                {view}
-            </Suspense>
-        </>
+        <Suspense>
+            {firstView}
+            {secondView}
+        </Suspense>
     );
 };
 

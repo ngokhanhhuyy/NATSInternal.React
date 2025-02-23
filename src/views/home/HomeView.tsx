@@ -1,137 +1,210 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import MainContainer from "@layouts/MainContainerComponent";
+import { HomeModel } from "@/models/home/homeModel";
+import { useStatsService } from "@/services/statsService";
 import { useViewStates } from "@/hooks/viewStatesHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useInitialDataStore } from "@/stores/initialDataStore";
 
-const HomeView = () => <LoadingView />;
+// Layout component.
+import MainContainer from "@layouts/MainContainerComponent";
 
-const LoadingView = () => {
-    const store = useAlertModalStore();
-    const navigate = useNavigate();
-    const [confirmation, setConfirmation] = useState<boolean | string>();
+// Child components.
+import SmallStatistics from "./SmallStatisticsComponent";
+import FinanceAreaGraph from "./FinanceAreaGraphComponent";
+import RevenueDistributionGraph from "./distributionGraphs/RevenueDistributionGraphComponent";
+import ExpenseAndCostGraph from "./distributionGraphs/ExpenseAndCostGraphComponent";
+import LastestTransactionList from "./LastestTransactionListComponent";
+import TopSoldProductList from "./TopSoldProductListComponent";
+import TopPurchasedCustomerList from "./TopPurchasedCustomerListComponent";
+import Logo from "./LogoComponent";
 
-    const columnClassName = "col col-xxl-3 col-xl-4 col-md-6 col-12 d-flex flex-column";
+// Component.
+const HomeView = () => {
+    // Dependencies.
+    const statsService = useStatsService();
+    const initialData = useInitialDataStore(store => store.data);
+    const getUndefinedErrorConfirmationAsync = useAlertModalStore(store => {
+        return store.getUndefinedErrorConfirmationAsync;
+    });
+
+    // Model and states.
     const { isInitialLoading, onInitialLoadingFinished } = useViewStates();
+    const [model, setModel] = useState<HomeModel>();
 
     // Effect.
     useEffect(() => {
-        setTimeout(onInitialLoadingFinished, 300);
+        const loadAsync = async () => {
+            try {
+                const [
+                    [thisMonthStatsResponseDto, lastMonthStatsResponseDto],
+                    lastestDailyStatsResponseDtos,
+                    lastestTransactionResponseDtos,
+                    topSoldProductListResponseDto,
+                    topPurchasedCustomerListResponseDto
+                ] = await Promise.all([
+                    statsService.getLastestMonthlyAsync({ monthCount: 2 }),
+                    statsService.getLastestDailyDetailAsync({ dayCount: 10 }),
+                    statsService.getLastestTransactionsAsync(),
+                    statsService.getTopSoldProductListAsync(),
+                    statsService.getTopPurchasedCustomerListAsync()
+                ]);
+    
+                setModel(new HomeModel({
+                    thisMonthStatsResponseDto,
+                    lastMonthStatsResponseDto,
+                    lastestDailyStatsResponseDtos,
+                    lastestTransactionResponseDtos,
+                    topSoldProductListResponseDto,
+                    topPurchasedCustomerListResponseDto,
+                    initialDataResponseDto: initialData
+                }));
+            } catch {
+                await getUndefinedErrorConfirmationAsync();
+                location.reload();
+            }
+        };
+
+        loadAsync().finally(onInitialLoadingFinished);
     }, []);
 
-    if (isInitialLoading) {
+    // Computed.
+    const firstRowColumnClass = "col col-xxl-3 col-lg-6 col-md-6 col-sm-12 col-12";
+
+    // Callback.
+    const formatAmount = (amount: number): string => {
+        if (amount === 0) {
+            return "0";
+        }
+
+        if (Math.abs(amount) > 1_000_000_000) {
+            return `${(amount / 1_000_000_000).toFixed(0)} Tỉ`.replaceAll(".", ",");
+        }
+
+        if (Math.abs(amount) > 100_000_000) {
+            return `${(amount / 1_000_000).toFixed(0)}Tr`.replaceAll(".", ",");
+        }
+
+        if (Math.abs(amount) > 10_000_000) {
+            return `${(amount / 1_000_000).toFixed(1)}Tr`.replaceAll(".", ",");
+        }
+
+        if (Math.abs(amount) > 1_000_000) {
+            return `${(amount / 1_000_000).toFixed(2)}Tr`.replaceAll(".", ",");
+        }
+
+        return `${(amount / 1_000).toFixed(2)}N`.replaceAll(".", ",");
+    };
+
+    if (!model) {
         return null;
     }
 
     return (
-        <MainContainer>
+        <MainContainer isInitialLoading={isInitialLoading}>
+            {/* This month row */}
             <div className="row g-3">
-                {/* DeletingConfirmation */}
-                <div className={columnClassName}>
-                    <button className="btn btn-primary mb-3"
-                        onClick={() => store.getDeletingConfirmationAsync()
-                            .then(answer => setConfirmation(answer))}>
-                        DeletingConfirmation
-                    </button>
-                    <span className="border border-primary-subtle bg-primary-subtle
-                                    rounded-3 text-primary px-3 py-2 text-center fw-bold">
-                        {JSON.stringify(confirmation)}
-                    </span>
+                <div className="col col-12 fs-5 pb-0 fw-bold d-flex
+                                justify-content-start text-primary mt-2">
+                    {"Tháng này".toUpperCase()}
+                </div>
+                {/* Net Revenue */}
+                <div className={firstRowColumnClass}>
+                    <SmallStatistics
+                        title="Doanh thu ròng"
+                        unit="vnđ"
+                        color="primary"
+                        thisMonthStats={model.thisMonthStats}
+                        lastMonthStats={model.lastMonthStats}
+                        statsPropertySelector={(stats) => stats.netRevenue}
+                        statsPropertyFormatter={formatAmount}
+                    />
                 </div>
 
-
-                {/* NotFoundConfirmation */}
-                <div className={columnClassName}>
-                    <button className="btn btn-primary mb-3"
-                        onClick={() => store.getNotFoundConfirmationAsync()
-                            .then(() => {
-                                setConfirmation("NotFound");
-                                navigate("/products");
-                            })}>
-                        NotFoundConfirmation
-                    </button>
-                    <span className="border border-primary-subtle bg-primary-subtle
-                                    rounded-3 text-primary px-3 py-2 text-center fw-bold">
-                        {JSON.stringify(confirmation)}
-                    </span>
+                {/* Expense and Cost */}
+                <div className={firstRowColumnClass}>
+                    <SmallStatistics
+                        title="Chi phí"
+                        unit="vnđ"
+                        color="danger"
+                        thisMonthStats={model.thisMonthStats}
+                        lastMonthStats={model.lastMonthStats}
+                        statsPropertySelector={(stats) => stats.expenses + stats.cost}
+                        statsPropertyFormatter={formatAmount}
+                    />
                 </div>
 
-                {/* DiscardingConfirmation */}
-                <div className={columnClassName}>
-                    <button className="btn btn-primary mb-3"
-                        onClick={() => store.getDiscardingConfirmationAsync()
-                            .then(answer => setConfirmation(answer))}>
-                        DiscardingConfirmation
-                    </button>
-                    <span className="border border-primary-subtle bg-primary-subtle
-                                    rounded-3 text-primary px-3 py-2 text-center fw-bold">
-                        {JSON.stringify(confirmation)}
-                    </span>
+                {/* Net Profit */}
+                <div className={firstRowColumnClass}>
+                    <SmallStatistics
+                        title="Lợi nhuận ròng"
+                        unit="vnđ"
+                        color="success"
+                        thisMonthStats={model.thisMonthStats}
+                        lastMonthStats={model.lastMonthStats}
+                        statsPropertySelector={(stats) => stats.netProfit}
+                        statsPropertyFormatter={formatAmount}
+                    />
                 </div>
 
-                {/* SubmissionErrorConfirmation */}
-                <div className={columnClassName}>
-                    <button className="btn btn-primary mb-3"
-                        onClick={() => store.getSubmissionErrorConfirmationAsync()
-                            .then(() => setConfirmation("SubmissionError"))}>
-                        SubmissionErrorConfirmation
-                    </button>
-                    <span className="border border-primary-subtle bg-primary-subtle
-                                    rounded-3 text-primary px-3 py-2 text-center fw-bold">
-                        {JSON.stringify(confirmation)}
-                    </span>
+                {/* New Customers */}
+                <div className={firstRowColumnClass}>
+                    <SmallStatistics
+                        title="Khách hàng mới"
+                        unit="khách"
+                        color="purple"
+                        thisMonthStats={model.thisMonthStats}
+                        lastMonthStats={model.lastMonthStats}
+                        statsPropertySelector={(stats) => stats.newCustomers}
+                    />
+                </div>
+            </div>
+
+            {/* Last 7 days row */}
+            <div className="row g-3 align-items-stretch mt-3">
+                <div className="col col-12 fs-5 pb-0 fw-bold d-flex 
+                                justify-content-start text-primary">
+                    {"7 ngày gần nhất".toUpperCase()}
+                </div>
+                <div className="col col-xl-8 col-lg-7 col-md-6 col-12">
+                    <FinanceAreaGraph height={380} model={model.lastestDailyStats} />
+                </div>
+                <div className="col p-0">
+                    <div className="row g-3">
+                        <div className="col col-12">
+                            <RevenueDistributionGraph model={model.lastestDailyStats} />
+                        </div>
+                        <div className="col col-12">
+                            <ExpenseAndCostGraph model={model.lastestDailyStats} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Ranking row */}
+            <div className="row g-3 align-items-stretch mt-3">
+                <div className="col col-12 fs-5 pb-0 fw-bold d-flex 
+                                justify-content-start text-primary">
+                    {"Xếp hạng".toUpperCase()}
                 </div>
 
-                {/* SubmissionSuccessConfirmation */}
-                <div className={columnClassName}>
-                    <button className="btn btn-primary mb-3"
-                        onClick={() => store.getSubmissionSuccessConfirmationAsync()
-                            .then(() => setConfirmation("SubmissionSuccess"))}>
-                        SubmissionSuccessConfirmation
-                    </button>
-                    <span className="border border-primary-subtle bg-primary-subtle
-                                    rounded-3 text-primary px-3 py-2 text-center fw-bold">
-                        {JSON.stringify(confirmation)}
-                    </span>
+                {/* Lastest transaction list */}
+                <div className="col col-xxl-3 col-md-6 col-12">
+                    <LastestTransactionList model={model.lastestTransactions} />
                 </div>
 
-                {/* UnauthorizationConfirmation */}
-                <div className={columnClassName}>
-                    <button className="btn btn-primary mb-3"
-                        onClick={() => store.getUnauthorizationConfirmationAsync()
-                            .then(() => setConfirmation("Unauthorized"))}>
-                        UnauthorizationConfirmation
-                    </button>
-                    <span className="border border-primary-subtle bg-primary-subtle
-                                    rounded-3 text-primary px-3 py-2 text-center fw-bold">
-                        {JSON.stringify(confirmation)}
-                    </span>
+                {/* Top sold products list */}
+                <div className="col col-xxl-3 col-md-6 col-12">
+                    <TopSoldProductList model={model.topSoldProducts} />
                 </div>
 
-                {/* UndefinedErrorConfirmation */}
-                <div className={columnClassName}>
-                    <button className="btn btn-primary mb-3"
-                        onClick={() => store.getUndefinedErrorConfirmationAsync()
-                            .then(() => setConfirmation("Undefined"))}>
-                        UndefinedErrorConfirmation
-                    </button>
-                    <span className="border border-primary-subtle bg-primary-subtle
-                                    rounded-3 text-primary px-3 py-2 text-center fw-bold">
-                        {JSON.stringify(confirmation)}
-                    </span>
+                {/* Top purchased customers list */}
+                <div className="col col-xxl-3 col-md-6 col-12">
+                    <TopPurchasedCustomerList model={model.topPurchasedCustomers} />
                 </div>
 
-                {/* FileTooLargeConfirmation */}
-                <div className={columnClassName}>
-                    <button className="btn btn-primary mb-3"
-                        onClick={() => store.getFileTooLargeConfirmationAsync()
-                            .then(() => setConfirmation("FileTooLarge"))}>
-                        FileTooLargeConfirmation
-                    </button>
-                    <span className="border border-primary-subtle bg-primary-subtle
-                                    rounded-3 text-primary px-3 py-2 text-center fw-bold">
-                        {JSON.stringify(confirmation)}
-                    </span>
+                {/* Logo */}
+                <div className="col col-xxl-3 col-md-6 col-12">
+                    <Logo />
                 </div>
             </div>
         </MainContainer>

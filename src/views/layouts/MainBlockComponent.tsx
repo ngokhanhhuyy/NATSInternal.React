@@ -10,6 +10,7 @@ export interface MainBlockProps extends ComponentPropsWithoutRef<"div"> {
     paginator?: boolean;
     children: React.ReactNode | React.ReactNode[];
     bodyClassName?: string;
+    bodyStyle?: React.CSSProperties;
     bodyPadding?: string | number | [number, number] | [number, number, number, number];
     bodyBorder?: boolean;
 }
@@ -82,7 +83,10 @@ const MainBlock = (props: MainBlockProps) => {
             </div>
 
             {/* Body */}
-            <div className={`rounded-bottom-3 flex-fill ${getBodyClass()}`}>
+            <div
+                className={`rounded-bottom-3 flex-fill ${getBodyClass()}`}
+                style={props.bodyStyle}
+            >
                 {props.children}
             </div>
         </div>

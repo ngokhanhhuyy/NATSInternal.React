@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import type { DebtIncurrenceListModel } from "@/models/debtIncurrence/debtIncurrenceListModel";
 import type { DebtPaymentListModel } from "@/models/debtPayment/debtPaymentListModel";
@@ -80,9 +80,9 @@ const DebtList = <TListModel extends DebtIncurrenceListModel | DebtPaymentListMo
     // Header.
     const header = (
         <Link to={props.listRoute(routeGenerator)}
-                className={`btn btn-outline-${props.color} btn-sm`}>
-            <i className="bi bi-list-ul me-2"></i>
-            <span>Xem thêm</span>
+                className={`btn btn-outline-${props.color} btn-sm me-sm-0 me-2`}>
+            <i className="bi bi-list-ul"></i>
+            <span className="d-sm-inline d-none ms-2">Xem thêm</span>
         </Link>
     );
 

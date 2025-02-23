@@ -1,32 +1,19 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { useStatsService } from "@/services/statsService";
-import { LastestTransactionModel } from "@/models/stats/lastestTransactionModel";
+import { type LastestTransactionModel } from "@/models/stats/lastestTransactionModel";
 import { TransactionType } from "@/services/dtos/enums";
 import { useInitialDataStore } from "@/stores/initialDataStore";
 
 // Layout component.
 import MainBlock from "../layouts/MainBlockComponent";
 
+// Props.
+interface LastestTransactionListProps {
+    model: LastestTransactionModel[];
+}
+
 // Component.
-const LastestTransactionList = () => {
-    // Dependencies.
-    const service = useStatsService();
-
-    // Model and states.
-    const [model, setModel] = useState<LastestTransactionModel[]>(() => []);
-    const [isInitialLoading, setInitialLoading] = useState<boolean>(() => true);
-
-    // Effect.
-    useEffect(() => {
-        const loadAsync = async () => {
-            const responseDto = await service.getLastestTransactionsAsync();
-            setModel(responseDto.map(dto => new LastestTransactionModel(dto)));
-        };
-
-        loadAsync().finally(() => setInitialLoading(false));
-    }, []);
-
+const LastestTransactionList = (props: LastestTransactionListProps) => {
     return (
         <MainBlock
             title="Giao dịch mới nhất"
@@ -34,30 +21,16 @@ const LastestTransactionList = () => {
             bodyPadding={0}
             bodyClassName="h-100 overflow-hidden"
         >
-            {!isInitialLoading ? (
-                <ul className="list-group list-group-flush">
-                    {model.length > 0 ? model.map((transaction, index) => (
-                        <LastestTransactionItem model={transaction} key={index} />
-                    )) : (
-                        <li className="list-group-item d-flex align-items-center
-                                        justify-content-center bg-transparent py-4 opacity-50">
-                            Không có giao dịch nào
-                        </li>
-                    )}
-                </ul>
-            ) : (
-
-                <div className="d-flex justify-content-center align-items-center p-3">
-                    <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">
-                            Đang tải...
-                        </span>
-                    </div>
-                    <span className="ms-2 text-primary">
-                        Đang tải
-                    </span>
-                </div>
-            )}
+            <ul className="list-group list-group-flush">
+                {props.model.length > 0 ? props.model.map((transaction, index) => (
+                    <LastestTransactionItem model={transaction} key={index} />
+                )) : (
+                    <li className="list-group-item d-flex align-items-center
+                                    justify-content-center bg-transparent py-4 opacity-50">
+                        Không có giao dịch nào
+                    </li>
+                )}
+            </ul>
         </MainBlock>
     );
 };
@@ -67,8 +40,11 @@ const LastestTransactionItem = ({ model }: { model: LastestTransactionModel }) =
     const getDisplayName = useInitialDataStore(store => store.getDisplayName);
 
     // Computed.
+    const iconContainerStyle: React.CSSProperties = {
+        aspectRatio: 1,
+        height: 40
+    };
 
-    // Computed.
     const computeColor = (): string => {
         const typeColors: Record<TransactionType, string> = {
             [TransactionType.Expense]: "primary",
@@ -110,12 +86,16 @@ const LastestTransactionItem = ({ model }: { model: LastestTransactionModel }) =
     };
 
     return (
-        <li className="list-group-item d-flex align-items-center bg-transparent">
+        <li
+            className="list-group-item d-flex align-items-center bg-transparent"
+            style={{ height: 65 }}
+        >
             <Link
                 to={model.detailRoute}
                 className={`p-2 d-flex justify-content-center align-items-center border
-                            rounded-circle flex-shrink-0 transaction-icon-container me-3
+                            rounded-circle flex-shrink-0 me-3
                             ${computeIconContainerClassName()}`}
+                style={iconContainerStyle}
             >
                 <i className={`bi ${computeIconClassName()}`} />
             </Link>

@@ -68,10 +68,6 @@ const CustomerListView = () => {
         }
     }, [model]);
 
-    if (isInitialLoading) {
-        return null;
-    }
-
     return (
         <MainContainer isInitialLoading={isInitialLoading}>
             <div className="row g-3">

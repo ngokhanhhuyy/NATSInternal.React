@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProductListModel } from "@/models/product/productListModel";
 import { useProductService } from "@/services/productService";
@@ -52,7 +52,7 @@ const MainList = ({ isInitialLoading, onInitialLoadingFinished }: MainListProps)
                 }
 
                 setReloading(true);
-                document.getElementById("content")!.scrollTo(0, 0);
+                document.getElementById("content")!.scrollTo({ top: 0, behavior: "smooth" });
                 const responseDto = await productService.getListAsync(model.toRequestDto());
                 setModel(model => model.fromListResponseDto(responseDto));
             } catch (error) {

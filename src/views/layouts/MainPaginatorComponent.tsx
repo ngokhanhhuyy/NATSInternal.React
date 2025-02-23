@@ -58,7 +58,7 @@ const MainPaginator = (props: Props) => {
     };
 
     const handlePageButtonClick = (buttonPage: number): void => {
-        window.scrollTo(0, 0);
+        window.scrollTo({ top: 0, behavior: "smooth" });
         props.onClick(buttonPage);
     };
 

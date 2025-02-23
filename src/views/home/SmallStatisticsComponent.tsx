@@ -66,7 +66,7 @@ const SmallStatistics = (props: Props) => {
                             <div className="small">
                                 <span className={`text-${props.color}`}>
                                     {computeValueText(props.lastMonthStats)}
-                                </span>
+                                </span>&nbsp;
                                 <span className={`text-${props.color}-emphasis`}>
                                     trong {computeLastMonthLabelText()}
                                 </span>
