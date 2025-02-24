@@ -66,6 +66,9 @@ const DebtPaymentListView = React.lazy(() => import("@/views/debt/list/DebtPayme
 const DebtPaymentDetailView = React.lazy(() => import("@/views/debt/detail/DebtPaymentDetailView"));
 const DebtPaymentUpsertView = React.lazy(() => import("@/views/debt/upsert/DebtPaymentUpsertView"));
 
+// Report.
+const ReportView = React.lazy(() => import("@/views/report/monthlyReport/MonthlyReportView"));
+
 // Services dependencies.
 const routeGenerator = useRouteGenerator();
 
@@ -709,9 +712,7 @@ const routes: Routes = {
     },
     debtPaymentUpdateView: {
         path: /^\/debts\/payments\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => (
-            <DebtPaymentUpsertView id={parseInt(params.id)} />
-        ),
+        element: async ({ params }) => <DebtPaymentUpsertView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chỉnh sửa khoản trả nợ",
             breadcrumbItems: [
@@ -724,6 +725,14 @@ const routes: Routes = {
             ]
         }
     },
+    reportView: {
+        path: /^\/report\/?$/,
+        element: async () => <ReportView />,
+        meta: {
+            pageTitle: "Báo cáo",
+            breadcrumbItems: [{ text: "Tổng quan nợ" }]
+        }
+    }
 };
 
 const HomeRoutes = () => {

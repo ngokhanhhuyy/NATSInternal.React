@@ -87,8 +87,8 @@ const NavigationBar = ({ keepExpanded, sticky }: Props) => {
                     <span>Chi phí</span>
                 </Link>
             </li>
-            <li className={getRouteLinkClassName("finance")}>
-                <Link to={"/home"}>
+            <li className={getRouteLinkClassName("report")}>
+                <Link to={"/report"}>
                     <i className="bi bi-graph-up-arrow"></i>
                     <span>Báo cáo</span>
                 </Link>

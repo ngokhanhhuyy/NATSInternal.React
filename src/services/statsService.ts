@@ -69,7 +69,7 @@ const service = {
      * @throws {NotFoundError} Thrown when the stats recorded at the specified month and year
      * doesn't exist.
      */
-    async getMonthlyDetailAsync(requestDto: RequestDtos.Stats.Monthly):
+    async getMonthlyDetailAsync(requestDto?: RequestDtos.Stats.Monthly):
             Promise<ResponseDtos.Stats.MonthlyDetail> {
         return await apiClient.getAsync("/stats/monthly", requestDto);
     },
@@ -170,6 +170,17 @@ const service = {
     async getLastestTransactionsAsync(requestDto?: RequestDtos.Stats.LastestTransactions):
             Promise<ResponseDtos.Stats.LastestTransaction[]> {
         return await apiClient.getAsync("/stats/lastestTransactions", requestDto);
+    },
+
+    /**
+     * Retrieves the statistics date as options.
+     * 
+     * @returns A {@link Promise} representing the asynchronous operation, which result is
+     * an array of ISO format strings, representing the dates as options.
+     * @example getStatsDateOptionsAsync();
+     */
+    async getStatsDateOptionsAsync(): Promise<string[]> {
+        return await apiClient.getAsync("/stats/statsDateOptions");
     }
 };
 

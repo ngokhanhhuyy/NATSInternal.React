@@ -19,7 +19,6 @@ function SelectInput(props: SelectInputProps) {
     // Dependencies.
     const formContext = useContext(FormContext);
     const modelState = formContext?.modelState;
-    const isInitialLoading = formContext?.isInitialLoading ?? false;
 
     // Computed.
     const computeClassName = () => {
@@ -27,21 +26,13 @@ function SelectInput(props: SelectInputProps) {
         if (name) {
             classNames.push(modelState?.inputClassName(name));
         }
-
-        if (isInitialLoading) {
-            classNames.push("pe-none");
-        }
         
         return classNames.filter(n => n).join(" ");
     };
 
     const computeOptions = () => {
-        if (isInitialLoading) {
-            return null;
-        }
-
-        return options.map(option => (
-            <option value={option.value} key={option.value}>
+        return options.map((option, index) => (
+            <option value={option.value} key={index}>
                 {option.displayName ?? option.value}
             </option>
         ));
@@ -49,7 +40,7 @@ function SelectInput(props: SelectInputProps) {
 
     return (
         <select {...rest} className={computeClassName()}
-                value={isInitialLoading ? "" : value}
+                value={formContext?.isSubmitting || formContext?.isDeleting ? "" : value}
                 onInput={(event: React.ChangeEvent<HTMLSelectElement>) => {
                     onValueChanged(event.target.value);
                 }}>

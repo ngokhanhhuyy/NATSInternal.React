@@ -409,6 +409,33 @@ export function useDateTimeUtility() {
         return oneMonthEarlierDate;
     }
 
+    /**
+     * Gets an array which contains [year, month, date of month] from an ISO format string
+     * retrieved from the server.
+     * 
+     * @param isoFormatString A string in ISO format, representing the date, retrieved from
+     * the server.
+     * @returns An array containing [year, month, date of month].
+     */
+    function getDateFromISOString(isoFormatString: string): [number, number, number] {
+        const date = new Date(isoFormatString);
+        return [date.getFullYear(), date.getMonth() + 1, date.getDate()];
+    }
+    
+    /**
+     * Get the string in ISO format which represents a date from an array containing a date
+     * information.
+     * 
+     * @param date An array containing [year, month, date].
+     * @returns The ISO format string reprenseting the date.
+     */
+    function getISOStringFromDate(date: [number, number, number]): string {
+        const [year, month, dateOfMonth] = date;
+        const monthAsString = month.toString().padStart(2, "0");
+        const dateOfMonthAsString = dateOfMonth.toString().padStart(2, "0");
+        return `${year}/${monthAsString}/${dateOfMonthAsString}`;
+    }
+
     return {
         getDateTimeISOString,
         getDateISOString,
@@ -424,6 +451,8 @@ export function useDateTimeUtility() {
         getDisplayTimeString,
         compareDates,
         compareDateTimes,
-        getDeltaTextRelativeToNow
+        getDeltaTextRelativeToNow,
+        getDateFromISOString,
+        getISOStringFromDate
     };
 }

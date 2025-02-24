@@ -36,7 +36,7 @@ export class DailyStatsDetailModel implements IStatsDetailModel {
     public readonly treatmentGrossRevenue: number;
     public readonly consultantGrossRevenue: number;
     public readonly vatCollectedAmount: number;
-    public readonly debtAmount: number;
+    public readonly debtIncurredAmount: number;
     public readonly debtPaidAmount: number;
     public readonly shipmentCost: number;
     public readonly supplyCost: number;
@@ -61,7 +61,7 @@ export class DailyStatsDetailModel implements IStatsDetailModel {
         this.treatmentGrossRevenue = responseDto.treatmentGrossRevenue;
         this.consultantGrossRevenue = responseDto.consultantGrossRevenue;
         this.vatCollectedAmount = responseDto.vatCollectedAmount;
-        this.debtAmount = responseDto.debtAmount;
+        this.debtIncurredAmount = responseDto.debtAmount;
         this.debtPaidAmount = responseDto.debtPaidAmount;
         this.shipmentCost = responseDto.shipmentCost;
         this.supplyCost = responseDto.supplyCost;
@@ -118,7 +118,7 @@ export class MonthlyStatsDetailModel implements IStatsDetailModel {
     public readonly treatmentGrossRevenue: number;
     public readonly consultantGrossRevenue: number;
     public readonly vatCollectedAmount: number;
-    public readonly debtAmount: number;
+    public readonly debtIncurredAmount: number;
     public readonly debtPaidAmount: number;
     public readonly shipmentCost: number;
     public readonly supplyCost: number;
@@ -144,7 +144,7 @@ export class MonthlyStatsDetailModel implements IStatsDetailModel {
         this.treatmentGrossRevenue = responseDto.treatmentGrossRevenue;
         this.consultantGrossRevenue = responseDto.consultantGrossRevenue;
         this.vatCollectedAmount = responseDto.vatCollectedAmount;
-        this.debtAmount = responseDto.debtAmount;
+        this.debtIncurredAmount = responseDto.debtAmount;
         this.debtPaidAmount = responseDto.debtPaidAmount;
         this.shipmentCost = responseDto.shipmentCost;
         this.supplyCost = responseDto.supplyCost;

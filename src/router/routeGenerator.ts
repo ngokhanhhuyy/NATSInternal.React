@@ -59,7 +59,9 @@ const routeGenerator = {
     getDebtPaymentListRoutePath: () => "/debts/payments",
     getDebtPaymentDetailRoutePath: (id: number) => `/debts/payments/${id}`,
     getDebtPaymentCreateRoutePath: () => "/debts/payments/create",
-    getDebtPaymentUpdateRoutePath: (id: number) => `/debts/payments/${id}/update`
+    getDebtPaymentUpdateRoutePath: (id: number) => `/debts/payments/${id}/update`,
+
+    getReportRoutePath: () => "/report"
 };
 
 export function useRouteGenerator() {

@@ -17,7 +17,7 @@ declare global {
         readonly treatmentGrossRevenue: number;
         readonly consultantGrossRevenue: number;
         readonly vatCollectedAmount: number;
-        readonly debtAmount: number;
+        readonly debtIncurredAmount: number;
         readonly debtPaidAmount: number;
         readonly shipmentCost: number;
         readonly supplyCost: number;
