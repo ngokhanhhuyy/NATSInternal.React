@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import type { MonthlyReportModel } from "@/models/report/ReportModel";
-import { useInitialDataStore } from "@/stores/initialDataStore";
 
 // Layout component.
 import MainBlock from "../../layouts/MainBlockComponent";
@@ -17,23 +16,16 @@ interface FiltersProps {
 
 // Component.
 const Filters = (props: FiltersProps) => {
-    // Dependencies.
-    const getDisplayName = useInitialDataStore(store => store.getDisplayName);
-
     // Computed.
-    const yearOptions = useMemo<SelectInputOption[]>(() => {
-        return props.model.yearOptions.map(option => ({
-            value: option.toString(),
-            displayName: option.toString()
-        }));
-    }, [props.model.yearOptions]);
-
-    const monthOptions = useMemo<SelectInputOption[]>(() => {
-        return props.model.monthOptions.map(option => ({
-            value: option.toString(),
-            displayName: option.toString()
-        }));
-    }, [props.model.monthOptions]);
+    const monthYearOptions = useMemo<SelectInputOption[]>(() => {
+        return props.model.monthYearOptions.map(option => {
+            const [year, month] = option;
+            return {
+                value: JSON.stringify([year, month]),
+                displayName: `Tháng ${month.toString().padStart(2, "0")}, ${year}`
+            };
+        });
+    }, [props.model.monthYearOptions]);
 
     const bodyClassName = ((): string => {
         const classNames = ["row g-3"];
@@ -60,33 +52,19 @@ const Filters = (props: FiltersProps) => {
         <MainBlock
             title="Báo cáo theo tháng"
             header={header}
+            headerClassName="pe-3"
             bodyPadding={[0, 2, 2, 2]}
             bodyClassName={bodyClassName}
         >
-            {/* Year */}
             <div className="col col-12">
-                <span className="fw-bold">{getDisplayName("year")}</span>
+                <span className="fw-bold">Tháng và năm</span>
                 <SelectInput
-                    name="recordedYear"
-                    options={yearOptions}
-                    value={props.model.recordedYear.toString()}
-                    onValueChanged={(yearAsString) => {
-                        const year = parseInt(yearAsString);
-                        props.setModel(model => model.fromRecordedYear(year));
-                    }}
-                />
-            </div>
-
-            {/* Month */}
-            <div className="col col-12">
-                <span className="fw-bold">{getDisplayName("month")}</span>
-                <SelectInput
-                    name="recordedMonth"
-                    options={monthOptions}
-                    value={props.model.recordedMonth.toString()}
-                    onValueChanged={(monthAsString) => {
-                        const month = parseInt(monthAsString);
-                        props.setModel(model => model.fromRecordedMonth(month));
+                    name="recordedMonthYear"
+                    options={monthYearOptions}
+                    value={JSON.stringify(props.model.recordedMonthYear)}
+                    onValueChanged={(monthYearJSON) => {
+                        const recordedMonthYear: [number, number] = JSON.parse(monthYearJSON);
+                        props.setModel(model => model.from({ recordedMonthYear }));
                     }}
                 />
             </div>

@@ -1,18 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { MonthlyReportModel } from "@/models/report/ReportModel";
 import { useStatsService } from "@/services/statsService";
 import { useViewStates } from "@/hooks/viewStatesHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
 import { ValidationError, NotFoundError } from "@/errors";
 
-// Layout component;
-import MainContainer from "../../layouts/MainContainerComponent";
-
 // Shared component.
 import ReportView from "../report/ReportView";
 
 // Child component.
 import Filters from "./FiltersComponent";
+import FinanceAreaGraph from "@/views/report/monthlyReport/FinanceAreaGraphComponent";
 
 // Component.
 const MonthlyReportView = () => {
@@ -23,20 +21,38 @@ const MonthlyReportView = () => {
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished } = useViewStates();
     const [model, setModel] = useState<MonthlyReportModel>(() => new MonthlyReportModel());
+    const isAdjustingAfterFirstLoading = useRef<boolean>(false);
     const [isReloading, setReloading] = useState<boolean>(() => false);
 
     // Effect.
     useEffect(() => {
-        const initialLoadAsync = async () => {
+        const loadAsync = async () => {
             try {
-                const [monthlyDetail, dateOptions] = await Promise.all([
-                    service.getMonthlyDetailAsync(),
-                    service.getStatsDateOptionsAsync()
-                ]);
+                if (isInitialLoading) {
+                    const [monthlyDetail, dateOptions] = await Promise.all([
+                        service.getMonthlyDetailAsync(),
+                        service.getStatsDateOptionsAsync()
+                    ]);
+    
+                    setModel(model => model
+                        .fromMonthlyDetail(monthlyDetail)
+                        .fromDateOptions(dateOptions));
+                    isAdjustingAfterFirstLoading.current = true;
+                } else {
+                    if (isAdjustingAfterFirstLoading.current) {
+                        isAdjustingAfterFirstLoading.current = false;
+                        return;
+                    }
 
-                setModel(model => model
-                    .fromMonthlyDetail(monthlyDetail)
-                    .fromDateOptions(dateOptions));
+                    setReloading(true);
+                    const [year, month] = model.recordedMonthYear;
+                    const monthlyDetail = await service.getMonthlyDetailAsync({
+                        recordedYear: year,
+                        recordedMonth: month
+                    });
+    
+                    setModel(model => model.fromMonthlyDetail(monthlyDetail));
+                }
             } catch (error) {
                 if (error instanceof ValidationError) {
                     await alertModelStore.getSubmissionErrorConfirmationAsync();
@@ -52,43 +68,14 @@ const MonthlyReportView = () => {
             }
         };
 
-        initialLoadAsync().finally(onInitialLoadingFinished);
-    }, []);
-
-    useEffect(() => {
-        const reloadAsync = async () => {
-            setReloading(true);
-    
-            try {
-                const monthlyDetail = await service.getMonthlyDetailAsync({
-                    recordedYear: model.recordedYear,
-                    recordedMonth: model.recordedMonth
-                });
-
-                setModel(model => model.fromMonthlyDetail(monthlyDetail));
-                return;
-            } catch (error) {
-                if (error instanceof ValidationError) {
-                    await alertModelStore.getSubmissionErrorConfirmationAsync();
-                    return;
-                }
-    
-                if (error instanceof NotFoundError) {
-                    await alertModelStore.getNotFoundConfirmationAsync();
-                    return;
-                }
-    
-                throw error;
+        loadAsync().finally(() => {
+            if (isInitialLoading) {
+                onInitialLoadingFinished();
             }
-        };
 
-        if (!isInitialLoading) {
-            reloadAsync().finally(() => {
-                setReloading(false);
-            });
-        }
-
-    }, [model.recordedYear, model.recordedMonth]);
+            setReloading(false);
+        });
+    }, [model.recordedMonthYear]);
 
     if (!model.stats) {
         return null;
@@ -99,10 +86,21 @@ const MonthlyReportView = () => {
             model={model.stats}
             isInitialLoading={isInitialLoading}
             isReloading={isReloading}
-            renderTop={() => (
-                <div className="row g-3 justify-content-center">
+            renderTop={(statsModel, groupLabelColumnClassName) => (
+                <div className="row g-3">
                     <div className="col col-12">
                         <Filters model={model} setModel={setModel} isReloading={isReloading} />
+                    </div>
+
+                    <div className={`${groupLabelColumnClassName} mt-3`}>
+                        {"Biểu đồ".toUpperCase()}
+                    </div>
+
+                    <div className="col col-12">
+                        <FinanceAreaGraph
+                            model={statsModel.dailyStats}
+                            isReloading={isReloading}
+                        />
                     </div>
                 </div>
             )}

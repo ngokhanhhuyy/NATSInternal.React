@@ -15,7 +15,7 @@ const PageLoadProgressBarComponent = () => {
 
     return (
         <div
-            className={`progress w-100 ${styles["progress"]}`}
+            className={`progress w-100 ${styles["progress"]} rounded-0`}
             role="progressbar"
             aria-label="Animated striped example"
             aria-valuenow={store.percentage}

@@ -31,7 +31,7 @@ export class DailyStatsDetailModel implements IStatsDetailModel {
         this.treatmentGrossRevenue = responseDto.treatmentGrossRevenue;
         this.consultantGrossRevenue = responseDto.consultantGrossRevenue;
         this.vatCollectedAmount = responseDto.vatCollectedAmount;
-        this.debtIncurredAmount = responseDto.debtAmount;
+        this.debtIncurredAmount = responseDto.debtIncurredAmount;
         this.debtPaidAmount = responseDto.debtPaidAmount;
         this.shipmentCost = responseDto.shipmentCost;
         this.supplyCost = responseDto.supplyCost;

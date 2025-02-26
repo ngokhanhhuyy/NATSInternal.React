@@ -1,4 +1,7 @@
 import { DateDisplayModel } from "../dateTime/dateDisplayModel";
+import { useDateTimeUtility } from "@/utilities/dateTimeUtility";
+
+const dateTimeUtility = useDateTimeUtility();
 
 export class DailyStatsBasicModel implements IStatsBasicModel {
     public readonly cost: number;
@@ -10,6 +13,10 @@ export class DailyStatsBasicModel implements IStatsBasicModel {
     public readonly isTemporarilyClosed: boolean;
     public readonly isOfficialClosed: boolean;
     public readonly recordedDate: DateDisplayModel;
+    public readonly recordedDateISO: string;
+    public readonly recordedYear: number;
+    public readonly recordedMonth: number;
+    public readonly recordedDay: number;
 
     constructor(responseDto: ResponseDtos.Stats.DailyBasic) {
         this.cost = responseDto.cost;
@@ -21,5 +28,10 @@ export class DailyStatsBasicModel implements IStatsBasicModel {
         this.isTemporarilyClosed = responseDto.isTemporarilyClosed;
         this.isOfficialClosed = responseDto.isOfficialClosed;
         this.recordedDate = new DateDisplayModel(responseDto.recordedDate);
+        this.recordedDateISO = responseDto.recordedDate;
+        
+        [this.recordedYear, this.recordedMonth, this.recordedDay] = dateTimeUtility
+            .getDateFromISOString(responseDto.recordedDate);
+        
     }
 }

@@ -16,7 +16,7 @@ declare global {
             treatmentGrossRevenue: number;
             consultantGrossRevenue: number;
             vatCollectedAmount: number;
-            debtAmount: number;
+            debtIncurredAmount: number;
             debtPaidAmount: number;
             shipmentCost: number;
             supplyCost: number;

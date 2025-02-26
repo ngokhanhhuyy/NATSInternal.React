@@ -9,7 +9,7 @@ declare global {
         readonly netProfit: number;
         readonly newCustomers: number;
         readonly isTemporarilyClosed: boolean;
-        isOfficialClosed: boolean;
+        readonly isOfficialClosed: boolean;
     }
 
     interface IStatsDetailModel {

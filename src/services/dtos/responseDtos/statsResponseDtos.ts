@@ -1,4 +1,4 @@
-import type { Gender, TransactionDirection, TransactionType } from "../enums";
+import type { Gender, TransactionDirection, TransactionType } from "@enums";
 
 declare global {
     namespace ResponseDtos {
@@ -20,7 +20,7 @@ declare global {
                 treatmentGrossRevenue: number;
                 consultantGrossRevenue: number;
                 vatCollectedAmount: number;
-                debtAmount: number;
+                debtIncurredAmount: number;
                 debtPaidAmount: number;
                 shipmentCost: number;
                 supplyCost: number;
@@ -59,7 +59,7 @@ declare global {
                 treatmentGrossRevenue: number;
                 consultantGrossRevenue: number;
                 vatCollectedAmount: number;
-                debtAmount: number;
+                debtIncurredAmount: number;
                 debtPaidAmount: number;
                 shipmentCost: number;
                 supplyCost: number;

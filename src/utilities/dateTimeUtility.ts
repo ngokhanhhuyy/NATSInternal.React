@@ -418,8 +418,8 @@ export function useDateTimeUtility() {
      * @returns An array containing [year, month, date of month].
      */
     function getDateFromISOString(isoFormatString: string): [number, number, number] {
-        const date = new Date(isoFormatString);
-        return [date.getFullYear(), date.getMonth() + 1, date.getDate()];
+        const dateAsString = isoFormatString.split("T")[0];
+        return dateAsString.split("-").map(value => parseInt(value));
     }
     
     /**

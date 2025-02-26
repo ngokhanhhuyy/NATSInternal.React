@@ -1,5 +1,4 @@
 import React from "react";
-import { useAmountUtility } from "@/utilities/amountUtility";
 
 // Child component.
 import PercentageGraph from "./percentageGraph/PercentageGraphComponent";
@@ -7,57 +6,38 @@ import PercentageGraph from "./percentageGraph/PercentageGraphComponent";
 // Props.
 interface ExpenseProps<TDetail extends IStatsDetailModel> {
     model: TDetail;
+    isReloading: boolean;
 }
 
 // Component.
 const Expense = <TDetail extends IStatsDetailModel>(props: ExpenseProps<TDetail>) => {
-    // Dependencies.
-    const amountUtility = useAmountUtility();
-
-    // Computed.
-    const consultantPercentage = (() => {
-        return Math.round(props.model.consultantGrossRevenue / props.model.grossRevenue * 100);
-    })();
-
-    const retailPercentage = (() => {
-        return Math.round(props.model.retailGrossRevenue / props.model.grossRevenue * 100);
-    })();
-
-    const treatmentPercentage = (() => {
-        return 100 - (consultantPercentage + retailPercentage);
-    })();
-
-    const header = (() => {
-        return (
-            <span className="fw-bold small me-2">
-                {amountUtility.getDisplayText(props.model.grossRevenue)}
-            </span>
-        );
-    })();
-
     return (
         <PercentageGraph
-            model={[
+            items={[
                 {
-                    displayName: (getDisplayName) => getDisplayName("consultant"),
-                    color: "primary",
-                    amount: props.model.consultantGrossRevenue,
-                    percentage: consultantPercentage
-                },
-                {
-                    displayName: () => "Bán lẻ",
+                    displayName: () => "Điện, nước, wifi, rác, ...",
                     color: "success",
-                    amount: props.model.retailGrossRevenue,
-                    percentage: retailPercentage
+                    amount: props.model.utilitiesExpenses,
                 },
                 {
-                    displayName: (getDisplayName) => getDisplayName("treatment"),
+                    displayName: () => "Trang thiết bị",
                     color: "danger",
-                    amount: props.model.treatmentGrossRevenue,
-                    percentage: treatmentPercentage
+                    amount: props.model.equipmentExpenses,
                 },
+                {
+                    displayName: () => "Mặt bằng",
+                    color: "purple",
+                    amount: props.model.officeExpense,
+                },
+                {
+                    displayName: () => "Lương thưởng nhân viên",
+                    color: "orange",
+                    amount: props.model.staffExpense,
+                }
             ]}
-            header={header}
+            totalAmountClassName="text-primary"
+            title="Chi phí vận hành"
+            isReloading={props.isReloading}
         />
     );
 };

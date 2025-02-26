@@ -1,3 +1,4 @@
+import { DailyStatsBasicModel } from "@models/stats/dailyStatsBasicModel";
 import { DateTimeDisplayModel } from "../dateTime/dateTimeDisplayModel";
 
 export class MonthlyStatsDetailModel implements IStatsDetailModel {
@@ -23,15 +24,16 @@ export class MonthlyStatsDetailModel implements IStatsDetailModel {
     public readonly newCustomers: number;
     public readonly temporarilyClosedDateTime: DateTimeDisplayModel | null;
     public readonly officialClosedDateTime: DateTimeDisplayModel | null;
-    public readonly recordedMonth: number;
     public readonly recordedYear: number;
+    public readonly recordedMonth: number;
+    public readonly dailyStats: DailyStatsBasicModel[];
 
     constructor(responseDto: ResponseDtos.Stats.MonthlyDetail) {
         this.retailGrossRevenue = responseDto.retailGrossRevenue;
         this.treatmentGrossRevenue = responseDto.treatmentGrossRevenue;
         this.consultantGrossRevenue = responseDto.consultantGrossRevenue;
         this.vatCollectedAmount = responseDto.vatCollectedAmount;
-        this.debtIncurredAmount = responseDto.debtAmount;
+        this.debtIncurredAmount = responseDto.debtIncurredAmount;
         this.debtPaidAmount = responseDto.debtPaidAmount;
         this.shipmentCost = responseDto.shipmentCost;
         this.supplyCost = responseDto.supplyCost;
@@ -53,7 +55,8 @@ export class MonthlyStatsDetailModel implements IStatsDetailModel {
         this.officialClosedDateTime = responseDto.officialClosedDateTime != null
             ? new DateTimeDisplayModel(responseDto.officialClosedDateTime)
             : null;
-        this.recordedMonth = responseDto.recordedMonth;
         this.recordedYear = responseDto.recordedYear;
+        this.recordedMonth = responseDto.recordedMonth;
+        this.dailyStats = responseDto.dailyStats.map(ds => new DailyStatsBasicModel(ds));
     }
 }
