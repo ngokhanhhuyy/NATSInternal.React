@@ -97,15 +97,14 @@ const FinanceAreaGraph = (props: Props) => {
                     opacityTo: 0,
                 }
             },
-            // markers: {
-            //     size: 5,
-            //     shape: "circle",
-            //     hover: {
-            //         size: 7,
-            //     }
-            // },
+            markers: {
+                size: windowWidth > 576 ? 5 : 3,
+                shape: "circle",
+                hover: windowWidth > 576 ? { size: 7 } : { }
+            },
             stroke: {
                 show: true,
+                width: windowWidth > 576 ? 3 : 2
             },
             yaxis: {
                 tickAmount: 4,
