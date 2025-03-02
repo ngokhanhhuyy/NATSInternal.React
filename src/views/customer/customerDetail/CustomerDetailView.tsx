@@ -1,12 +1,9 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useCustomerService } from "@/services/customerService";
 import { CustomerDetailModel } from "@/models/customer/customerDetailModel";
 import { useViewStates } from "@/hooks/viewStatesHook";
-import { useAlertModalStore } from "@/stores/alertModalStore";
-import { useRouteGenerator } from "@/router/routeGenerator";
-import { NotFoundError } from "@/errors";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 
 // Layout components.
 import MainContainer from "@/views/layouts/MainContainerComponent";
@@ -19,59 +16,43 @@ import { ConsultantList, OrderList, TreatmentList } from "./HasCustomerListCompo
 // Component.
 const CustomerDetailView = ({ id }: { id: number }) => {
     // Dependencies.
-    const navigate = useNavigate();
-    const alertModalStore = useAlertModalStore();
     const customerService = useMemo(() => useCustomerService(), []);
-    const routeGenerator = useMemo(() => useRouteGenerator(), []);
 
     // Model and states.
-    const { isInitialLoading, onInitialLoadingFinished } = useViewStates();
+    const { onInitialLoadingFinished } = useViewStates();
     const [initialLoadingStates, setInitialLoadingStates] = useState(() => ({
         customerDetail: true,
         consultantList: true,
         orderList: true,
         treatmentList: true
     }));
-    const [model, setModel] = useState<CustomerDetailModel>();
+    const initializedModel = useAsyncModelInitializer({
+        initializer: async () => {
+            const responseDto = await customerService.getDetailAsync(id);
+            return new CustomerDetailModel(responseDto);
+        },
+        cacheKey: "customerDetail"
+    });
+    const [model] = useState<CustomerDetailModel>(() => initializedModel);
 
     // Effect.
     useEffect(() => {
-        const loadAsync = async () => {
-            try {
-                const responseDto = await customerService.getDetailAsync(id);
-                setModel(new CustomerDetailModel(responseDto));
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(routeGenerator.getCustomerListRoutePath());
-                    return;
-                }
-
-                throw error;
-            }
-        };
-
-        loadAsync().finally(() => {
-            setInitialLoadingStates(states => ({
-                ...states,
-                customerDetail: false
-            }));
-        });
+        onInitialLoadingFinished();
     }, []);
 
-    useEffect(() => {
-        const { customerDetail, consultantList, orderList, treatmentList } = initialLoadingStates;
-        if (!customerDetail && !consultantList && !orderList && !treatmentList) {
-            onInitialLoadingFinished();
-        }
-    }, [initialLoadingStates]);
+    // useEffect(() => {
+    //     const { customerDetail, consultantList, orderList, treatmentList } = initialLoadingStates;
+    //     if (!customerDetail && !consultantList && !orderList && !treatmentList) {
+    //         onInitialLoadingFinished();
+    //     }
+    // }, [initialLoadingStates]);
 
     if (!model) {
         return null;
     }
     
     return (
-        <MainContainer isInitialLoading={isInitialLoading}>
+        <MainContainer>
             <div className="row g-3">
                 {/* Detail */}
                 <div className="col col-12">

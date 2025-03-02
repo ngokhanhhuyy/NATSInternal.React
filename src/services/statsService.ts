@@ -22,7 +22,7 @@ const service = {
     },
 
     /**
-     * Retrieves the stats of lastest dates with basic information, specified by the count of
+     * Retrieves the stats of latest dates with basic information, specified by the count of
      * dates, from today (if the `requestDto` specifies) or yesterday to the past.
      * 
      * @param requestDto A DTO indicating the count number of dates and whether today's data
@@ -33,13 +33,13 @@ const service = {
      * @throws {ValidationError} Throws when the conditions specified in the request DTO is
      * invalid.
      */
-    async getLastestDailyBasicAsync(requestDto: RequestDtos.Stats.LastestDaily):
+    async getLatestDailyBasicAsync(requestDto: RequestDtos.Stats.LatestDaily):
             Promise<ResponseDtos.Stats.DailyBasic[]> {
-        return await apiClient.getAsync("/stats/lastestDailyBasic", requestDto);
+        return await apiClient.getAsync("/stats/latestDailyBasic", requestDto);
     },
 
     /**
-     * Retrieves the stats of lastest dates with details, specified by the count of dates, from
+     * Retrieves the stats of latest dates with details, specified by the count of dates, from
      * today (if the `requestDto` specifies) or yesterday to the past.
      * 
      * @param requestDto A DTO indicating the count number of dates and whether today's data
@@ -50,9 +50,9 @@ const service = {
      * @throws {ValidationError} Throws when the conditions specified in the request DTO is
      * invalid.
      */
-    async getLastestDailyDetailAsync(requestDto: RequestDtos.Stats.LastestDaily):
+    async getLatestDailyDetailAsync(requestDto: RequestDtos.Stats.LatestDaily):
             Promise<ResponseDtos.Stats.DailyDetail[]> {
-        return await apiClient.getAsync("/stats/lastestDailyDetail", requestDto);
+        return await apiClient.getAsync("/stats/latestDailyDetail", requestDto);
     },
 
     /**
@@ -75,7 +75,7 @@ const service = {
     },
 
     /**
-     * Retrieves the stats of lastest months with basic information, specified by the count of
+     * Retrieves the stats of latest months with basic information, specified by the count of
      * months, from this month (if the `requestDto` specifies), to the past.
      * 
      * @param requestDto A DTO instance indicating the count number of months and whethere the
@@ -86,14 +86,14 @@ const service = {
      * @throws {ValidationError} Throws when the conditions specified in the request DTO is
      * invalid.
      */
-    async getLastestMonthlyAsync(requestDto: RequestDtos.Stats.LastestMonthly):
+    async getLatestMonthlyAsync(requestDto: RequestDtos.Stats.LatestMonthly):
             Promise<ResponseDtos.Stats.MonthlyBasic[]> {
-        return await apiClient.getAsync("/stats/lastestMonthly", requestDto);
+        return await apiClient.getAsync("/stats/latestMonthly", requestDto);
     },
 
     /**
      * Retrieves the top of the sold products with basic information, based on the creteria
-     * and count in a lastest time-range specified in the request DTO.
+     * and count in a latest time-range specified in the request DTO.
      * 
      * @param requestDto A DTO instance containing the conditions for the results.
      * @returns A {@link Promise} representing the asynchronous operation, which result is a
@@ -130,7 +130,7 @@ const service = {
 
     /**
      * Retrieves the top of the purchased customers with basic information, based on the
-     * creteria and count in a lastest time-range specified in the request DTO.
+     * creteria and count in a latest time-range specified in the request DTO.
      * 
      * @param requestDto A DTO instance containing the conditions for the results.
      * @returns A {@link Promise} representing the asynchronous operation, which result is a
@@ -153,23 +153,23 @@ const service = {
     },
 
     /**
-     * Retrieves the lastest transactions, based on the transaction count specified in the
+     * Retrieves the latest transactions, based on the transaction count specified in the
      * request DTO.
      * 
      * @param requestDto A DTO containing the conditions for the results.
      * @returns A {@link Promise} representing the asynchronous operation, which result is a an
      * array of DTOs, containing the results.
-     * @example getLastestTransactionsAsync();
-     * @example getLastestTransactionsAsync({
+     * @example getLatestTransactionsAsync();
+     * @example getLatestTransactionsAsync({
      *  count: 5
      * });
      * 
      * @throws {ValidationError} Throws when the conditions specified in the request DTO is
      * invalid.
      */
-    async getLastestTransactionsAsync(requestDto?: RequestDtos.Stats.LastestTransactions):
-            Promise<ResponseDtos.Stats.LastestTransaction[]> {
-        return await apiClient.getAsync("/stats/lastestTransactions", requestDto);
+    async getLatestTransactionAsync(requestDto?: RequestDtos.Stats.LatestTransactions):
+            Promise<ResponseDtos.Stats.LatestTransaction[]> {
+        return await apiClient.getAsync("/stats/latestTransactions", requestDto);
     },
 
     /**

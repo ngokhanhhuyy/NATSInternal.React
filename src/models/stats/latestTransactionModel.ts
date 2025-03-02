@@ -4,14 +4,14 @@ import { useRouteGenerator } from "@/router/routeGenerator";
 
 const routeGenerator = useRouteGenerator();
 
-export class LastestTransactionModel {
+export class LatestTransactionModel {
     public readonly id: number;
     public readonly direction: TransactionDirection;
     public readonly type: TransactionType;
     public readonly amount: number;
     public readonly statsDateTime: DateTimeDisplayModel;
 
-    constructor(responseDto: ResponseDtos.Stats.LastestTransaction) {
+    constructor(responseDto: ResponseDtos.Stats.LatestTransaction) {
         this.id = responseDto.id;
         this.direction = responseDto.direction;
         this.type = responseDto.type;

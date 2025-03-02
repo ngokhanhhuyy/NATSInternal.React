@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { HomeModel } from "@/models/home/homeModel";
 import { useStatsService } from "@/services/statsService";
 import { useViewStates } from "@/hooks/viewStatesHook";
-import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useInitialDataStore } from "@/stores/initialDataStore";
 
 // Layout component.
@@ -13,7 +13,7 @@ import SmallStatistics from "./SmallStatisticsComponent";
 import FinanceAreaGraph from "./FinanceAreaGraphComponent";
 import RevenueDistributionGraph from "./distributionGraphs/RevenueDistributionGraphComponent";
 import ExpenseAndCostGraph from "./distributionGraphs/ExpenseAndCostGraphComponent";
-import LastestTransactionList from "./LastestTransactionListComponent";
+import LatestTransactionList from "./LatestTransactionListComponent";
 import TopSoldProductList from "./TopSoldProductListComponent";
 import TopPurchasedCustomerList from "./TopPurchasedCustomerListComponent";
 import Logo from "./LogoComponent";
@@ -23,48 +23,45 @@ const HomeView = () => {
     // Dependencies.
     const statsService = useStatsService();
     const initialData = useInitialDataStore(store => store.data);
-    const getUndefinedErrorConfirmationAsync = useAlertModalStore(store => {
-        return store.getUndefinedErrorConfirmationAsync;
-    });
 
     // Model and states.
     const { isInitialLoading, onInitialLoadingFinished } = useViewStates();
-    const [model, setModel] = useState<HomeModel>();
+    const initializedModel = useAsyncModelInitializer({
+        initializer: async () => {
+            const [
+                [thisMonthStatsResponseDto, lastMonthStatsResponseDto],
+                latestDailyStatsResponseDtos,
+                latestTransactionResponseDtos,
+                topSoldProductListResponseDto,
+                topPurchasedCustomerListResponseDto
+            ] = await Promise.all([
+                statsService.getLatestMonthlyAsync({ monthCount: 2 }),
+                statsService.getLatestDailyDetailAsync({ dayCount: 10 }),
+                statsService.getLatestTransactionAsync(),
+                statsService.getTopSoldProductListAsync(),
+                statsService.getTopPurchasedCustomerListAsync()
+            ]);
+
+            return new HomeModel({
+                thisMonthStatsResponseDto,
+                lastMonthStatsResponseDto,
+                latestDailyStatsResponseDtos,
+                latestTransactionResponseDtos,
+                topSoldProductListResponseDto,
+                topPurchasedCustomerListResponseDto,
+                initialDataResponseDto: initialData
+            });
+        },
+        cacheKey: "home"
+    });
+
+    const [model, _] = useState<HomeModel>(() => initializedModel);
 
     // Effect.
     useEffect(() => {
-        const loadAsync = async () => {
-            try {
-                const [
-                    [thisMonthStatsResponseDto, lastMonthStatsResponseDto],
-                    lastestDailyStatsResponseDtos,
-                    lastestTransactionResponseDtos,
-                    topSoldProductListResponseDto,
-                    topPurchasedCustomerListResponseDto
-                ] = await Promise.all([
-                    statsService.getLastestMonthlyAsync({ monthCount: 2 }),
-                    statsService.getLastestDailyDetailAsync({ dayCount: 10 }),
-                    statsService.getLastestTransactionsAsync(),
-                    statsService.getTopSoldProductListAsync(),
-                    statsService.getTopPurchasedCustomerListAsync()
-                ]);
-    
-                setModel(new HomeModel({
-                    thisMonthStatsResponseDto,
-                    lastMonthStatsResponseDto,
-                    lastestDailyStatsResponseDtos,
-                    lastestTransactionResponseDtos,
-                    topSoldProductListResponseDto,
-                    topPurchasedCustomerListResponseDto,
-                    initialDataResponseDto: initialData
-                }));
-            } catch {
-                await getUndefinedErrorConfirmationAsync();
-                location.reload();
-            }
-        };
-
-        loadAsync().finally(onInitialLoadingFinished);
+        if (isInitialLoading) {
+            onInitialLoadingFinished();
+        }
     }, []);
 
     // Computed.
@@ -100,7 +97,7 @@ const HomeView = () => {
     }
 
     return (
-        <MainContainer isInitialLoading={isInitialLoading}>
+        <MainContainer>
             {/* This month row */}
             <div className="row g-3">
                 <div className="col col-12 fs-5 pb-0 fw-bold d-flex
@@ -166,15 +163,15 @@ const HomeView = () => {
                     {"7 ngày gần nhất".toUpperCase()}
                 </div>
                 <div className="col col-xl-8 col-lg-7 col-md-6 col-12">
-                    <FinanceAreaGraph height={380} model={model.lastestDailyStats} />
+                    <FinanceAreaGraph height={380} model={model.latestDailyStats} />
                 </div>
                 <div className="col p-0">
                     <div className="row g-3">
                         <div className="col col-12">
-                            <RevenueDistributionGraph model={model.lastestDailyStats} />
+                            <RevenueDistributionGraph model={model.latestDailyStats} />
                         </div>
                         <div className="col col-12">
-                            <ExpenseAndCostGraph model={model.lastestDailyStats} />
+                            <ExpenseAndCostGraph model={model.latestDailyStats} />
                         </div>
                     </div>
                 </div>
@@ -187,9 +184,9 @@ const HomeView = () => {
                     {"Xếp hạng".toUpperCase()}
                 </div>
 
-                {/* Lastest transaction list */}
+                {/* Latest transaction list */}
                 <div className="col col-xxl-3 col-md-6 col-12">
-                    <LastestTransactionList model={model.lastestTransactions} />
+                    <LatestTransactionList model={model.latestTransactions} />
                 </div>
 
                 {/* Top sold products list */}

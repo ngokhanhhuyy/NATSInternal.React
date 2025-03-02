@@ -112,7 +112,7 @@ declare global {
                 items: TopPurchasedCustomer[];
             };
 
-            type LastestTransaction = {
+            type LatestTransaction = {
                 id: number;
                 direction: TransactionDirection;
                 type: TransactionType;

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { DebtOperationType } from "@/services/dtos/enums";
 import { type CustomerDetailModel } from "@/models/customer/customerDetailModel";

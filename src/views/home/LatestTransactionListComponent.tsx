@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { type LastestTransactionModel } from "@/models/stats/lastestTransactionModel";
+import { type LatestTransactionModel } from "@/models/stats/latestTransactionModel";
 import { TransactionType } from "@/services/dtos/enums";
 import { useInitialDataStore } from "@/stores/initialDataStore";
 
@@ -8,12 +8,12 @@ import { useInitialDataStore } from "@/stores/initialDataStore";
 import MainBlock from "../layouts/MainBlockComponent";
 
 // Props.
-interface LastestTransactionListProps {
-    model: LastestTransactionModel[];
+interface LatestTransactionListProps {
+    model: LatestTransactionModel[];
 }
 
 // Component.
-const LastestTransactionList = (props: LastestTransactionListProps) => {
+const LatestTransactionList = (props: LatestTransactionListProps) => {
     return (
         <MainBlock
             title="Giao dịch mới nhất"
@@ -23,7 +23,7 @@ const LastestTransactionList = (props: LastestTransactionListProps) => {
         >
             <ul className="list-group list-group-flush">
                 {props.model.length > 0 ? props.model.map((transaction, index) => (
-                    <LastestTransactionItem model={transaction} key={index} />
+                    <LatestTransactionItem model={transaction} key={index} />
                 )) : (
                     <li className="list-group-item d-flex align-items-center
                                     justify-content-center bg-transparent py-4 opacity-50">
@@ -35,7 +35,7 @@ const LastestTransactionList = (props: LastestTransactionListProps) => {
     );
 };
 
-const LastestTransactionItem = ({ model }: { model: LastestTransactionModel }) => {
+const LatestTransactionItem = ({ model }: { model: LatestTransactionModel }) => {
     // Dependencies.
     const getDisplayName = useInitialDataStore(store => store.getDisplayName);
 
@@ -115,4 +115,4 @@ const LastestTransactionItem = ({ model }: { model: LastestTransactionModel }) =
     );
 };
 
-export default LastestTransactionList;
+export default LatestTransactionList;

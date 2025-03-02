@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, startTransition } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { ConsultantListModel } from "@/models/consultant/consultantListModel";
@@ -7,6 +7,7 @@ import { TreatmentListModel } from "@/models/treatment/treatmentListModel";
 import { useConsultantService } from "@/services/consultantService";
 import { useOrderService } from "@/services/orderService";
 import { useTreatmentService } from "@/services/treatmentService";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useInitialDataStore } from "@/stores/initialDataStore";
 import { useAlertModalStore } from "@/stores/alertModalStore";
 import { useAmountUtility } from "@/utilities/amountUtility";
@@ -20,6 +21,11 @@ import MainBlockPaginator from "@/views/layouts/MainBlockPaginatorComponent";
 // Utility.
 const amountUtility = useAmountUtility();
 
+// Services.
+const consultantService = useConsultantService();
+const orderService = useOrderService();
+const treatmentService = useTreatmentService();
+
 export interface HasCustomerListProps<
         TList extends IHasCustomerListModel<TList, TBasic, TAuthorization>,
         TBasic extends IHasCustomerBasicModel<TAuthorization>,
@@ -30,10 +36,10 @@ export interface HasCustomerListProps<
     customerId: number;
     isInitialLoading: boolean;
     onInitialLoadingFinished: () => void;
-    initializeModel: (
+    initializeModelAsync: (
         requestDto: { customerId: number, resultsPerPage: number },
-        initialData: ResponseDtos.InitialData) => TList;
-    onLoadAsync: (
+        initialData: ResponseDtos.InitialData) => Promise<TList>;
+    onModelReloadAsync: (
         model: TList,
         setModel: React.Dispatch<React.SetStateAction<TList>>) => Promise<void>;
 };
@@ -50,11 +56,14 @@ const HasCustomerList = <
     const routeGenerator = useMemo(() => useRouteGenerator(), []);
 
     // Model and state.
-    const [model, setModel] = useState<TList>(() => {
-        const requestDto = { resultsPerPage: 5, customerId: props.customerId };
-        return props.initializeModel(requestDto, initialDataStore.data);
+    const initializedModel = useAsyncModelInitializer({
+        initializer: async () => {
+            const requestDto = { resultsPerPage: 5, customerId: props.customerId };
+            return props.initializeModelAsync(requestDto, initialDataStore.data);
+        },
+        cacheKey: `customerDetail_${props.resourceType}List`
     });
-
+    const [model, setModel] = useState<TList>(() => initializedModel);
     const [isReloading, setIsReloading] = useState<boolean>(false);
 
     // Computed.
@@ -64,31 +73,26 @@ const HasCustomerList = <
 
     // Effect.
     useEffect(() => { 
-        const loadAsync = async () => {
-            if (!props.isInitialLoading) {
-                setIsReloading(true);
-            }
-
-            try {
-                await props.onLoadAsync(model, setModel);
-            } catch (error) {
-                if (error instanceof ValidationError) {
-                    await alertModalStore.getSubmissionErrorConfirmationAsync();
-                    await navigate(routeGenerator.getCustomerListRoutePath());
-                    return;
+        if (!props.isInitialLoading) {
+            setIsReloading(true);
+            startTransition(async () => {
+                try {
+                    await props.onModelReloadAsync(model, setModel);
+                } catch (error) {
+                    if (error instanceof ValidationError) {
+                        await alertModalStore.getSubmissionErrorConfirmationAsync();
+                        await navigate(routeGenerator.getCustomerListRoutePath());
+                        return;
+                    }
+    
+                    throw error;
+                } finally {
+                    setIsReloading(false);
                 }
-
-                throw error;
-            }
-        };
-
-        loadAsync().finally(() => {
-            if (props.isInitialLoading) {
-                props.onInitialLoadingFinished();
-            }
-
-            setIsReloading(false);
-        });
+            });
+        } else {
+            props.onInitialLoadingFinished();
+        }
     }, [model.page]);
 
     // Header.
@@ -224,6 +228,7 @@ interface Props {
 }
 
 export const ConsultantList = (props: Props) => {
+    // Dependencies.
     const service = useConsultantService();
 
     return (
@@ -234,10 +239,12 @@ export const ConsultantList = (props: Props) => {
             customerId={props.customerId}
             isInitialLoading={props.isInitialLoading}
             onInitialLoadingFinished={props.onInitialLoadingFinished}
-            initializeModel={(requestDto, initialData) => {
-                return new ConsultantListModel(initialData.consultant, requestDto);
+            initializeModelAsync={async (requestDto, initialData) => {
+                const responseDto = await consultantService.getListAsync(requestDto);
+                return new ConsultantListModel(initialData.consultant, requestDto)
+                    .fromListResponseDto(responseDto);
             }}
-            onLoadAsync={async (model, setModel) => {
+            onModelReloadAsync={async (model, setModel) => {
                 const responseDto = await service.getListAsync(model.toRequestDto());
                 setModel(model => model.fromListResponseDto(responseDto));
             }}
@@ -256,10 +263,12 @@ export const OrderList = (props: Props) => {
             customerId={props.customerId}
             isInitialLoading={props.isInitialLoading}
             onInitialLoadingFinished={props.onInitialLoadingFinished}
-            initializeModel={(requestDto, initialData) => {
-                return new OrderListModel(initialData.order, requestDto);
+            initializeModelAsync={async (requestDto, initialData) => {
+                const responseDto = await orderService.getListAsync(requestDto);
+                return new OrderListModel(initialData.order, requestDto)
+                    .fromListResponseDto(responseDto);
             }}
-            onLoadAsync={async (model, setModel) => {
+            onModelReloadAsync={async (model, setModel) => {
                 const responseDto = await service.getListAsync(model.toRequestDto());
                 setModel(model => model.fromListResponseDto(responseDto));
             }}
@@ -278,10 +287,12 @@ export const TreatmentList = (props: Props) => {
             customerId={props.customerId}
             isInitialLoading={props.isInitialLoading}
             onInitialLoadingFinished={props.onInitialLoadingFinished}
-            initializeModel={(requestDto, initialData) => {
-                return new TreatmentListModel(initialData.order, requestDto);
+            initializeModelAsync={async (requestDto, initialData) => {
+                const responseDto = await treatmentService.getListAsync(requestDto);
+                return new TreatmentListModel(initialData.order, requestDto)
+                    .fromListResponseDto(responseDto);
             }}
-            onLoadAsync={async (model, setModel) => {
+            onModelReloadAsync={async (model, setModel) => {
                 const responseDto = await service.getListAsync(model.toRequestDto());
                 setModel(model => model.fromListResponseDto(responseDto));
             }}

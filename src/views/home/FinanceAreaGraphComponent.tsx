@@ -147,7 +147,7 @@ const FinanceAreaGraph = (props: Props) => {
         };
 
         const chart = new ApexCharts(chartElementRef.current, options);
-        chart.render();
+        setTimeout(() => chart.render());
 
         return () => {
             chart.destroy();

@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, startTransition } from "react";
 import { useCustomerService } from "@/services/customerService";
 import { CustomerListModel } from "@/models/customer/customerListModel";
 import { useViewStates } from "@/hooks/viewStatesHook";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
 import * as styles from "./CustomerListView.module.css";
 
@@ -16,8 +17,8 @@ import Results from "./ResultsComponent";
 // Component.
 const CustomerListView = () => {
     // Dependencies.
-    const customerService = useMemo(() => useCustomerService(), []);
     const alertModelStore = useAlertModalStore();
+    const customerService = useCustomerService();
 
     // Model and states.
     const {
@@ -27,24 +28,33 @@ const CustomerListView = () => {
         ValidationError
     } = useViewStates();
 
-    const [model, setModel] = useState(() => new CustomerListModel(initialData.customer));
+    const initializedModel = useAsyncModelInitializer({
+        initializer: async () => {
+            const model = new CustomerListModel(initialData.customer);
+            const responseDto = await customerService.getListAsync();
+            return model.fromListResponseDto(responseDto);
+        },
+        cacheKey: "customerList"
+    });
+    const [model, setModel] = useState(() => initializedModel);
     const [isReloading, setReloading] = useState<boolean>(() => false);
 
     // Effect.
     useEffect(() => {
-        loadListAsync().finally(() => {
-            if (isInitialLoading) {
-                onInitialLoadingFinished();
-            }
+        if (isInitialLoading) {
+            onInitialLoadingFinished();
+            return;
+        }
+
+        setReloading(true);
+        startTransition(async () => {
+            await loadListAsync();
+            setReloading(false);
         });
     }, [model.page]);
 
     // Callbacks.
     const loadListAsync = async () => {
-        if (!isInitialLoading) {
-            setReloading(true);
-        }
-
         try {
             const responseDto = await customerService.getListAsync(model.toRequestDto());
             setModel(model => model.fromListResponseDto(responseDto));
@@ -56,8 +66,6 @@ const CustomerListView = () => {
             }
 
             throw error;
-        } finally {
-            setReloading(false);
         }
     };
 
@@ -67,14 +75,16 @@ const CustomerListView = () => {
             await loadListAsync();
         }
     }, [model]);
-
     return (
-        <MainContainer isInitialLoading={isInitialLoading}>
+        <MainContainer>
             <div className="row g-3">
                 {/* Search */}
                 <div className="col col-12">
-                    <Filters model={model} setModel={setModel}
-                            loadListAsync={onSearchButtonClickedAsync} />
+                    <Filters
+                        model={model}
+                        setModel={setModel}
+                        loadListAsync={onSearchButtonClickedAsync}
+                    />
                 </div>
     
                 {/* Pagination */}
@@ -85,17 +95,23 @@ const CustomerListView = () => {
                     <div className={`block bg-white p-0 h-100 d-flex flex-column
                                     overflow-hidden rounded-3 border overflow-hidden
                                     ${styles["customerListBlock"]}`}>
-                        <Results model={model.items} isInitialLoading={isInitialLoading}
-                                isReloading={isReloading} />
+                        <Results
+                            model={model.items}
+                            isInitialLoading={isInitialLoading}
+                            isReloading={isReloading}
+                        />
                     </div>
                 </div>
     
                 {/* Pagination */}
                 {model.pageCount > 0 && (
                     <div className="col col-12">
-                        <MainPaginator page={model.page} pageCount={model.pageCount}
-                                isReloading={isReloading}
-                                onClick={page =>  setModel(model => model.from({ page }))} />
+                        <MainPaginator
+                            page={model.page}
+                            pageCount={model.pageCount}
+                            isReloading={isReloading}
+                            onClick={page =>  setModel(model => model.from({ page }))}
+                        />
                     </div>
                 )}
             </div>

@@ -5,7 +5,7 @@ import { CustomerBasicModel } from "./customerModels";
 export class HomeModel {
     public thisMonthStats: MonthlyStatsBasicModel;
     public lastMonthStats: MonthlyStatsBasicModel;
-    public lastestDailyStats: DailyStatsDetailModel[];
+    public latestDailyStats: DailyStatsDetailModel[];
 
     constructor(
             thisMonthStatsResponseDto: ResponseDtos.Stats.MonthlyBasic,
@@ -13,7 +13,7 @@ export class HomeModel {
             latestDailyStatsResponseDtos: ResponseDtos.Stats.DailyDetail[]) {
         this.thisMonthStats = new MonthlyStatsBasicModel(thisMonthStatsResponseDto);
         this.lastMonthStats = new MonthlyStatsBasicModel(lastMonthStatsResponseDto);
-        this.lastestDailyStats = latestDailyStatsResponseDtos
+        this.latestDailyStats = latestDailyStatsResponseDtos
             .map(dto => new DailyStatsDetailModel(dto));
     }
 }

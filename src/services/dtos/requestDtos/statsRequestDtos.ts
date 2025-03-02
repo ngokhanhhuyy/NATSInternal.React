@@ -10,12 +10,12 @@ declare global {
                 year: number;
             }>;
 
-            type LastestMonthly = Partial<{
+            type LatestMonthly = Partial<{
                 monthCount: number;
                 includeThisMonth: boolean;
             }>;
 
-            type LastestDaily = Partial<{
+            type LatestDaily = Partial<{
                 dayCount: number;
                 includeToday: boolean;
             }>;
@@ -36,7 +36,7 @@ declare global {
                 count: number;
             }>;
 
-            type LastestTransactions = Partial<{
+            type LatestTransactions = Partial<{
                 count: number;
             }>;
         }

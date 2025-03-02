@@ -1,11 +1,31 @@
 import React, { useMemo } from "react";
 import * as styles from "@layouts/LoadingView.module.css";
 
+// const LoadingView = () => {
+//     const computeClassName = () => {
+//         const classNames = [
+//             styles["container"],
+//             "border rounded-3"
+//         ];
+
+//         return classNames.filter(name => name).join(" ");
+//     };
+
+//     return (
+//         <div className={computeClassName()}>
+//             <div className="rounded-circle overflow-visible position-relative">
+//                 <img src="/images/main-logo.png" className={styles["loadingLogo"]}/>
+//                 <div className={styles["border"]}/>
+//             </div>
+//         </div>
+//     );
+// };
+
 const LoadingView = () => {
     const computeClassName = () => {
         const classNames = [
             styles["container"],
-            "border rounded-3"
+            "shadow-sm"
         ];
 
         return classNames.filter(name => name).join(" ");
@@ -13,9 +33,13 @@ const LoadingView = () => {
 
     return (
         <div className={computeClassName()}>
-            <div className="rounded-circle overflow-visible position-relative">
-                <img src="/images/main-logo.png" className={styles["loadingLogo"]}/>
+            <div className="col col-12 d-flex justify-content-center
+                            rounded-circle overflow-visible position-relative">
                 <div className={styles["border"]}/>
+                <img
+                    src="/images/main-logo-transparent.png"
+                    className={styles["loadingLogo"]}
+                />
             </div>
         </div>
     );

@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { usePageLoadProgressBarStore } from "@/stores/pageLoadProgressBarStore";
 import * as styles from "./NavigationBarComponent.module.css";
 
 interface Props {
@@ -8,13 +9,21 @@ interface Props {
 }
 
 const NavigationBar = ({ keepExpanded, sticky }: Props) => {
+    // Dependencies.
     const location = useLocation();
+    const progressBarPhase = usePageLoadProgressBarStore(store => store.phase);
+
+    // Computed.
     const currentRouteName = useMemo<string>(() => {
         return location.pathname.split("/")[1];
     }, [location.pathname]);
 
     const className: string = (() => {
         const names: string[] = [];
+
+        if (progressBarPhase === "waiting") {
+            names.push("pe-none");
+        }
     
         if (keepExpanded) {
             names.push("keep-expanded");

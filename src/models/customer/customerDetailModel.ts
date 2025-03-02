@@ -13,58 +13,60 @@ const routeGenerator = useRouteGenerator();
 
 export class CustomerDetailModel
         implements ICreatorTrackableDetailModel<CustomerExistingAuthorizationModel> {
-    public id: number;
-    public firstName: string;
-    public middleName: string | null;
-    public lastName: string;
-    public fullName: string;
-    public nickName: string | null;
-    public gender: Gender;
-    public birthday: DateDisplayModel | null;
-    public phoneNumber: string | null;
-    public zaloNumber: string | null;
-    public facebookUrl: string | null;
-    public email: string | null;
-    public address: string | null;
-    public note: string | null;
-    public createdUser: UserBasicModel;
-    public createdDateTime: DateTimeDisplayModel;
-    public updatedDateTime: DateTimeDisplayModel | null;
-    public introducer: CustomerBasicModel | null;
-    public debtAmount: number;
-    public debtOperations: CustomerDebtOperationModel[];
-    public avatarUrl: string;
-    public authorization: CustomerExistingAuthorizationModel;
+    public readonly id: number;
+    public readonly firstName: string;
+    public readonly middleName: string | null;
+    public readonly lastName: string;
+    public readonly fullName: string;
+    public readonly nickName: string | null;
+    public readonly gender: Gender;
+    public readonly birthday: DateDisplayModel | null;
+    public readonly phoneNumber: string | null;
+    public readonly zaloNumber: string | null;
+    public readonly facebookUrl: string | null;
+    public readonly email: string | null;
+    public readonly address: string | null;
+    public readonly note: string | null;
+    public readonly createdUser: UserBasicModel;
+    public readonly createdDateTime: DateTimeDisplayModel;
+    public readonly updatedDateTime: DateTimeDisplayModel | null;
+    public readonly introducer: CustomerBasicModel | null;
+    public readonly debtAmount: number;
+    public readonly debtOperations: CustomerDebtOperationModel[];
+    public readonly avatarUrl: string;
+    public readonly authorization: CustomerExistingAuthorizationModel;
 
-    constructor(responseDto: ResponseDtos.Customer.Detail) {
-        this.id = responseDto.id;
-        this.firstName = responseDto.firstName;
-        this.middleName = responseDto.middleName;
-        this.lastName = responseDto.lastName;
-        this.fullName = responseDto.fullName;
-        this.nickName = responseDto.nickName;
-        this.gender = responseDto.gender;
-        this.birthday = responseDto.birthday
-            ? new DateDisplayModel(responseDto.birthday)
+    constructor(detailResponseDto: ResponseDtos.Customer.Detail,) {
+        this.id = detailResponseDto.id;
+        this.firstName = detailResponseDto.firstName;
+        this.middleName = detailResponseDto.middleName;
+        this.lastName = detailResponseDto.lastName;
+        this.fullName = detailResponseDto.fullName;
+        this.nickName = detailResponseDto.nickName;
+        this.gender = detailResponseDto.gender;
+        this.birthday = detailResponseDto.birthday
+            ? new DateDisplayModel(detailResponseDto.birthday)
             : null;
-        this.phoneNumber = responseDto.phoneNumber;
-        this.zaloNumber = responseDto.zaloNumber;
-        this.facebookUrl = responseDto.facebookUrl;
-        this.email = responseDto.email;
-        this.address = responseDto.address;
-        this.note = responseDto.note;
-        this.createdUser = new UserBasicModel(responseDto.createdUser);
-        this.createdDateTime = new DateTimeDisplayModel(responseDto.createdDateTime);
-        this.updatedDateTime = responseDto.updatedDateTime
-            ? new DateTimeDisplayModel(responseDto.updatedDateTime)
+        this.phoneNumber = detailResponseDto.phoneNumber;
+        this.zaloNumber = detailResponseDto.zaloNumber;
+        this.facebookUrl = detailResponseDto.facebookUrl;
+        this.email = detailResponseDto.email;
+        this.address = detailResponseDto.address;
+        this.note = detailResponseDto.note;
+        this.createdUser = new UserBasicModel(detailResponseDto.createdUser);
+        this.createdDateTime = new DateTimeDisplayModel(detailResponseDto.createdDateTime);
+        this.updatedDateTime = detailResponseDto.updatedDateTime
+            ? new DateTimeDisplayModel(detailResponseDto.updatedDateTime)
             : null;
-        this.introducer = responseDto.introducer &&
-            new CustomerBasicModel(responseDto.introducer);
-        this.debtAmount = responseDto.debtAmount;
-        this.debtOperations = (responseDto.debtOperations ?? [])
+        this.introducer = detailResponseDto.introducer &&
+            new CustomerBasicModel(detailResponseDto.introducer);
+        this.debtAmount = detailResponseDto.debtAmount;
+        this.debtOperations = (detailResponseDto.debtOperations ?? [])
             .map(dh => new CustomerDebtOperationModel(dh));
-        this.authorization = new CustomerExistingAuthorizationModel(responseDto.authorization);
-        this.avatarUrl = avatarUtility.getDefaultAvatarUrlByFullName(responseDto.fullName);
+        this.authorization =
+            new CustomerExistingAuthorizationModel(detailResponseDto.authorization);
+        this.avatarUrl = avatarUtility
+            .getDefaultAvatarUrlByFullName(detailResponseDto.fullName);
     }
 
     public get detailRoute(): string {

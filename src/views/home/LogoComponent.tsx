@@ -4,7 +4,7 @@ const Logo = () => {
     return (
         <div className="bg-primary-subtle border border-primary-subtle text-white rounded-3
                         d-flex flex-column justify-content-center align-items-center
-                        h-100 py-md-0 py-5">
+                        h-100 py-md-4 py-5">
             <img
                 src="/images/main-logo.png"
                 className="mx-5 mb-3 w-100 h-auto rounded-circle shadow"

@@ -1,84 +1,89 @@
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useTransition, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { usePageLoadProgressBarStore } from "@/stores/pageLoadProgressBarStore";
-import { useAlertModalStore, type IAlertModalStore } from "@/stores/alertModalStore";
 import { useBreadcrumbStore } from "@/stores/breadcrumbStore";
-import { useInitialDataStore } from "@/stores/initialDataStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
+import { clearAsyncModelInitializerCache } from "@/hooks/asyncModelInitializerHook";
 
-// Loading view.
+const simulatedLazy = <TProps extends object>(loader: () => Promise<{ default: React.ComponentType<TProps>}>) => {
+    return React.lazy(async () => {
+        return await Promise.all([
+            loader(),
+            new Promise(resolve => setTimeout(resolve))
+        ]).then(([view, _]) => view);
+    });
+};
+
+// Loading view and error components.
 import LoadingView from "@/views/layouts/LoadingView";
+import { ErrorBoundary } from "react-error-boundary";
+import ErrorFallback from "./ErrorFallbackComponent";
+
 
 // View components.
-const HomeView = React.lazy(() => import("@/views/home/HomeView"));
+const HomeView = simulatedLazy(() => import("@/views/home/HomeView"));
 
 // User views.
-const UserListView = React.lazy(() => import("@/views/user/userList/UserListView"));
-const UserProfileView = React.lazy(() => import("@/views/user/userProfile/UserProfileView"));
-const UserCreateView = React.lazy(() => import("@/views/user/userUpsert/userCreate/UserCreateView"));
-const UserUpdateView = React.lazy(() => import("@/views/user/userUpsert/userUpdate/UserUpdateView"));
-const UserPasswordChangeView = React.lazy(() => import("@/views/user/userPasswordChange/UserPasswordChangeView"));
-const UserPasswordResetView = React.lazy(() => import("@/views/user/userPasswordReset/UserPasswordResetView"));
+const UserListView = simulatedLazy(() => import("@/views/user/userList/UserListView"));
+const UserProfileView = simulatedLazy(() => import("@/views/user/userProfile/UserProfileView"));
+const UserCreateView = simulatedLazy(() => import("@/views/user/userUpsert/userCreate/UserCreateView"));
+const UserUpdateView = simulatedLazy(() => import("@/views/user/userUpsert/userUpdate/UserUpdateView"));
+const UserPasswordChangeView = simulatedLazy(() => import("@/views/user/userPasswordChange/UserPasswordChangeView"));
+const UserPasswordResetView = simulatedLazy(() => import("@/views/user/userPasswordReset/UserPasswordResetView"));
 
 // Customer views.
-const CustomerListView = React.lazy(() => import("@/views/customer/customerList/CustomerListView"));
-const CustomerDetailView = React.lazy(() => import("@/views/customer/customerDetail/CustomerDetailView"));
-const CustomerUpsertView = React.lazy(() => import("@/views/customer/customerUpsert/CustomerUpsertView"));
+const CustomerListView = simulatedLazy(() => import("@/views/customer/customerList/CustomerListView"));
+const CustomerDetailView = simulatedLazy(() => import("@/views/customer/customerDetail/CustomerDetailView"));
+const CustomerUpsertView = simulatedLazy(() => import("@/views/customer/customerUpsert/CustomerUpsertView"));
 
 // Product views.
-const ProductListView = React.lazy(() => import("@/views/product/productList/ProductListView"));
-const ProductDetailView = React.lazy(() => import("@/views/product/productDetail/ProductDetailView"));
-const ProductUpsertView = React.lazy(() => import("@/views/product/productUpsert/ProductUpsertView"));
-const BrandUpsertView = React.lazy(() => import("@/views/product/brandUpsert/BrandUpsertView"));
-const ProductCategoryUpsertView = React.lazy(() => import("@/views/product/productCategoryUpsert/ProductCategoryUpsertView"));
+const ProductListView = simulatedLazy(() => import("@/views/product/productList/ProductListView"));
+const ProductDetailView = simulatedLazy(() => import("@/views/product/productDetail/ProductDetailView"));
+const ProductUpsertView = simulatedLazy(() => import("@/views/product/productUpsert/ProductUpsertView"));
+const BrandUpsertView = simulatedLazy(() => import("@/views/product/brandUpsert/BrandUpsertView"));
+const ProductCategoryUpsertView = simulatedLazy(() => import("@/views/product/productCategoryUpsert/ProductCategoryUpsertView"));
 
 // Consultant views.
-const ConsultantListView = React.lazy(() => import("@/views/consultant/consultantList/ConsultantListView"));
-const ConsultantDetailView = React.lazy(() => import("@/views/consultant/consultantDetail/ConsultantDetailView"));
-const ConsultantUpsertView = React.lazy(() => import("@/views/consultant/consultantUpsert/ConsultantUpsertView"));
+const ConsultantListView = simulatedLazy(() => import("@/views/consultant/consultantList/ConsultantListView"));
+const ConsultantDetailView = simulatedLazy(() => import("@/views/consultant/consultantDetail/ConsultantDetailView"));
+const ConsultantUpsertView = simulatedLazy(() => import("@/views/consultant/consultantUpsert/ConsultantUpsertView"));
 
 // Supply views.
-const SupplyListView = React.lazy(() => import("@/views/supply/supplyList/SupplyListView"));
-const SupplyDetailView = React.lazy(() => import("@/views/supply/supplyDetail/SupplyDetailView"));
-const SupplyUpsertView = React.lazy(() => import("@/views/supply/supplyUpsert/SupplyUpsertView"));
+const SupplyListView = simulatedLazy(() => import("@/views/supply/supplyList/SupplyListView"));
+const SupplyDetailView = simulatedLazy(() => import("@/views/supply/supplyDetail/SupplyDetailView"));
+const SupplyUpsertView = simulatedLazy(() => import("@/views/supply/supplyUpsert/SupplyUpsertView"));
 
 // Expense views.
-const ExpenseListView = React.lazy(() => import("@/views/expense/expenseList/ExpenseListView"));
-const ExpenseDetailView = React.lazy(() => import("@/views/expense/expenseDetail/ExpenseDetailView"));
-const ExpenseUpsertView = React.lazy(() => import("@/views/expense/expenseUpsert/ExpenseUpsertView"));
+const ExpenseListView = simulatedLazy(() => import("@/views/expense/expenseList/ExpenseListView"));
+const ExpenseDetailView = simulatedLazy(() => import("@/views/expense/expenseDetail/ExpenseDetailView"));
+const ExpenseUpsertView = simulatedLazy(() => import("@/views/expense/expenseUpsert/ExpenseUpsertView"));
 
 // Order views.
-const OrderListView = React.lazy(() => import("@/views/order/orderList/OrderListView"));
-const OrderDetailView = React.lazy(() => import("@/views/order/orderDetail/OrderDetailView"));
-const OrderUpsertView = React.lazy(() => import("@/views/order/orderUpsert/OrderUpsertView"));
+const OrderListView = simulatedLazy(() => import("@/views/order/orderList/OrderListView"));
+const OrderDetailView = simulatedLazy(() => import("@/views/order/orderDetail/OrderDetailView"));
+const OrderUpsertView = simulatedLazy(() => import("@/views/order/orderUpsert/OrderUpsertView"));
 
 // Treatment views.
-const TreatmentListView = React.lazy(() => import("@/views/treatment/treatmentList/TreatmentListView"));
-const TreatmentDetailView = React.lazy(() => import("@/views/treatment/treatmentDetail/treatmentDetailView"));
-const TreatmentUpsertView = React.lazy(() => import("@/views/treatment/treatmentUpsert/TreatmentUpsertView"));
+const TreatmentListView = simulatedLazy(() => import("@/views/treatment/treatmentList/TreatmentListView"));
+const TreatmentDetailView = simulatedLazy(() => import("@/views/treatment/treatmentDetail/treatmentDetailView"));
+const TreatmentUpsertView = simulatedLazy(() => import("@/views/treatment/treatmentUpsert/TreatmentUpsertView"));
 
 // Debt views.
-const DebtOverviewView = React.lazy(() => import("@/views/debt/overview/DebtOverviewView"));
-const DebtIncurrenceListView = React.lazy(() => import("@/views/debt/list/DebtIncurrenceListView"));
-const DebtIncurrenceDetailView = React.lazy(() => import("@/views/debt/detail/DebtIncurrenceDetailView"));
-const DebtIncurrenceUpsertView = React.lazy(() => import("@/views/debt/upsert/DebtIncurrenceUpsertView"));
-const DebtPaymentListView = React.lazy(() => import("@/views/debt/list/DebtPaymentListView"));
-const DebtPaymentDetailView = React.lazy(() => import("@/views/debt/detail/DebtPaymentDetailView"));
-const DebtPaymentUpsertView = React.lazy(() => import("@/views/debt/upsert/DebtPaymentUpsertView"));
+const DebtOverviewView = simulatedLazy(() => import("@/views/debt/overview/DebtOverviewView"));
+const DebtIncurrenceListView = simulatedLazy(() => import("@/views/debt/list/DebtIncurrenceListView"));
+const DebtIncurrenceDetailView = simulatedLazy(() => import("@/views/debt/detail/DebtIncurrenceDetailView"));
+const DebtIncurrenceUpsertView = simulatedLazy(() => import("@/views/debt/upsert/DebtIncurrenceUpsertView"));
+const DebtPaymentListView = simulatedLazy(() => import("@/views/debt/list/DebtPaymentListView"));
+const DebtPaymentDetailView = simulatedLazy(() => import("@/views/debt/detail/DebtPaymentDetailView"));
+const DebtPaymentUpsertView = simulatedLazy(() => import("@/views/debt/upsert/DebtPaymentUpsertView"));
 
 // Report.
-const ReportView = React.lazy(() => import("@/views/report/monthlyReport/MonthlyReportView"));
+const ReportView = simulatedLazy(() => import("@/views/report/monthlyReport/MonthlyReportView"));
 
 // Services dependencies.
 const routeGenerator = useRouteGenerator();
 
-type ElementGetterParameters = {
-    params: Params,
-    alertModalStore: IAlertModalStore,
-    initialData: ResponseDtos.InitialData,
-};
-
-type ElementGetter = (parameter: ElementGetterParameters) => Promise<React.ReactNode | null>;
+type ElementGetter = (params: Params) => React.ReactNode | null;
 
 interface Route {
     path: RegExp;
@@ -107,7 +112,7 @@ interface Params {
 const routes: Routes = {
     home: {
         path: /^\/$/,
-        element: async () => <HomeView />,
+        element: () => <HomeView />,
         meta: {
             pageTitle: "Trang chủ",
             breadcrumbItems: []
@@ -115,7 +120,7 @@ const routes: Routes = {
     },
     userList: {
         path: /^\/users\/?$/,
-        element: async () => <UserListView />,
+        element: () => <UserListView />,
         meta: {
             pageTitle: "Danh sách nhân viên",
             breadcrumbItems: [
@@ -125,9 +130,7 @@ const routes: Routes = {
     },
     userProfile: {
         path: /^\/users\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => (
-            <UserProfileView id={parseInt(params.id)} />
-        ),
+        element: (params) => <UserProfileView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Hồ sơ nhân viên",
             breadcrumbItems: [
@@ -138,7 +141,7 @@ const routes: Routes = {
     },
     userCreate: {
         path: /^\/users\/create\/?$/,
-        element: async () => <UserCreateView />,
+        element: () => <UserCreateView />,
         meta: {
             pageTitle: "Tạo nhân viên mới",
             breadcrumbItems: [
@@ -149,9 +152,7 @@ const routes: Routes = {
     },
     userUpdate: {
         path: /^\/users\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => (
-            <UserUpdateView id={parseInt(params.id as string)} />
-        ),
+        element: (params) => <UserUpdateView id={parseInt(params.id as string)} />,
         meta: {
             pageTitle: "Chỉnh sửa nhân viên",
             breadcrumbItems: [
@@ -162,7 +163,7 @@ const routes: Routes = {
     },
     userPasswordChange: {
         path: /^\/users\/changePassword\/?$/,
-        element: async () => <UserPasswordChangeView />,
+        element: () => <UserPasswordChangeView />,
         meta: {
             pageTitle: "Đổi mật khẩu",
             breadcrumbItems: [
@@ -173,9 +174,7 @@ const routes: Routes = {
     },
     userPasswordReset: {
         path: /^\/users\/(?<id>\d+)\/resetPassword\/?$/,
-        element: async ({ params }) => (
-            <UserPasswordResetView id={parseInt(params.id)} />
-        ),
+        element: (params) => <UserPasswordResetView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Đặt lại mật khẩu",
             breadcrumbItems: [
@@ -186,7 +185,7 @@ const routes: Routes = {
     },
     customerList: {
         path: /^\/customers\/?$/,
-        element: async () => <CustomerListView />,
+        element: () => <CustomerListView />,
         meta: {
             pageTitle: "Danh sách khách hàng",
             breadcrumbItems: [
@@ -196,9 +195,7 @@ const routes: Routes = {
     },
     customerDetail: {
         path: /^\/customers\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => (
-            <CustomerDetailView id={parseInt(params.id)} />
-        ),
+        element: (params) => <CustomerDetailView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Hồ sơ khách hàng",
             breadcrumbItems: [
@@ -212,9 +209,7 @@ const routes: Routes = {
     },
     customerCreate: {
         path: /^\/customers\/create\/?$/,
-        element: async () => (
-            <CustomerUpsertView isForCreating={true} />
-        ),
+        element: () => <CustomerUpsertView isForCreating={true} />,
         meta: {
             pageTitle: "Tạo khách hàng mới",
             breadcrumbItems: [
@@ -228,7 +223,7 @@ const routes: Routes = {
     },
     customerUpdate: {
         path: /^\/customers\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => (
+        element: (params) => (
             <CustomerUpsertView
                 isForCreating={false}
                 id={parseInt(params.id)}
@@ -247,7 +242,7 @@ const routes: Routes = {
     },
     productList: {
         path: /^\/products\/?$/,
-        element: async () => <ProductListView />,
+        element: () => <ProductListView />,
         meta: {
             pageTitle: "Danh sách sản phẩm",
             breadcrumbItems: [
@@ -257,9 +252,7 @@ const routes: Routes = {
     },
     productDetail: {
         path: /^\/products\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => (
-            <ProductDetailView id={parseInt(params.id)} />
-        ),
+        element: (params) => <ProductDetailView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chi tiết sản phẩm",
             breadcrumbItems: [
@@ -270,7 +263,7 @@ const routes: Routes = {
     },
     productCreate: {
         path: /^\/products\/create\/?$/,
-        element: async () => <ProductUpsertView />,
+        element: () => <ProductUpsertView />,
         meta: {
             pageTitle: "Tạo sản phẩm mới",
             breadcrumbItems: [
@@ -281,9 +274,7 @@ const routes: Routes = {
     },
     productUpdate: {
         path: /^\/products\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => (
-            <ProductUpsertView id={parseInt(params.id)} />
-        ),
+        element: (params) => <ProductUpsertView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chi tiết sản phẩm",
             breadcrumbItems: [
@@ -294,7 +285,7 @@ const routes: Routes = {
     },
     brandCreate: {
         path: /^\/products\/brands\/create\/?$/,
-        element: async () => <BrandUpsertView />,
+        element: () => <BrandUpsertView />,
         meta: {
             pageTitle: "Tạo thương hiệu mới",
             breadcrumbItems: [
@@ -305,9 +296,7 @@ const routes: Routes = {
     },
     brandUpdate: {
         path: /^\/products\/brands\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => (
-            <BrandUpsertView id={parseInt(params.id)} />
-        ),
+        element: (params) => <BrandUpsertView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chỉnh sửa thương hiệu",
             breadcrumbItems: [
@@ -318,7 +307,7 @@ const routes: Routes = {
     },
     productCategoryCreate: {
         path: /^\/products\/categories\/create\/?$/,
-        element: async () => <ProductCategoryUpsertView />,
+        element: () => <ProductCategoryUpsertView />,
         meta: {
             pageTitle: "Tạo phân loại sản phẩm mới",
             breadcrumbItems: [
@@ -329,9 +318,7 @@ const routes: Routes = {
     },
     productCategoryUpdate: {
         path: /^\/products\/categories\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => (
-            <ProductCategoryUpsertView id={parseInt(params.id)} />
-        ),
+        element: (params) => <ProductCategoryUpsertView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chỉnh sửa phân loại sản phẩm",
             breadcrumbItems: [
@@ -342,7 +329,7 @@ const routes: Routes = {
     },
     consultantList: {
         path: /^\/consultants\/?$/,
-        element: async () => <ConsultantListView />,
+        element: () => <ConsultantListView />,
         meta: {
             pageTitle: "Danh sách tư vấn",
             breadcrumbItems: [
@@ -352,9 +339,7 @@ const routes: Routes = {
     },
     consultantDetail: {
         path: /^\/consultants\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => (
-            <ConsultantDetailView id={parseInt(params.id)} />
-        ),
+        element: (params) => <ConsultantDetailView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chi tiết tư vấn",
             breadcrumbItems: [
@@ -365,7 +350,7 @@ const routes: Routes = {
     },
     consultantCreate: {
         path: /^\/consultants\/create\/?$/,
-        element: async () => <ConsultantUpsertView />,
+        element: () => <ConsultantUpsertView />,
         meta: {
             pageTitle: "Tạo tư vấn mới",
             breadcrumbItems: [
@@ -376,9 +361,7 @@ const routes: Routes = {
     },
     consultantUpdate: {
         path: /^\/consultants\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => (
-            <ConsultantUpsertView id={parseInt(params.id)} />
-        ),
+        element: (params) => <ConsultantUpsertView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chỉnh sửa tư vấn",
             breadcrumbItems: [
@@ -389,7 +372,7 @@ const routes: Routes = {
     },
     supplyList: {
         path: /^\/supplies\/?$/,
-        element: async () => <SupplyListView />,
+        element: () => <SupplyListView />,
         meta: {
             pageTitle: "Danh sách nhập hàng",
             breadcrumbItems: [
@@ -399,9 +382,7 @@ const routes: Routes = {
     },
     supplyDetail: {
         path: /^\/supplies\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => (
-            <SupplyDetailView id={parseInt(params.id)} />
-        ),
+        element: (params) => <SupplyDetailView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chi tiết đơn nhập hàng",
             breadcrumbItems: [
@@ -415,7 +396,7 @@ const routes: Routes = {
     },
     supplyCreate: {
         path: /^\/supplies\/create\/?$/,
-        element: async () => <SupplyUpsertView />,
+        element: () => <SupplyUpsertView />,
         meta: {
             pageTitle: "Tạo đơn nhập hàng mới",
             breadcrumbItems: [
@@ -429,9 +410,7 @@ const routes: Routes = {
     },
     supplyUpdate: {
         path: /^\/supplies\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => (
-            <SupplyUpsertView id={parseInt(params.id)} />
-        ),
+        element: (params) => <SupplyUpsertView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chỉnh sửa đơn nhập hàng",
             breadcrumbItems: [
@@ -445,7 +424,7 @@ const routes: Routes = {
     },
     expenseList: {
         path: /^\/expenses\/?$/,
-        element: async () => <ExpenseListView />,
+        element: () => <ExpenseListView />,
         meta: {
             pageTitle: "Danh sách chi phí",
             breadcrumbItems: [
@@ -455,9 +434,7 @@ const routes: Routes = {
     },
     expenseDetail: {
         path: /^\/expenses\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => (
-            <ExpenseDetailView id={parseInt(params.id)} />
-        ),
+        element: (params) => <ExpenseDetailView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chi tiết chi phí",
             breadcrumbItems: [
@@ -468,7 +445,7 @@ const routes: Routes = {
     },
     expenseCreate: {
         path: /^\/expenses\/create\/?$/,
-        element: async () => <ExpenseUpsertView />,
+        element: () => <ExpenseUpsertView />,
         meta: {
             pageTitle: "Tạo chi phí mới",
             breadcrumbItems: [
@@ -482,9 +459,7 @@ const routes: Routes = {
     },
     expenseUpdate: {
         path: /^\/expenses\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) =>(
-            <ExpenseUpsertView id={parseInt(params.id)} />
-        ),
+        element: (params) => <ExpenseUpsertView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chỉnh sửa chi phí",
             breadcrumbItems: [
@@ -498,7 +473,7 @@ const routes: Routes = {
     },
     orderList: {
         path: /^\/orders\/?$/,
-        element: async () => <OrderListView />,
+        element: () => <OrderListView />,
         meta: {
             pageTitle: "Danh sách đơn bản lẻ",
             breadcrumbItems: [
@@ -508,9 +483,7 @@ const routes: Routes = {
     },
     orderDetail: {
         path: /^\/orders\/(?<id>\d+)\/?$/,
-        element: async ({ params }) =>(
-            <OrderDetailView id={parseInt(params.id)} />
-        ),
+        element: (params) => <OrderDetailView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chi tiết đơn bán lẻ",
             breadcrumbItems: [
@@ -521,7 +494,7 @@ const routes: Routes = {
     },
     orderCreate: {
         path: /^\/orders\/create\/?$/,
-        element: async () => <OrderUpsertView />,
+        element: () => <OrderUpsertView />,
         meta: {
             pageTitle: "Tạo đơn bán lẻ mới",
             breadcrumbItems: [
@@ -532,9 +505,7 @@ const routes: Routes = {
     },
     orderUpdate: {
         path: /^\/orders\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => (
-            <OrderUpsertView id={parseInt(params.id)} />
-        ),
+        element: (params) => <OrderUpsertView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chỉnh sửa đơn bán lẻ",
             breadcrumbItems: [
@@ -545,7 +516,7 @@ const routes: Routes = {
     },
     treatmentList: {
         path: /^\/treatments\/?$/,
-        element: async () => <TreatmentListView />,
+        element: () => <TreatmentListView />,
         meta: {
             pageTitle: "Danh sách liệu trình",
             breadcrumbItems: [
@@ -555,9 +526,7 @@ const routes: Routes = {
     },
     treatmentDetail: {
         path: /^\/treatments\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => (
-            <TreatmentDetailView id={parseInt(params.id)} />
-        ),
+        element: (params) => <TreatmentDetailView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chi tiết liệu trình",
             breadcrumbItems: [
@@ -571,7 +540,7 @@ const routes: Routes = {
     },
     treatmentCreate: {
         path: /^\/treatments\/create\/?$/,
-        element: async () => <TreatmentUpsertView />,
+        element: () => <TreatmentUpsertView />,
         meta: {
             pageTitle: "Tạo liệu trình mới",
             breadcrumbItems: [
@@ -585,9 +554,7 @@ const routes: Routes = {
     },
     treatmentUpdate: {
         path: /^\/treatments\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => (
-            <TreatmentUpsertView id={parseInt(params.id)} />
-        ),
+        element: (params) => <TreatmentUpsertView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chỉnh sửa liệu trình",
             breadcrumbItems: [
@@ -601,7 +568,7 @@ const routes: Routes = {
     },
     debtOverviewView: {
         path: /^\/debts\/?$/,
-        element: async () => <DebtOverviewView />,
+        element: () => <DebtOverviewView />,
         meta: {
             pageTitle: "Tổng quan nợ",
             breadcrumbItems: [{ text: "Tổng quan nợ" }],
@@ -609,7 +576,7 @@ const routes: Routes = {
     },
     debtIncurrenceListView: {
         path: /^\/debts\/incurrences\/?$/,
-        element: async () => <DebtIncurrenceListView />,
+        element: () => <DebtIncurrenceListView />,
         meta: {
             pageTitle: "Danh sách khoản ghi nợ",
             breadcrumbItems: [
@@ -620,9 +587,7 @@ const routes: Routes = {
     },
     debtIncurrenceDetailView: {
         path: /^\/debts\/incurrences\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => (
-            <DebtIncurrenceDetailView id={parseInt(params.id)} />
-        ),
+        element: (params) => <DebtIncurrenceDetailView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Danh sách khoản ghi nợ",
             breadcrumbItems: [
@@ -637,7 +602,7 @@ const routes: Routes = {
     },
     debtIncurrenceCreateView: {
         path: /^\/debts\/incurrences\/create\/?$/,
-        element: async () => <DebtIncurrenceUpsertView />,
+        element: () => <DebtIncurrenceUpsertView />,
         meta: {
             pageTitle: "Tạo khoản ghi nợ mới",
             breadcrumbItems: [
@@ -652,9 +617,7 @@ const routes: Routes = {
     },
     debtIncurrenceUpdateView: {
         path: /^\/debts\/incurrences\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => (
-            <DebtIncurrenceUpsertView id={parseInt(params.id)} />
-        ),
+        element: (params) => <DebtIncurrenceUpsertView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chỉnh sửa khoản ghi nợ",
             breadcrumbItems: [
@@ -669,7 +632,7 @@ const routes: Routes = {
     },
     debtPaymentListView: {
         path: /^\/debts\/payments\/?$/,
-        element: async () => <DebtPaymentListView />,
+        element: () => <DebtPaymentListView />,
         meta: {
             pageTitle: "Danh sách khoản trả nợ",
             breadcrumbItems: [
@@ -680,9 +643,7 @@ const routes: Routes = {
     },
     debtPaymentDetailView: {
         path: /^\/debts\/payments\/(?<id>\d+)\/?$/,
-        element: async ({ params }) => (
-            <DebtPaymentDetailView id={parseInt(params.id)} />
-        ),
+        element: (params) => <DebtPaymentDetailView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Danh sách khoản trả nợ",
             breadcrumbItems: [
@@ -697,7 +658,7 @@ const routes: Routes = {
     },
     debtPaymentCreateView: {
         path: /^\/debts\/payments\/create\/?$/,
-        element: async () => <DebtPaymentUpsertView />,
+        element: () => <DebtPaymentUpsertView />,
         meta: {
             pageTitle: "Tạo khoản trả nợ mới",
             breadcrumbItems: [
@@ -712,7 +673,7 @@ const routes: Routes = {
     },
     debtPaymentUpdateView: {
         path: /^\/debts\/payments\/(?<id>\d+)\/update\/?$/,
-        element: async ({ params }) => <DebtPaymentUpsertView id={parseInt(params.id)} />,
+        element: (params) => <DebtPaymentUpsertView id={parseInt(params.id)} />,
         meta: {
             pageTitle: "Chỉnh sửa khoản trả nợ",
             breadcrumbItems: [
@@ -727,7 +688,7 @@ const routes: Routes = {
     },
     reportView: {
         path: /^\/report\/?$/,
-        element: async () => <ReportView />,
+        element: () => <ReportView />,
         meta: {
             pageTitle: "Báo cáo",
             breadcrumbItems: [{ text: "Tổng quan nợ" }]
@@ -741,37 +702,30 @@ const HomeRoutes = () => {
     const location = useLocation();
     const breadcrumbStore = useBreadcrumbStore();
     const pageLoadProgressBarStore = usePageLoadProgressBarStore();
-    const alertModalStore = useAlertModalStore();
-    const initialData = useInitialDataStore(state => state.data);
 
     // States.
-    const [firstView, setFirstView] = useState<React.ReactNode | null>(<LoadingView />);
-    const [secondView, setSecondView] = useState<React.ReactNode | null>(null);
-    const [currentViewKey, setCurrentViewKey] = useState<1 | 2>(1);
+    const [view, setView] = useState<React.ReactNode | null>(<LoadingView />);
+    const [_, startTransition] = useTransition();
 
     useEffect(() => {
         pageLoadProgressBarStore.start();
-        const matchedPair = Object
-            .entries(routes)
-            .map(([viewName, route]) => ({ viewName, route }))
-            .find(pair => pair.route.path.test(location.pathname));
 
-        if (!matchedPair) {
-            navigate(routeGenerator.getHomeRoutePath(), { replace: true });
-            return;
-        }
-
-        const route = matchedPair.route;
-        const match = location.pathname.match(route.path);
-        const params: Params = match?.groups ?? {};
-        route.element({ params, alertModalStore, initialData }).then(element => {
-            if (currentViewKey === 1) {
-                setSecondView(element);
-                setCurrentViewKey(2);
-            } else {
-                setFirstView(element);
-                setCurrentViewKey(1);
+        startTransition(async () => {
+            const matchedPair = Object
+                .entries(routes)
+                .map(([viewName, route]) => ({ viewName, route }))
+                .find(pair => pair.route.path.test(location.pathname));
+    
+            if (!matchedPair) {
+                navigate(routeGenerator.getHomeRoutePath(), { replace: true });
+                return;
             }
+    
+            const route = matchedPair.route;
+            const match = location.pathname.match(route.path);
+            const params: Params = match?.groups ?? {};
+            const element = route.element(params);
+            setView(element);
 
             if (route.meta.breadcrumbItems) {
                 let breadcrumbItems: BreadcrumbItem[];
@@ -787,20 +741,17 @@ const HomeRoutes = () => {
     }, [location.pathname]);
 
     useEffect(() => {
-        if (pageLoadProgressBarStore.phase === "finishing") {
-            if (currentViewKey === 1) {
-                setSecondView(null);
-            } else {
-                setFirstView(null);
-            }
-        }
-    }, [pageLoadProgressBarStore.phase]);
+        return () => {
+            clearAsyncModelInitializerCache();
+        };
+    }, []);
 
     return (
-        <Suspense>
-            {firstView}
-            {secondView}
-        </Suspense>
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <Suspense>
+                {view}
+            </Suspense>
+        </ErrorBoundary>
     );
 };
 

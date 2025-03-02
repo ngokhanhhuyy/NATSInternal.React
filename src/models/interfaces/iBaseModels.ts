@@ -2,16 +2,16 @@ import type { ListSortingOptionsModel } from "../listSortingModels";
 
 declare global {
     interface IPaginatedListModel<TBasic extends IBasicModel> {
-        page: number;
-        resultsPerPage: number | undefined;
-        pageCount: number;
-        items: Readonly<TBasic[]>;
+        readonly page: number;
+        readonly resultsPerPage: number | undefined;
+        readonly pageCount: number;
+        readonly items: Readonly<TBasic[]>;
     }
     
     interface ISortableListModel<TBasic extends IBasicModel>
             extends IPaginatedListModel<TBasic> {
-        sortingByAscending: boolean | undefined;
-        sortingByField: string | undefined;
+        readonly sortingByAscending: boolean | undefined;
+        readonly sortingByField: string | undefined;
         readonly sortingOptions: ListSortingOptionsModel | undefined;
     }
     

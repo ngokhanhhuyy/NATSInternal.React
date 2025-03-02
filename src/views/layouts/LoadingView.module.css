@@ -3,33 +3,39 @@
     width: 250px;
     height: 250px;
     position: absolute;
-    padding: 25px;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 50%;
+    border-color: var(--bs-border-color);
     top: calc(50% - var(--topbar-height));
     left: 50%;
     transform: translate(-50%, -50%);
 }
 
 .loadingLogo {
-    filter: grayscale(0);
     max-width: 100%;
-    animation-name: loadingLogoScaling;
-    animation-duration: 0.75s;
+    /* animation-name: loadingLogoScaling;
+    animation-duration: 1s;
     animation-iteration-count: infinite;
     animation-direction: alternate;
-    animation-timing-function: ease-in-out;
+    animation-timing-function: ease-in-out; */
+    max-width: 100%;
+    aspect-ratio: 1;
+    transform: scale(0.8);
 }
 
 .border {
     border-width: 5px;
     border-style: solid;
+    border-color: rgb(44, 119, 230);
     width: 100%;
     height: 100%;
     border-radius: 50%;
     transform-origin: 50% 50%;
     top: 0;
-    clip-path: polygon(0 0, 100% 0, 50% 50%);
+    clip-path: polygon(0 0, 100% 0, 100% 50%, 50% 50%, 0 0);
     position: absolute;
-    animation-duration: 0.5s;
+    animation-duration: 1s;
     animation-iteration-count: infinite;
     animation-timing-function: linear;
     animation-name: borderSpinning;
@@ -43,34 +49,20 @@
 
 @keyframes borderSpinning {
     0% {
-        border-color: var(--bs-primary);
         transform: rotate(0deg);
     }
 
-    25% {
-        border-color: var(--bs-success);
-    }
-
-    50% {
-        border-color: var(--bs-warning);
-    }
-
-    75% {
-        border-color: var(--bs-danger);
-    }
-
     100% {
-        border-color: var(--bs-primary);
         transform: rotate(360deg);
     }
 }
 
 @keyframes loadingLogoScaling {
-    from {
+    0% {
         transform: scale(0.9);
     }
 
-    to {
-        transform: scale(0.8);
+    100% {
+        transform: scale(1.1);
     }
 }
