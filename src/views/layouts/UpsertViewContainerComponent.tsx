@@ -11,7 +11,6 @@ interface Props<TSubmissionResult> {
     children: React.ReactNode | React.ReactNode[];
     modelState: IModelState;
     formId?: string;
-    isInitialLoading: boolean;
     submittingAction: () => Promise<TSubmissionResult>;
     onSubmissionSucceeded: (submissionResult: TSubmissionResult) => Promise<void>;
     submissionSucceededModal?: boolean;
@@ -22,11 +21,11 @@ interface Props<TSubmissionResult> {
 }
 
 const UpsertViewContainer = <TSubmissionResult,>(props: Props<TSubmissionResult>) => {
-    const { children, modelState, isInitialLoading, ...rest } = props;
+    const { children, modelState, ...rest } = props;
 
     return (
         <Form {...rest} className="m-0 p-0" modelState={modelState}>
-            <MainContainer isInitialLoading={isInitialLoading}>
+            <MainContainer>
                 {modelState.hasAnyError() && (
                     <div className="row g-3">
                         <div className="col col-12">

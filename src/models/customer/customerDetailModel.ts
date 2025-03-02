@@ -1,7 +1,11 @@
 import { Gender } from "@/services/dtos/enums";
+import { AbstractClonableModel } from "../baseModels";
 import { CustomerBasicModel } from "./customerBasicModel";
 import { CustomerExistingAuthorizationModel } from "./customerExistingAuthorizationModel";
 import { CustomerDebtOperationModel } from "./customerDebtOperationModel";
+import { CustomerDetailConsultantListModel } from "./customerDetailConsultantListModel";
+import { CustomerDetailOrderListModel } from "./customerDetailOrderListModel";
+import { CustomerDetailTreatmentListModel } from "./customerDetailTreatmentListModel";
 import { DateDisplayModel } from "../dateTime/dateDisplayModel";
 import { DateTimeDisplayModel } from "../dateTime/dateTimeDisplayModel";
 import { UserBasicModel } from "../user/userBasicModel";
@@ -12,6 +16,7 @@ const avatarUtility = useAvatarUtility();
 const routeGenerator = useRouteGenerator();
 
 export class CustomerDetailModel
+        extends AbstractClonableModel<CustomerDetailModel>
         implements ICreatorTrackableDetailModel<CustomerExistingAuthorizationModel> {
     public readonly id: number;
     public readonly firstName: string;
@@ -35,8 +40,17 @@ export class CustomerDetailModel
     public readonly debtOperations: CustomerDebtOperationModel[];
     public readonly avatarUrl: string;
     public readonly authorization: CustomerExistingAuthorizationModel;
+    public readonly consultantList: CustomerDetailConsultantListModel;
+    public readonly orderList: CustomerDetailOrderListModel;
+    public readonly treatmentList: CustomerDetailTreatmentListModel;
 
-    constructor(detailResponseDto: ResponseDtos.Customer.Detail,) {
+    constructor(
+            detailResponseDto: ResponseDtos.Customer.Detail,
+            consultantListResponseDto: ResponseDtos.Consultant.List,
+            orderListResponseDto: ResponseDtos.Order.List,
+            treatmnentListResponseDto: ResponseDtos.Treatment.List) {
+        super();
+
         this.id = detailResponseDto.id;
         this.firstName = detailResponseDto.firstName;
         this.middleName = detailResponseDto.middleName;
@@ -67,6 +81,9 @@ export class CustomerDetailModel
             new CustomerExistingAuthorizationModel(detailResponseDto.authorization);
         this.avatarUrl = avatarUtility
             .getDefaultAvatarUrlByFullName(detailResponseDto.fullName);
+        this.consultantList = new CustomerDetailConsultantListModel(consultantListResponseDto);
+        this.orderList = new CustomerDetailOrderListModel(orderListResponseDto);
+        this.treatmentList = new CustomerDetailTreatmentListModel(treatmnentListResponseDto);
     }
 
     public get detailRoute(): string {
@@ -75,5 +92,38 @@ export class CustomerDetailModel
 
     public get updateRoute(): string {
         return routeGenerator.getCustomerUpdateRoutePath(this.id);
+    }
+
+    public fromConsultantList(consultantList: CustomerDetailConsultantListModel) {
+        return this.from({ consultantList });
+    }
+
+    public fromOrderList(orderList: CustomerDetailOrderListModel) {
+        return this.from({ orderList });
+    }
+
+    public fromTreatmentList(treatmentList: CustomerDetailTreatmentListModel) {
+        return this.from({ treatmentList });
+    }
+
+    public toConsultantListRequestDto(): RequestDtos.Consultant.List {
+        return {
+            ...this.consultantList.toRequestDto(),
+            customerId: this.id
+        };
+    }
+
+    public toOrderListRequestDto(): RequestDtos.Order.List {
+        return {
+            ...this.orderList.toRequestDto(),
+            customerId: this.id
+        };
+    }
+
+    public toTreatmentListRequestDto(): RequestDtos.Treatment.List {
+        return {
+            ...this.treatmentList.toRequestDto(),
+            customerId: this.id
+        };
     }
 }

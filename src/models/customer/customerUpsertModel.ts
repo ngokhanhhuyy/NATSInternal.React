@@ -19,23 +19,25 @@ export class CustomerUpsertModel extends AbstractClonableModel<CustomerUpsertMod
     public readonly introducerId: number | null = null;
     public readonly canDelete: boolean | undefined;
 
-    fromResponseDto(responseDto: ResponseDtos.Customer.Detail): CustomerUpsertModel {
-        return this.from({
-            id: responseDto.id,
-            firstName: responseDto.firstName,
-            middleName: responseDto.middleName || "",
-            lastName: responseDto.lastName,
-            nickName: responseDto.nickName || "",
-            gender: responseDto.gender,
-            birthday: this.birthday.fromResponseDto(responseDto.birthday),
-            phoneNumber: responseDto.phoneNumber || "",
-            zaloNumber: responseDto.zaloNumber || "",
-            facebookUrl: responseDto.facebookUrl || "",
-            email: responseDto.email || "",
-            address: responseDto.address || "",
-            note: responseDto.note || "",
-            canDelete: responseDto.authorization.canDelete
-        });
+    constructor(responseDto?: ResponseDtos.Customer.Detail) {
+        super();
+        
+        if (responseDto) {
+            this.id = responseDto.id;
+            this.firstName = responseDto.firstName;
+            this.middleName = responseDto.middleName || "";
+            this.lastName = responseDto.lastName;
+            this.nickName = responseDto.nickName || "";
+            this.gender = responseDto.gender;
+            this.birthday = this.birthday.fromResponseDto(responseDto.birthday);
+            this.phoneNumber = responseDto.phoneNumber || "";
+            this.zaloNumber = responseDto.zaloNumber || "";
+            this.facebookUrl = responseDto.facebookUrl || "";
+            this.email = responseDto.email || "";
+            this.address = responseDto.address || "";
+            this.note = responseDto.note || "";
+            this.canDelete = responseDto.authorization.canDelete;
+        }
     }
 
     public toRequestDto(): RequestDtos.Customer.Upsert {

@@ -1,6 +1,9 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, startTransition } from "react";
 import { Link } from "react-router-dom";
 import { useCustomerService } from "@/services/customerService";
+import { useOrderService } from "@/services/orderService";
+import { useTreatmentService } from "@/services/treatmentService";
+import { useConsultantService } from "@/services/consultantService";
 import { CustomerDetailModel } from "@/models/customer/customerDetailModel";
 import { useViewStates } from "@/hooks/viewStatesHook";
 import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
@@ -11,45 +14,75 @@ import MainContainer from "@/views/layouts/MainContainerComponent";
 // Child components.
 import CustomerDetail from "./CustomerDetailComponent";
 import CustomerDebtOperations from "./CustomerDebtOperationsComponent";
-import { ConsultantList, OrderList, TreatmentList } from "./HasCustomerListComponent";
+import TransactionList from "./TransactionList";
 
 // Component.
 const CustomerDetailView = ({ id }: { id: number }) => {
     // Dependencies.
-    const customerService = useMemo(() => useCustomerService(), []);
+    const customerService = useCustomerService();
+    const consultantService = useConsultantService();
+    const orderService = useOrderService();
+    const treatmentService = useTreatmentService();
 
     // Model and states.
-    const { onInitialLoadingFinished } = useViewStates();
-    const [initialLoadingStates, setInitialLoadingStates] = useState(() => ({
-        customerDetail: true,
-        consultantList: true,
-        orderList: true,
-        treatmentList: true
-    }));
+    const { isInitialLoading, onInitialLoadingFinished } = useViewStates();
     const initializedModel = useAsyncModelInitializer({
         initializer: async () => {
-            const responseDto = await customerService.getDetailAsync(id);
-            return new CustomerDetailModel(responseDto);
+            const listsRequestDto = { customerId: id, resultsPerPage: 5 };
+            const responseDtos = await Promise.all([
+                customerService.getDetailAsync(id),
+                consultantService.getListAsync(listsRequestDto),
+                orderService.getListAsync(listsRequestDto),
+                treatmentService.getListAsync(listsRequestDto)
+            ]);
+
+            return new CustomerDetailModel(...responseDtos);
         },
         cacheKey: "customerDetail"
     });
-    const [model] = useState<CustomerDetailModel>(() => initializedModel);
+    const [model, setModel] = useState<CustomerDetailModel>(() => initializedModel);
+    const [reloadingStates, setReloadingStates] = useState(() => ({
+        consultantList: false,
+        orderList: false,
+        treatmentList: false
+    }));
 
     // Effect.
     useEffect(() => {
-        onInitialLoadingFinished();
-    }, []);
-
-    // useEffect(() => {
-    //     const { customerDetail, consultantList, orderList, treatmentList } = initialLoadingStates;
-    //     if (!customerDetail && !consultantList && !orderList && !treatmentList) {
-    //         onInitialLoadingFinished();
-    //     }
-    // }, [initialLoadingStates]);
-
-    if (!model) {
-        return null;
-    }
+        if (isInitialLoading) {
+            onInitialLoadingFinished();
+            return;
+        }
+        
+        startTransition(async () => {
+            if (reloadingStates.consultantList) {
+                const requestDto = model.toConsultantListRequestDto();
+                const responseDto = await consultantService.getListAsync(requestDto);
+                setModel(model => model.from({
+                    consultantList: model.consultantList.fromListResponseDto(responseDto)
+                }));
+                setReloadingStates(states => ({ ...states, consultantList: false }));
+            }
+            
+            if (reloadingStates.orderList) {
+                const requestDto = model.toOrderListRequestDto();
+                const responseDto = await orderService.getListAsync(requestDto);
+                setModel(model => model.from({
+                    orderList: model.orderList.fromListResponseDto(responseDto)
+                }));
+                setReloadingStates(states => ({ ...states, orderList: false }));
+            }
+            
+            if (reloadingStates.treatmentList) {
+                const requestDto = model.toTreatmentListRequestDto();
+                const responseDto = await treatmentService.getListAsync(requestDto);
+                setModel(model => model.from({
+                    treatmentList: model.treatmentList.fromListResponseDto(responseDto)
+                }));
+                setReloadingStates(states => ({ ...states, treatmentList: false }));
+            }
+        });
+    }, [isInitialLoading, reloadingStates, model]);
     
     return (
         <MainContainer>
@@ -66,46 +99,64 @@ const CustomerDetailView = ({ id }: { id: number }) => {
                     </div>
                 )}
             </div>
-            <div className="row g-3">
 
+            <div className="row g-3">
                 {/* Consultant */}
                 <div className="col col-12">
-                    <ConsultantList
+                    <TransactionList
+                        resourceType="consultant"
+                        blockColor="primary"
+                        idPrefix="TV"
                         customerId={id}
-                        isInitialLoading={initialLoadingStates.consultantList}
-                        onInitialLoadingFinished={() => {
-                            setInitialLoadingStates(states => ({
+                        isReloading={reloadingStates.consultantList}
+                        model={model.consultantList}
+                        onModelChanged={(changedData) => {
+                            setReloadingStates(states => ({
                                 ...states,
-                                consultantList: false
+                                consultantList: true
                             }));
+                            const changedListModel = model.consultantList.from(changedData);
+                            setModel(model => model.fromConsultantList(changedListModel));
                         }}
                     />
                 </div>
 
                 {/* OrderList */}
                 <div className="col col-12">
-                    <OrderList
+                    <TransactionList
+                        resourceType="order"
+                        blockColor="success"
+                        idPrefix="BL"
                         customerId={id}
-                        isInitialLoading={initialLoadingStates.orderList}
-                        onInitialLoadingFinished={() => {
-                            setInitialLoadingStates(states => ({
+                        isReloading={reloadingStates.orderList}
+                        model={model.orderList}
+                        onModelChanged={(changedData) => {
+                            setReloadingStates(states => ({
                                 ...states,
-                                orderList: false
+                                orderList: true
                             }));
+                            const changedListModel = model.orderList.from(changedData);
+                            setModel(model => model.fromOrderList(changedListModel));
                         }}
                     />
                 </div>
 
                 {/* TreatmentList */}
                 <div className="col col-12">
-                    <TreatmentList
+                    <TransactionList
+                        resourceType="treatment"
+                        blockColor="danger"
+                        idPrefix="LT"
                         customerId={id}
-                        isInitialLoading={initialLoadingStates.treatmentList}
-                        onInitialLoadingFinished={() => {
-                            setInitialLoadingStates(states => ({
+                        isReloading={reloadingStates.treatmentList}
+                        model={model.treatmentList}
+                        onModelChanged={(changedData) => {
+                            setReloadingStates(states => ({
                                 ...states,
-                                treatmentList: false
+                                treatmentList: true
                             }));
+                            const changedListModel = model.treatmentList.from(changedData);
+                            setModel(model => model.fromTreatmentList(changedListModel));
                         }}
                     />
                 </div>

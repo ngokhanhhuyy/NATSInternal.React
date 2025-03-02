@@ -25,10 +25,15 @@ const MainContainer = (props: MainContainerProps) => {
         return classNames.filter(name => name).join(" ");
     };
 
+    const computeStyle = (): React.CSSProperties => {
+        return { transition: "opacity 0.2s ease" };
+    };
+
     return (
         <div
             {...rest}
             className={`container-fluid d-flex flex-column px-2 pb-1 ${computeClassName()}`}
+            style={computeStyle()}
         >
             {children}
         </div>

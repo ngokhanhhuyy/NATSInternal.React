@@ -4,10 +4,9 @@ import { CustomerUpsertModel } from "@/models/customer/customerUpsertModel";
 import { useCustomerService } from "@/services/customerService";
 import { Gender } from "@/services/dtos/enums";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
-import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
 import { useRouteGenerator } from "@/router/routeGenerator";
-import { NotFoundError } from "@/errors";
 
 // Layout components.
 import UpsertViewContainer from "@layouts/UpsertViewContainerComponent";
@@ -38,14 +37,24 @@ interface CustomerUpdateViewProps {
 const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewProps) => {
     // Dependencies.
     const navigate = useNavigate();
-    const alertModelStore = useAlertModalStore();
     const customerService = useCustomerService();
     const routeGenerator = useRouteGenerator();
     
-    // Internal states.
-    const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
-    const [model, setModel] = useState(() => new CustomerUpsertModel());
-    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model);
+    // Model and states.
+    const initializedModel = useAsyncModelInitializer({
+        initializer: async () => {
+            if (props.isForCreating) {
+                return new CustomerUpsertModel();
+            }
+
+            const responseDto = await customerService.getDetailAsync(props.id);
+            return new CustomerUpsertModel(responseDto);
+        },
+        cacheKey: props.isForCreating ? "customerCreate" : "customerUpdate"
+    });
+    const { onInitialLoadingFinished, modelState } = useUpsertViewStates();
+    const [model, setModel] = useState(() => initializedModel);
+    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(initializedModel);
     
     // Computed.
     const blockTitle = useMemo<string>(() => {
@@ -58,37 +67,8 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
 
     // Effect.
     useEffect(() => {
-        const initialLoadAsync = async () => {
-            try {
-                if (props.isForCreating) {
-                    const canCreate = await customerService.getCreatingPermissionAsync();
-                    if (!canCreate) {
-                        await alertModelStore.getUnauthorizationConfirmationAsync();
-                        await navigate(routeGenerator.getCustomerListRoutePath());
-                    }
-                    
-                    setOriginalModel(model);
-                    return;
-                }
-    
-                const responseDto = await customerService.getDetailAsync(props.id);
-                setModel(model => {
-                    const loadedModel = model.fromResponseDto(responseDto);
-                    setOriginalModel(loadedModel);
-                    return loadedModel;
-                });
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await alertModelStore.getNotFoundConfirmationAsync();
-                    await navigate(routeGenerator.getCustomerListRoutePath());
-                    return;
-                }
-                
-                throw error;
-            }
-        };
-
-        initialLoadAsync().finally(onInitialLoadingFinished);
+        setOriginalModel(initializedModel);
+        onInitialLoadingFinished();
     }, []);
     
     // Computed.
@@ -122,7 +102,6 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
     return (
         <UpsertViewContainer
             modelState={modelState}
-            isInitialLoading={isInitialLoading}
             submittingAction={handleSubmissionAsync}
             onSubmissionSucceeded={handleSucceededSubmissionAsync}
             deletingAction={handleDeletionAsync}
