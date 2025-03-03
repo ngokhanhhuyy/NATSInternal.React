@@ -38,10 +38,17 @@ const MainList = (props: MainListProps) => {
 
     // Effect.
     useEffect(() => {
+        console.log(props.isInitialRendering);
         if (!props.isInitialRendering) {
             reloadAsync();
         }
-    }, [model.sortingByField, model.sortingByAscending, model.roleId, model.page]);
+    }, [
+        model.sortingByField,
+        model.sortingByAscending,
+        model.roleId,
+        model.page,
+        model.content
+    ]);
 
     // Callbacks.
     const reloadAsync = async (): Promise<void> => {
@@ -70,6 +77,7 @@ const MainList = (props: MainListProps) => {
         <div className="row g-3">
             {/* List filters */}
             <div className="col col-12">
+                <pre>{JSON.stringify(model.content, null, 2)}</pre>
                 <Filters
                     model={model}
                     onChanged={(changedData) => {
@@ -77,12 +85,6 @@ const MainList = (props: MainListProps) => {
                     }}
                     modelState={modelState}
                     isReloading={isReloading}
-                    onSearchButtonClicked={(searchContent) => {
-                        setModel(model => model.from({
-                            content: searchContent,
-                            page: 1
-                        }));
-                    }}
                 />
             </div>
 

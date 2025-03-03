@@ -37,14 +37,6 @@ const Filters = (props: Props) => {
         || props.model.content.length >= 3;
     const searchContentColumnClassName = !isSearchContentValid ? "pb-0" : "";
 
-    // Callbacks.
-    const handleRoleChange = (role: RoleMinimalModel | null): void => {
-        props.onChanged({
-            roleId: role?.id,
-            page: 1
-        });
-    };
-
     // Header.
     const header = (
         <>
@@ -109,9 +101,9 @@ const Filters = (props: Props) => {
                                 type="text"
                                 maxLength={255}
                                 placeholder="Họ và tên, số điện thoại ..."
-                                value={searchContent}
-                                onValueChanged={(searchContent) => {
-                                    setSearchContent(searchContent);
+                                value={props.model.content}
+                                onValueChanged={(content) => {
+                                    props.onChanged({ content, page: 1 });
                                 }}
                             />
 
@@ -140,7 +132,7 @@ const Filters = (props: Props) => {
                     </div>
 
                     {/* Search button */}
-                    <div className="col col-auto">
+                    <div className="col col-auto d-none">
                         <button
                             className="btn btn-primary"
                             type="button"
@@ -156,13 +148,14 @@ const Filters = (props: Props) => {
                     {/* Sort by field */}
                     <div className="col col-sm-6 col-12">
                         <Label text="Trường sắp xếp" />
-                        <SortingByFieldSelectInput name="sortingByField"
-                                options={(data) => data.user.listSortingOptions}
-                                value={props.model.sortingByField}
-                                onValueChanged={(sortingByField) => {
-                                    
-                                    props.onChanged({ sortingByField });
-                                }} />
+                        <SortingByFieldSelectInput
+                            name="sortingByField"
+                            options={(data) => data.user.listSortingOptions}
+                            value={props.model.sortingByField}
+                            onValueChanged={(sortingByField) => {
+                                props.onChanged({ sortingByField, page: 1 });
+                            }}
+                        />
                         <ValidationMessage name="orderByField" />
                     </div>
 
@@ -175,7 +168,7 @@ const Filters = (props: Props) => {
                             falseDisplayName="Từ lớn đến nhỏ"
                             value={props.model.sortingByAscending}
                             onValueChanged={(sortingByAscending) => {
-                                props.onChanged({ sortingByAscending });
+                                props.onChanged({ sortingByAscending, page: 1 });
                             }}
                         >
                         </BooleanSelectInput>
@@ -189,7 +182,9 @@ const Filters = (props: Props) => {
                             <RoleButtons
                                 selectedRoleId={props.model.roleId}
                                 roleOptions={props.model.roleOptions}
-                                onClick={handleRoleChange}
+                                onClick={(role) => {
+                                    props.onChanged({ roleId: role?.id, page: 1 });
+                                }}
                             />
                         </div>
                     </div>

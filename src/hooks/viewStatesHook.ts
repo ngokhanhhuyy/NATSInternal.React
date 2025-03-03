@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useModelState } from "@/hooks/modelStateHook";
 import { usePageLoadProgressBarStore } from "@/stores/pageLoadProgressBarStore";
 import { useInitialDataStore } from "@/stores/initialDataStore";
@@ -18,17 +18,17 @@ export function useViewStates() {
 
     // States.
     const modelState = useModelState();
-    const isInitialRendering = useRef<boolean>(true);
+    const [isInitialRendering, setInitialRendering] = useState<boolean>(() => true);
 
     useEffect(() => {
         finishPageLoading();
-        isInitialRendering.current = false;
+        setInitialRendering(false);
         window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
 
     return {
         modelState,
-        isInitialRendering: isInitialRendering.current,
+        isInitialRendering: isInitialRendering,
         get initialData(): ResponseDtos.InitialData {
             return initialDataStore.data;
         },
