@@ -35,15 +35,18 @@ const Filters = ({ model, setModel, loadListAsync }: Props) => {
     }, []);
 
     // Header.
-    let header: React.ReactNode = null;
-    if (model.canCreate) {
-        header = <CreatingLink to={model.createRoute} canCreate={model.canCreate} />;
-    }
+    const computeHeader = () => {
+        if (model.canCreate) {
+            return <CreatingLink to={model.createRoute} canCreate={model.canCreate} />;
+        }
+
+        return null;
+    };
 
     return (
-        <MainBlock title="Danh sách khách hàng" header={header} bodyPadding={2}>
+        <MainBlock title="Danh sách khách hàng" header={computeHeader()} bodyPadding={2}>
             <div className="row g-3">
-                <div className={`col ${computeSearchColumnClassName}`}>
+                <div className={`col ${computeSearchColumnClassName()}`}>
                     <div className="input-group">
                         {/* Search content */}
                         <TextInput
@@ -66,8 +69,8 @@ const Filters = ({ model, setModel, loadListAsync }: Props) => {
                     </div>
 
                     {/* Validation message */}
-                    {!isSearchContentValid && (
-                        <span className="small opacity-50">
+                    {!isSearchContentValid() && (
+                        <span className="small text-danger">
                             * Nội dung tìm kiếm phải chứa ít nhất 3 ký tự.
                         </span>
                     )}
@@ -77,7 +80,7 @@ const Filters = ({ model, setModel, loadListAsync }: Props) => {
                     <button
                         className="btn btn-primary"
                         onClick={loadListAsync}
-                        disabled={!isSearchContentValid}
+                        disabled={!isSearchContentValid()}
                     >
                         <i className="bi bi-search"></i>
                         <span className="ms-2 d-sm-inline d-none">Tìm kiếm</span>

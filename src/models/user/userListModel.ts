@@ -31,10 +31,14 @@ export class UserListModel
     public readonly createRoute: string = routeGenerator.getUserCreateRoutePath();
 
     constructor(
+            listResponseDto: ResponseDtos.User.List,
             initialResponseDto?: InitialResponseDto,
             roleOptionsResponseDto?: ResponseDtos.Role.Minimal[],
             requestDto?: RequestDto) {
         super();
+
+        this.pageCount = listResponseDto.pageCount;
+        this.items = listResponseDto.items?.map(dto => new UserBasicModel(dto)) ?? [];
         
         if (initialResponseDto) {
             const sortingOptions = initialResponseDto.listSortingOptions;

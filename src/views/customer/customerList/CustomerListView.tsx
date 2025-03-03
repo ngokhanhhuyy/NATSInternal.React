@@ -4,6 +4,8 @@ import { CustomerListModel } from "@/models/customer/customerListModel";
 import { useViewStates } from "@/hooks/viewStatesHook";
 import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useInitialDataStore } from "@/stores/initialDataStore";
+import { ValidationError } from "@/errors";
 import * as styles from "./CustomerListView.module.css";
 
 // Layout components.
@@ -19,15 +21,10 @@ const CustomerListView = () => {
     // Dependencies.
     const alertModelStore = useAlertModalStore();
     const customerService = useCustomerService();
+    const initialData = useInitialDataStore(store => store.data);
 
     // Model and states.
-    const {
-        isInitialLoading,
-        onInitialLoadingFinished,
-        initialData,
-        ValidationError
-    } = useViewStates();
-
+    const { isInitialRendering } = useViewStates();
     const initializedModel = useAsyncModelInitializer({
         initializer: async () => {
             const model = new CustomerListModel(initialData.customer);
@@ -41,38 +38,41 @@ const CustomerListView = () => {
 
     // Effect.
     useEffect(() => {
-        if (isInitialLoading) {
-            onInitialLoadingFinished();
-            return;
+        if (!isInitialRendering) {
+            reload();
         }
-
-        setReloading(true);
-        startTransition(async () => {
-            await loadListAsync();
-            setReloading(false);
-        });
-    }, [model.page]);
+    }, [
+        model.page,
+        model.sortingByField,
+        model.sortingByAscending,
+        model.hasRemainingDebtAmountOnly
+    ]);
 
     // Callbacks.
-    const loadListAsync = async () => {
-        try {
-            const responseDto = await customerService.getListAsync(model.toRequestDto());
-            setModel(model => model.fromListResponseDto(responseDto));
-            document.getElementById("content")?.scrollTo({ top: 0, behavior: "smooth" });
-        } catch (error) {
-            if (error instanceof ValidationError) {
-                await alertModelStore.getSubmissionErrorConfirmationAsync();
-                return;
+    const reload = () => {
+        setReloading(true);
+        startTransition(async () => {
+            try {
+                const responseDto = await customerService.getListAsync(model.toRequestDto());
+                setModel(model => model.fromListResponseDto(responseDto));
+                document.getElementById("content")?.scrollTo({ top: 0, behavior: "smooth" });
+            } catch (error) {
+                if (error instanceof ValidationError) {
+                    await alertModelStore.getSubmissionErrorConfirmationAsync();
+                    return;
+                }
+    
+                throw error;
+            } finally {
+                setReloading(false);
             }
-
-            throw error;
-        }
+        });
     };
 
     const onSearchButtonClickedAsync = useCallback(async (): Promise<void> => {
         setModel(model => model.from({ page: 1 }));
         if (!model.searchByContent || model.searchByContent.length >= 3) {
-            await loadListAsync();
+            reload();
         }
     }, [model]);
     return (
@@ -95,11 +95,7 @@ const CustomerListView = () => {
                     <div className={`block bg-white p-0 h-100 d-flex flex-column
                                     overflow-hidden rounded-3 border overflow-hidden
                                     ${styles["customerListBlock"]}`}>
-                        <Results
-                            model={model.items}
-                            isInitialLoading={isInitialLoading}
-                            isReloading={isReloading}
-                        />
+                        <Results model={model.items} isReloading={isReloading} />
                     </div>
                 </div>
     

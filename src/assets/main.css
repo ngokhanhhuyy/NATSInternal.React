@@ -263,6 +263,23 @@ a:hover:not(.btn), a:active:not(.btn) {
     --bs-border-color: rgb(var(--bs-orange-rgb)) !important;
 }
 
+.transition-opacity {
+    transition-property: opacity;
+}
+
+.transition-250 {
+    transition-duration: 0.25s;
+}
+
+.transition-300 {
+    transition-duration: .3s;
+}
+
+.transition-reloading {
+    transition-duration: 0.25s;
+    transition-duration: .3s;
+}
+
 .apexcharts-legend-series {
     margin-right: 20px !important;
 }

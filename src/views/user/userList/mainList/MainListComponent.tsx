@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, startTransition } from "react";
 import { UserListModel } from "@/models/user/userListModel";
 import { useUserService } from "@/services/userService";
 import { useModelState } from "@/hooks/modelStateHook";
-import { useInitialDataStore } from "@/stores/initialDataStore";
+import { useAlertModalStore } from "@/stores/alertModalStore";
 import { ValidationError } from "@/errors";
 
 // Layout components.
@@ -17,62 +16,55 @@ import Results from "./ResultsComponent";
 const userService = useUserService();
 
 interface MainListProps {
-    isInitialLoading: boolean;
-    onInitialLoadingFinished: () => void;
+    initialModel: UserListModel;
+    isInitialRendering: boolean;
 }
 
 // Component.
-const MainList = ({ isInitialLoading, onInitialLoadingFinished }: MainListProps) => {
+const MainList = (props: MainListProps) => {
     // Dependencies.
-    const initialData = useInitialDataStore(store => store.data);
-    const navigate = useNavigate();
+    const getUndefinedErrorConfirmationAsync = useAlertModalStore(store => {
+        return store.getUndefinedErrorConfirmationAsync;
+    });
 
     // Model.
-    const [model, setModel] = useState<UserListModel>(() => {
-        return new UserListModel(initialData.user, initialData.role.allAsOptions);
-    });
+    const [model, setModel] = useState<UserListModel>(() => props.initialModel);
     const [isReloading, setReloading] = useState<boolean>(false);
-    const [forceUpdate, setForceUpdate] = useState<number>(() => 0);
     const modelState = useModelState();
 
     const onPaginationPageButtonClicked = async (page: number): Promise<void> => {
         setModel(model => model.from({ page }));
     };
 
-    // Callbacks.
-    const loadAsync = async (): Promise<void> => {
-        modelState.resetErrors();
-        if (!isInitialLoading) {
-            setReloading(true);
-        }
-
-        try {
-            const responseDto = await userService.getListAsync(model.toRequestDto());
-            setModel(model => model.fromListResponseDto(responseDto));
-        } catch (error) {
-            if (error instanceof ValidationError) {
-                modelState.setErrors(error.errors);
-                if (isInitialLoading) {
-                    await navigate(-1);
-                }
-
-                return;
-            }
-
-            throw error;
-        } finally {
-            if (isInitialLoading) {
-                onInitialLoadingFinished();
-            }
-
-            setReloading(false);
-        }
-    };
-
     // Effect.
     useEffect(() => {
-        loadAsync();
-    }, [model.sortingByField, model.sortingByAscending, model.roleId, model.page, forceUpdate]);
+        if (!props.isInitialRendering) {
+            reloadAsync();
+        }
+    }, [model.sortingByField, model.sortingByAscending, model.roleId, model.page]);
+
+    // Callbacks.
+    const reloadAsync = async (): Promise<void> => {
+        modelState.resetErrors();
+        setReloading(true);
+
+        startTransition(async () => {
+            try {
+                const responseDto = await userService.getListAsync(model.toRequestDto());
+                setModel(model => model.fromListResponseDto(responseDto));
+            } catch (error) {
+                if (error instanceof ValidationError) {
+                    await getUndefinedErrorConfirmationAsync();
+                    window.location.reload();
+                    return;
+                }
+    
+                throw error;
+            } finally {
+                setReloading(false);
+            }
+        });
+    };
 
     return (
         <div className="row g-3">
@@ -84,14 +76,12 @@ const MainList = ({ isInitialLoading, onInitialLoadingFinished }: MainListProps)
                         setModel(model => model.from(changedData));
                     }}
                     modelState={modelState}
-                    isInitialLoading={isInitialLoading}
                     isReloading={isReloading}
                     onSearchButtonClicked={(searchContent) => {
                         setModel(model => model.from({
                             content: searchContent,
                             page: 1
                         }));
-                        setForceUpdate(forceUpdate => forceUpdate + 1);
                     }}
                 />
             </div>

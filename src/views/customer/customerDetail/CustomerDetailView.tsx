@@ -25,7 +25,7 @@ const CustomerDetailView = ({ id }: { id: number }) => {
     const treatmentService = useTreatmentService();
 
     // Model and states.
-    const { isInitialLoading, onInitialLoadingFinished } = useViewStates();
+    const { isInitialRendering } = useViewStates();
     const initializedModel = useAsyncModelInitializer({
         initializer: async () => {
             const listsRequestDto = { customerId: id, resultsPerPage: 5 };
@@ -49,11 +49,13 @@ const CustomerDetailView = ({ id }: { id: number }) => {
 
     // Effect.
     useEffect(() => {
-        if (isInitialLoading) {
-            onInitialLoadingFinished();
-            return;
+        if (!isInitialRendering) {
+            reload();
         }
-        
+    }, [reloadingStates, model]);
+
+    // Callbacks.
+    const reload = () => {
         startTransition(async () => {
             if (reloadingStates.consultantList) {
                 const requestDto = model.toConsultantListRequestDto();
@@ -82,7 +84,7 @@ const CustomerDetailView = ({ id }: { id: number }) => {
                 setReloadingStates(states => ({ ...states, treatmentList: false }));
             }
         });
-    }, [isInitialLoading, reloadingStates, model]);
+    };
     
     return (
         <MainContainer>

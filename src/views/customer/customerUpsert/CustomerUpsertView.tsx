@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { CustomerUpsertModel } from "@/models/customer/customerUpsertModel";
 import { useCustomerService } from "@/services/customerService";
@@ -44,6 +44,7 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
     const initializedModel = useAsyncModelInitializer({
         initializer: async () => {
             if (props.isForCreating) {
+                await new Promise(resolve => setTimeout(resolve, 300));
                 return new CustomerUpsertModel();
             }
 
@@ -52,9 +53,9 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
         },
         cacheKey: props.isForCreating ? "customerCreate" : "customerUpdate"
     });
-    const { onInitialLoadingFinished, modelState } = useUpsertViewStates();
+    const { modelState } = useUpsertViewStates();
     const [model, setModel] = useState(() => initializedModel);
-    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(initializedModel);
+    const isModelDirty = useDirtyModelChecker(initializedModel, model);
     
     // Computed.
     const blockTitle = useMemo<string>(() => {
@@ -65,13 +66,6 @@ const CustomerUpsertView = (props: CustomerCreateViewProps | CustomerUpdateViewP
         return "CHỈNH SỬA KHÁCH HÀNG";
     }, []);
 
-    // Effect.
-    useEffect(() => {
-        setOriginalModel(initializedModel);
-        onInitialLoadingFinished();
-    }, []);
-    
-    // Computed.
     const genderOptions = useMemo(() => [
         { value: Gender[Gender.Male], displayName: "Nam" },
         { value: Gender[Gender.Female], displayName: "Nữ" }

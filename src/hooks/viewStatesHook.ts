@@ -1,8 +1,7 @@
-import { useMemo, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { useModelState } from "@/hooks/modelStateHook";
-import { useInitialLoadingState } from "./initialLoadingStateHook";
+import { usePageLoadProgressBarStore } from "@/stores/pageLoadProgressBarStore";
 import { useInitialDataStore } from "@/stores/initialDataStore";
-import { AuthorizationError, ValidationError } from "@/errors";
 import { useRouteGenerator } from "@/router/routeGenerator";
 
 /**
@@ -12,21 +11,24 @@ import { useRouteGenerator } from "@/router/routeGenerator";
  * @returns An object containing the loading state and model state APIs.
  */
 export function useViewStates() {
-    const { isInitialLoading, onInitialLoadingFinished } = useInitialLoadingState();
-    const modelState = useModelState();
+    // Dependencies.
     const initialDataStore = useInitialDataStore();
-    const routeGenerator = useMemo(() => useRouteGenerator(), []);
+    const finishPageLoading = usePageLoadProgressBarStore(store => store.finish);
+    const routeGenerator = useRouteGenerator();
+
+    // States.
+    const modelState = useModelState();
+    const isInitialRendering = useRef<boolean>(true);
 
     useEffect(() => {
-        // setLoading(false);
+        finishPageLoading();
+        isInitialRendering.current = false;
         window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
 
     return {
-        isInitialLoading, onInitialLoadingFinished,
         modelState,
-        AuthorizationError,
-        ValidationError,
+        isInitialRendering: isInitialRendering.current,
         get initialData(): ResponseDtos.InitialData {
             return initialDataStore.data;
         },

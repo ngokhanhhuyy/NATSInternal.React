@@ -13,7 +13,7 @@ interface ResultsProps {
 // Component.
 const Results = ({ model, isReloading }: ResultsProps) => {
     const itemColumnClassName = useMemo<string>(() => {
-        return "col col-xl-4 col-lg-4 col-md-4 col-sm-6 col-6";
+        return "col col-xl-4 col-lg-4 col-md-4 col-sm-6 col-6 transition-reloading";
     }, []);
 
     const computeItemColumnReloadingClassName = () => {

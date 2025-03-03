@@ -1,57 +1,44 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, startTransition } from "react";
 import { Link } from "react-router-dom";
 import { useUserService } from "@/services/userService";
 import { UserListModel } from "@/models/user/userListModel";
 import type { UserBasicModel } from "@models/user/userBasicModel";
 import { useAlertModalStore } from "@/stores/alertModalStore";
 import { usePhotoUtility } from "@/utilities/photoUtility";
+import { ValidationError } from "@/errors";
 import * as styles from "./SecondaryListComponent.module.css";
 
 // Layout component.
 import MainBlock from "@layouts/MainBlockComponent";
-import { ValidationError } from "@/errors";
-
-// Form component.
-import Button from "@/views/form/ButtonComponent";
 
 // Interface and type.
 type Mode = "JoinedRecently" | "UpcomingBirthday";
 
 export interface SecondaryListProps {
     mode: Mode;
-    isInitialLoading: boolean;
-    onInitialLoadingFinished: () => void;
+    initialModel: UserListModel;
+    isInitialRendering: boolean;
 }
 
 const SecondaryList = (props: SecondaryListProps) => {
-    const { mode, isInitialLoading, onInitialLoadingFinished } = props;
-
     // Dependencies.
     const userService = useMemo(() => useUserService(), []);
-    const alertModelStore = useAlertModalStore();
+    const getUndefinedErrorConfirmationAsync = useAlertModalStore(store => {
+        return store.getUndefinedErrorConfirmationAsync;
+    });
 
     // Model and states.
-    const [model, setModel] = useState<UserListModel>(() => {
-        let requestDto: RequestDtos.User.List;
-        if (mode === "JoinedRecently") {
-            requestDto = { joinedRecentlyOnly: true };
-        } else {
-            requestDto = { upcomingBirthdayOnly: true };
-        }
-
-        return new UserListModel(undefined, undefined, requestDto);
-    });
-    
+    const [model, setModel] = useState<UserListModel>(() => props.initialModel);
     const [isReloading, setReloading] = useState<boolean>(false);
 
     // Computed.
     const blockTitle = useMemo<string>(() => {
-        return mode === "JoinedRecently" ? "Mới gia nhập" : "Sinh nhật tháng này";
-    }, [mode]);
+        return props.mode === "JoinedRecently" ? "Mới gia nhập" : "Sinh nhật tháng này";
+    }, [props.mode]);
 
     // Computed
     const computeResultNotFoundText = () => {
-        if (mode === "JoinedRecently") {
+        if (props.mode === "JoinedRecently") {
             return "Không có nhân viên nào vừa gia nhập";
         }
     
@@ -63,34 +50,25 @@ const SecondaryList = (props: SecondaryListProps) => {
     };
 
     // Callback.
-    const loadListAsync = async (): Promise<void> => {
-        if (!isInitialLoading) {
-            setReloading(true);
-        }
-        
-        try {
-            const responseDto = await userService.getListAsync(model.toRequestDto());
-            setModel(model => model.fromListResponseDto(responseDto));
-        } catch (error) {
-            if (error instanceof ValidationError) {
-                await alertModelStore.getSubmissionErrorConfirmationAsync();
-                return;
+    const loadListAsync = (): void => {
+        setReloading(true);
+        startTransition(async () => {
+            try {
+                const responseDto = await userService.getListAsync(model.toRequestDto());
+                setModel(model => model.fromListResponseDto(responseDto));
+            } catch (error) {
+                if (error instanceof ValidationError) {
+                    await getUndefinedErrorConfirmationAsync();
+                    window.location.reload();
+                    return;
+                }
+                
+                throw error;
+            } finally {
+                setReloading(false);
             }
-            
-            throw error;
-        } finally {
-            setReloading(false);
-        }
+        });
     };
-
-    // Effect.
-    useEffect(() => {
-        loadListAsync().finally(onInitialLoadingFinished);
-    }, []);
-
-    if (isInitialLoading) {
-        return null;
-    }
 
     // Header.
     const header = (
@@ -101,22 +79,28 @@ const SecondaryList = (props: SecondaryListProps) => {
                 </div>
             )}
 
-            <Button className="btn btn-primary btn-sm"
-                    isPlaceholder={isInitialLoading}
+            <button className="btn btn-primary btn-sm"
                     disabled={isReloading}
                     onClick={loadListAsync}>
                 <i className="bi bi-arrow-counterclockwise" />
-            </Button>
+            </button>
         </>
     );
 
     return (
-        <MainBlock title={blockTitle} header={header}
-                bodyClassName={styles["blockBody"]} bodyPadding={0}>
-            <ul className={`list-group list-group-flush ${computeItemListClassName()}`}>
+        <MainBlock
+            title={blockTitle}
+            header={header}
+            bodyClassName={styles["blockBody"]}
+            bodyPadding={0}
+        >
+            <ul
+                className={`list-group list-group-flush ${computeItemListClassName()}`}
+                style={{ transition: "opacity .25s ease" }}
+            >
                 {/* Results */}
                 {model.items.length > 0 && model.items.map(user => (
-                    <Item mode={mode} model={user} key={user.id} />
+                    <Item mode={props.mode} model={user} key={user.id} />
                 ))}
 
                 {/* Fallback */}
@@ -153,14 +137,19 @@ const Item = ({ mode, model }: { mode: Mode, model: UserBasicModel }) => {
             {/* Avatar */}
             {model && (
                 <Link to={model.detailRoute}>
-                    <img src={model.avatarUrl} style={{ width: "40px", height: "40px" }}
-                            className="rounded-circle me-2" />
+                    <img
+                        src={model.avatarUrl}
+                        className="rounded-circle me-2"
+                        style={{ width: "40px", height: "40px" }}
+                    />
                 </Link>
             )}
             {!model && (
-                <img src={photoUtility.getDefaultPlainPhotoUrl()}
-                        style={{ width: "40px", height: "40px" }}
-                        className="rounded-circle me-2" />
+                <img
+                    src={photoUtility.getDefaultPlainPhotoUrl()}
+                    className="rounded-circle me-2"
+                    style={{ width: "40px", height: "40px" }}
+                />
             )}
 
             {/* Name and detail text */}

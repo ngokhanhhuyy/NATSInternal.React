@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 // Global level componets.
 import PageLoadProgressBar from "@layouts/PageLoadProgressBarComponent";
@@ -9,19 +9,17 @@ import AlertModals from "@/views/modals/AlertModalsComponent";
 import SignInView from "@/views/signIn/SignInView";
 import MainLayout from "@/views/layouts/MainLayout";
 
+// Router.
+const router = createBrowserRouter([
+    { path: "/signIn", element: <SignInView /> },
+    { path: "/*", element: <MainLayout /> }
+]);
+
 const App = () => {
     return (
         <>
             <PageLoadProgressBar/>
-            <BrowserRouter>
-                <Routes>
-                    {/* SignIn */}
-                    <Route path="/signIn" element={<SignInView />} />
-
-                    {/* AuthenticationRequired */}
-                    <Route path="/*" element={<MainLayout />} />
-                </Routes>
-            </BrowserRouter>
+            <RouterProvider router={router} />
             <AlertModals />
         </>
     );

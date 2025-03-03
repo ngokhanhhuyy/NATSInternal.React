@@ -1,32 +1,32 @@
 import { useRef } from "react";
 
-export interface IDirtyModelChecker<TModel extends object> {
-    get isModelDirty(): boolean;
-    setOriginalModel: (model: TModel) => void;
-}
+// Utility for model serialization.
+const serializeModel = <TModel extends object, TKey extends keyof TModel>
+        (model: TModel, excludedKeys?: TKey[]): string => {
+    if (excludedKeys && excludedKeys.length) {
+        return JSON.stringify(model, (key, value) => {
+            if (!excludedKeys.includes(key as TKey)) {
+                return value;
+            }
+        });
+    }
 
-export function useDirtyModelChecker<TModel extends object, TKey extends keyof TModel>
-        (currentModel: TModel | undefined, excludedKeys?: TKey[]): IDirtyModelChecker<TModel> {
-    const serializeModel = (model: TModel): string => {
-        if (excludedKeys && excludedKeys.length) {
-            return JSON.stringify(model, (key, value) => {
-                if (!excludedKeys.includes(key as TKey)) {
-                    return value;
-                }
-            });
-        }
+    return JSON.stringify(model);
+};
 
-        return JSON.stringify(model);
-    };
-    const originalModelJson = useRef("");
+// Hook.
+export function useDirtyModelChecker<TModel extends object, TKey extends keyof TModel>(
+        originModel: TModel,
+        currentModel: TModel | undefined,
+        excludedKeys?: TKey[]): boolean {
+    // States.
+    const originalModelJson = useRef(serializeModel(originModel));
+    const isModelDirty = (() => {
+        const currentModelJson = currentModel
+            ? serializeModel(currentModel, excludedKeys)
+            : "";
+        return originalModelJson.current !== currentModelJson;
+    })();
 
-    return {
-        get isModelDirty(): boolean {
-            const currentModelJson = currentModel ? serializeModel(currentModel) : "";
-            return originalModelJson.current !== currentModelJson;
-        },
-        setOriginalModel(model) {
-            originalModelJson.current = serializeModel(model);
-        }
-    };
+    return isModelDirty;
 }

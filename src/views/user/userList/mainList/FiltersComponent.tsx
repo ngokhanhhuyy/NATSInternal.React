@@ -16,17 +16,12 @@ import SortingByFieldSelectInput from "@/views/form/SortingByFieldSelectInputCom
 import TextInput from "@/views/form/TextInputComponent";
 import ValidationMessage from "@/views/form/ValidationMessageComponent";
 
-// Placeholder component.
-import { LoadingFiltersBlock } from "@/views/layouts/LoadingView";
-
 // Props.
 interface Props {
     model: UserListModel;
     onChanged: (changedData: Partial<UserListModel>) => any;
     modelState: IModelState;
-    isInitialLoading: boolean;
     isReloading: boolean;
-    onSearchButtonClicked: (searchContent: string) => any;
 }
 
 // Dependencies.
@@ -62,7 +57,6 @@ const Filters = (props: Props) => {
             <CreatingLink
                 to={props.model.createRoute}
                 canCreate={props.model.canCreate}
-                isPlaceholder={props.isInitialLoading}
                 disabled={props.isReloading}
             />
         </>
@@ -97,10 +91,6 @@ const Filters = (props: Props) => {
             background-color: rgb(var(--purple-color), var(--bs-bg-opacity)) !important;
         }
     `;
-
-    if (props.isInitialLoading) {
-        return <LoadingFiltersBlock mode="SearchTextBox" />;
-    }
 
     return (
         <MainBlock
@@ -142,8 +132,8 @@ const Filters = (props: Props) => {
 
                         {/* Search content validation message */}
                         {isSearchContentValid && (
-                            <span className={`small opacity-50
-                                            ${isSearchContentValid ? "d-none" : ""}`}>
+                            <span className={"small opacity-50 " +
+                                            `${isSearchContentValid ? "d-none" : ""}`}>
                                 * Nội dung tìm kiếm phải chứa ít nhất 3 ký tự.
                             </span>
                         )}
@@ -154,7 +144,7 @@ const Filters = (props: Props) => {
                         <button
                             className="btn btn-primary"
                             type="button"
-                            onClick={() => props.onSearchButtonClicked(searchContent)}
+                            onClick={() => props.onChanged({ content: searchContent })}
                         >
                             <i className="bi bi-search"></i>
                             <span className="d-sm-inline d-none ms-2">Tìm kiếm</span>
@@ -170,6 +160,7 @@ const Filters = (props: Props) => {
                                 options={(data) => data.user.listSortingOptions}
                                 value={props.model.sortingByField}
                                 onValueChanged={(sortingByField) => {
+                                    
                                     props.onChanged({ sortingByField });
                                 }} />
                         <ValidationMessage name="orderByField" />
@@ -218,6 +209,7 @@ interface RoleButtonsProps {
 }
 
 const RoleButtons = ({ selectedRoleId, roleOptions, onClick }: RoleButtonsProps) => {
+    // Computed.
     const getRoleButtonClassName = (roleName: string | null): string => {
         const color  = roleName ? roleUtility.getRoleBootstrapColor(roleName) : "purple";
         const classNames = [`bg-${color}`];
@@ -234,27 +226,13 @@ const RoleButtons = ({ selectedRoleId, roleOptions, onClick }: RoleButtonsProps)
         return roleUtility.getRoleBootstrapIconClassName(roleName);
     };
 
-    const elements: React.JSX.Element[] = [(
-        <div className={`btn btn-sm me-2 mb-2 role-button ${getRoleButtonClassName(null)}`}
-                onClick={() => onClick(null)} key={0}>
-            <i className="bi bi-grid-3x3-gap me-1"></i>
-            Tất cả
+    return roleOptions?.map(role => (
+        <div className={"btn btn-sm me-2 mb-2 role-button " + 
+                        `${getRoleButtonClassName(role.name)}`}
+                key={role.id}
+                onClick={() => onClick(role)}>
+            <i className={getRoleButtonIcon(role.name)}></i>
+            <span className="ms-1">{role.displayName}</span>
         </div>
-    )];
-
-    if (roleOptions) {
-        for (const role of roleOptions) {
-            const className = getRoleButtonClassName(role.name);
-            elements.push(
-                <div className={`btn btn-sm me-2 mb-2 role-button ${className}`}
-                        key={role.id}
-                        onClick={() => onClick(role)}>
-                    <i className={getRoleButtonIcon(role.name)}></i>
-                    <span className="ms-1">{role.displayName}</span>
-                </div>
-            );
-        }
-    }
-
-    return elements;
+    ));
 };
