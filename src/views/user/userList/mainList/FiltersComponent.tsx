@@ -38,7 +38,7 @@ const Filters = (props: Props) => {
     const header = (
         <>
             {props.isReloading && (
-                <div className="spinner-border spinner-border-sm me-2" role="status">
+                <div className="spinner-border spinner-border-sm me-3" role="status">
                     <span className="visually-hidden">Loading...</span>
                 </div>
             )}

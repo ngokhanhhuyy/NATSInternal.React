@@ -23,11 +23,18 @@ const Filters = (props: FiltersProps) => {
     const computeHeader = () => {
         const className = props.isReloading ? "placeholder disabled" : "";
         return (
-            <CreatingLink
-                to={props.model.createRoute}
-                className={className}
-                canCreate={props.model.canCreate}
-            />
+            <>
+                {props.isReloading && (
+                    <div className="spinner-border spinner-border-sm me-3" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                )}
+                <CreatingLink
+                    to={props.model.createRoute}
+                    className={className}
+                    canCreate={props.model.canCreate}
+                />
+            </>
         );
     };
 

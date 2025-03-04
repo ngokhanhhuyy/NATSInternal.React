@@ -1,8 +1,10 @@
+const avatarUtility = {
+    getDefaultAvatarUrlByFullName(fullName: string): string {
+        const computedFullName = fullName.replace(" ", "+");
+        return `https://ui-avatars.com/api/?name=${computedFullName}&background=random`;
+    }
+};
+
 export function useAvatarUtility() {
-    return {
-        getDefaultAvatarUrlByFullName(fullName: string): string {
-            return "https://ui-avatars.com/api/?name=" +
-                    `${fullName.replace(" ", "+")}&background=random&size=256`;
-        }
-    };
+    return avatarUtility;
 }

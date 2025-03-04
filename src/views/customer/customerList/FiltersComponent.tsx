@@ -1,60 +1,53 @@
-import React, { useMemo } from "react";
 import type { CustomerListModel } from "@/models/customer/customerListModel";
 
 // Layout component.
-import MainBlock from "../../layouts/MainBlockComponent";
-import CreatingLink from "../../layouts/CreateLinkComponent";
+import MainBlock from "@/views/layouts/MainBlockComponent";
+import CreatingLink from "@/views/layouts/CreateLinkComponent";
 
 // Form component.
-import Label from "../../form/LabelComponent";
-import TextInput from "../../form/TextInputComponent";
-import SelectInput, { type SelectInputOption } from "../../form/SelectInputComponent";
-import SortingByFieldSelectInput from "../../form/SortingByFieldSelectInputComponent";
+import Label from "@/views/form/LabelComponent";
+import TextInput from "@/views/form/TextInputComponent";
+import SortingByFieldSelectInput from "@/views/form/SortingByFieldSelectInputComponent";
+import BooleanSelectInput from "@/views/form/BooleanSelectInputComponent";
 
 interface Props {
     model: CustomerListModel;
-    setModel: React.Dispatch<React.SetStateAction<CustomerListModel>>;
-    loadListAsync: () => Promise<void>;
+    onModelChanged: (changedData: Partial<CustomerListModel>) => any;
+    isReloading: boolean;
 }
 
-const Filters = ({ model, setModel, loadListAsync }: Props) => {
-    // Computed.
-    const isSearchContentValid = () => {
-        return !model.searchByContent.length || model.searchByContent.length >= 3;
-    };
-
-    const computeSearchColumnClassName = () => {
-        return isSearchContentValid() ? "" : "pb-0";
-    };
-
-    const hasRemainingDebtAmountOnlyOptions = useMemo<SelectInputOption[]>(() => {
-        return [
-            { value: "false", displayName: "Hiển thị tất cả khách hàng" },
-            { value: "true", displayName: "Chỉ hiển thị khách hàng còn nợ" }
-        ];
-    }, []);
-
+const Filters = (props: Props) => {
     // Header.
     const computeHeader = () => {
-        if (model.canCreate) {
-            return <CreatingLink to={model.createRoute} canCreate={model.canCreate} />;
-        }
-
-        return null;
+        return (
+            <>
+                {props.isReloading && (
+                    <div className="spinner-border spinner-border-sm me-3" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                )}
+                <CreatingLink
+                    to={props.model.createRoute}
+                    disabled={props.isReloading}
+                    canCreate={props.model.canCreate}
+                />
+            </>
+        );
     };
 
     return (
         <MainBlock title="Danh sách khách hàng" header={computeHeader()} bodyPadding={2}>
             <div className="row g-3">
-                <div className={`col ${computeSearchColumnClassName()}`}>
+                <div className={"col col-12"}>
                     <div className="input-group">
                         {/* Search content */}
                         <TextInput
-                            className="border-end-0" type="text"
+                            className="border-end-0"
+                            type="text"
                             placeholder="Tìm kiếm tên, thông tin liên lạc ..."
-                            value={model.searchByContent}
+                            value={props.model.searchByContent}
                             onValueChanged={searchByContent => {
-                                setModel(model => model.from({ searchByContent }));
+                                props.onModelChanged({ searchByContent });
                             }}
                         />
                         
@@ -67,24 +60,6 @@ const Filters = ({ model, setModel, loadListAsync }: Props) => {
                             <i className="bi bi-sliders"></i>
                         </button>
                     </div>
-
-                    {/* Validation message */}
-                    {!isSearchContentValid() && (
-                        <span className="small text-danger">
-                            * Nội dung tìm kiếm phải chứa ít nhất 3 ký tự.
-                        </span>
-                    )}
-                </div>
-            
-                <div className="col col-auto">
-                    <button
-                        className="btn btn-primary"
-                        onClick={loadListAsync}
-                        disabled={!isSearchContentValid()}
-                    >
-                        <i className="bi bi-search"></i>
-                        <span className="ms-2 d-sm-inline d-none">Tìm kiếm</span>
-                    </button>
                 </div>
             </div>
 
@@ -95,9 +70,9 @@ const Filters = ({ model, setModel, loadListAsync }: Props) => {
                     <SortingByFieldSelectInput
                         name="sortingByField"
                         options={(data) => data.customer.listSortingOptions}
-                        value={model.sortingByField}
+                        value={props.model.sortingByField}
                         onValueChanged={sortingByField => {
-                            setModel(model => model.from({ sortingByField }));
+                            props.onModelChanged({ sortingByField });
                         }}
                     />
                 </div>
@@ -105,17 +80,13 @@ const Filters = ({ model, setModel, loadListAsync }: Props) => {
                 {/* SortingByAscending */}
                 <div className="col col-xl-4 col-sm-6 col-12">
                     <Label text="Thứ tự sắp xếp" />
-                    <SelectInput
+                    <BooleanSelectInput
                         name="sortingByAscending"
-                        options={[
-                            { value: "true", displayName: "Từ nhỏ đến lớn" },
-                            { value: "false", displayName: "Từ lớn đến nhỏ" }
-                        ]}
-                        value={model.sortingByAscending?.toString() ?? ""}
-                        onValueChanged={(ascending) => {
-                            setModel(model => model.from({
-                                sortingByAscending: JSON.parse(ascending) as boolean
-                            }));
+                        trueDisplayName="Từ nhỏ đến lớn"
+                        falseDisplayName="Từ lớn đến nhỏ"
+                        value={props.model.sortingByAscending ?? true}
+                        onValueChanged={(sortingByAscending) => {
+                            props.onModelChanged({ sortingByAscending });
                         }}
                     />
                 </div>
@@ -123,15 +94,13 @@ const Filters = ({ model, setModel, loadListAsync }: Props) => {
                 {/* HasRemainingDebtOnly */}
                 <div className="col col-xl-4 col-sm-12 col-12">
                     <Label text="Chế độ hiển thị" />
-                    <SelectInput
+                    <BooleanSelectInput
                         name="hasRemainingDebtAmountOnly"
-                        options={hasRemainingDebtAmountOnlyOptions}
-                        value={model.hasRemainingDebtAmountOnly.toString()}
-                        onValueChanged={value => {
-                            const parsedValue: boolean = JSON.parse(value);
-                            setModel(model => model.from({
-                                hasRemainingDebtAmountOnly: parsedValue
-                            }));
+                        trueDisplayName="Chỉ hiển thị khách hàng còn nợ"
+                        falseDisplayName="Hiển thị tất cả khách hàng"
+                        value={props.model.hasRemainingDebtAmountOnly}
+                        onValueChanged={hasRemainingDebtAmountOnly => {
+                            props.onModelChanged({ hasRemainingDebtAmountOnly });
                         }}
                     />
                 </div>

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, startTransition } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { useCustomerService } from "@/services/customerService";
 import { CustomerListModel } from "@/models/customer/customerListModel";
 import { useViewStates } from "@/hooks/viewStatesHook";
@@ -9,8 +9,8 @@ import { ValidationError } from "@/errors";
 import * as styles from "./CustomerListView.module.css";
 
 // Layout components.
-import MainContainer from "../../layouts/MainContainerComponent";
-import MainPaginator from "../../layouts/MainPaginatorComponent";
+import MainContainer from "@/views/layouts/MainContainerComponent";
+import MainPaginator from "@/views/layouts/MainPaginatorComponent";
 
 // Child components.
 import Filters from "./FiltersComponent";
@@ -34,7 +34,7 @@ const CustomerListView = () => {
         cacheKey: "customerList"
     });
     const [model, setModel] = useState(() => initializedModel);
-    const [isReloading, setReloading] = useState<boolean>(() => false);
+    const [isReloading, startReloadingTransition] = useTransition();
 
     // Effect.
     useEffect(() => {
@@ -45,13 +45,13 @@ const CustomerListView = () => {
         model.page,
         model.sortingByField,
         model.sortingByAscending,
-        model.hasRemainingDebtAmountOnly
+        model.hasRemainingDebtAmountOnly,
+        model.searchByContent
     ]);
 
     // Callbacks.
     const reload = () => {
-        setReloading(true);
-        startTransition(async () => {
+        startReloadingTransition(async () => {
             try {
                 const responseDto = await customerService.getListAsync(model.toRequestDto());
                 setModel(model => model.fromListResponseDto(responseDto));
@@ -63,32 +63,22 @@ const CustomerListView = () => {
                 }
     
                 throw error;
-            } finally {
-                setReloading(false);
             }
         });
     };
-
-    const onSearchButtonClickedAsync = useCallback(async (): Promise<void> => {
-        setModel(model => model.from({ page: 1 }));
-        if (!model.searchByContent || model.searchByContent.length >= 3) {
-            reload();
-        }
-    }, [model]);
     return (
         <MainContainer>
             <div className="row g-3">
                 {/* Search */}
                 <div className="col col-12">
                     <Filters
+                        isReloading={isReloading}
                         model={model}
-                        setModel={setModel}
-                        loadListAsync={onSearchButtonClickedAsync}
+                        onModelChanged={changedData => {
+                            setModel(model => model.from(changedData));
+                        }}
                     />
                 </div>
-    
-                {/* Pagination */}
-                {/* {paginationElement} */}
     
                 {/* Results */}
                 <div className="col col-12">

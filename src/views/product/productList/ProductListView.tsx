@@ -69,24 +69,15 @@ const ProductListView = () => {
                         <div className="col col-xl-12 col-lg-6 col-md-6 col-sm-6 col-12">
                             {/* Brand */}
                             <BrandList
-                                isInitialRendering={initialLoadingState.brandList}
-                                onInitialLoadingFinished={() => {
-                                    setInitialLoadingState(state => ({
-                                        ...state,
-                                        brandList: false
-                                    }));
-                                }}
+                                isInitialRendering={isInitialRendering}
+                                initialModel={initialModels.brandList}
                             />
                         </div>
                         <div className="col col-xl-12 col-lg-6 col-md-6 col-sm-6 col-12">
                             <ProductCategoryList
-                                    isInitialRendering={initialLoadingState.categoryList}
-                                    onInitialLoadingFinished={() => {
-                                        setInitialLoadingState(state => ({
-                                            ...state,
-                                            categoryList: false
-                                        }));
-                                    }} />
+                                isInitialRendering={isInitialRendering}
+                                initialModel={initialModels.categoryList}
+                            />
                         </div>
                     </div>
                 </div>

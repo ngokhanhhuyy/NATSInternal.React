@@ -9,13 +9,19 @@ interface Props {
 
 const Results = ({ model, isReloading }: Props) => {
     // Computed.
-    const computedClassName = (): string => isReloading ? "opacity-50 pe-none" : "";
+    const computeUlClassName = (): string => {
+        const classNames = ["list-group list-group-flush w-100 transition-reloading"];
+        if (isReloading) {
+            classNames.push("opacity-50 pe-none");
+        }
+
+        return classNames.join(" ");
+    };
 
     return (
-        <div className={`block-body w-100 flex-fill d-flex justify-content-center
-                        align-items-center ${computedClassName()}`}>
+        <div className={computeUlClassName()}>
             {model.length > 0 ? (
-                <ul className="list-group list-group-flush w-100">
+                <ul className="list-group list-group-flush w-100 transition-reloading">
                     {model.map(customer => (
                         <ResultItem model={customer} key={customer.id} />
                     ))}

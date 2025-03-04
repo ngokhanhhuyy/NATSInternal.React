@@ -5,33 +5,31 @@ import { Link } from "react-router-dom";
 interface CreateLinkProps extends React.ComponentPropsWithoutRef<"a"> {
     to: string;
     canCreate: boolean | undefined;
-    isPlaceholder?: boolean | undefined;
     disabled?: boolean | undefined;
     hideText?: boolean;
 }
 
 const CreatingLink = (props: CreateLinkProps) => {
-    const { to, canCreate,isPlaceholder, disabled } = props;
+    // Computed.
+    const computeClassName = () => {
+        const classNames = ["btn btn-primary btn-sm"];
+        if (props.className) {
+            classNames.push(props.className);
+        }
 
-    if (!canCreate) {
+        if (props.disabled) {
+            classNames.push("disabled pe-none");
+        }
+
+        return classNames.join(" ");
+    };
+
+    if (!props.canCreate) {
         return null;
     }
 
-    if (isPlaceholder) {
-        const className = `btn btn-primary btn-sm placeholder disabled ${props.className}`;
-        return (
-            <button type="button" className={className}>
-                <span className="opacity-0">
-                    <i className="bi bi-plus-lg"></i>
-                    {!props.hideText && <span className="ms-1">Tạo mới</span>}
-                </span>
-            </button>
-        );
-    }
     return (
-        <Link className={`btn btn-primary btn-sm ${props.className}
-                        ${disabled ? "disabled pe-none" : ""}`}
-                to={to} >
+        <Link className={computeClassName()} to={props.to} >
             <i className="bi bi-plus-lg"></i>
             {!props.hideText && <span className="ms-1">Tạo mới</span>}
         </Link>

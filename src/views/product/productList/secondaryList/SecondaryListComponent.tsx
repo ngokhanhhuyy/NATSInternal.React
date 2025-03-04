@@ -1,17 +1,11 @@
-import { useState, useMemo, useEffect, useTransition } from "react";
-import type { ReactNode, TransitionStartFunction } from "react";
+import { useState, useMemo, useEffect, useTransition, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { useAlertModalStore } from "@/stores/alertModalStore";
 import { useInitialDataStore } from "@/stores/initialDataStore";
 import { type ProductCategoryListModel }
     from "@/models/product/productCategory/productCategoryListModel";
-import { type ProductCategoryBasicModel }
-    from "@/models/product/productCategory/productCategoryBasicModel";
 import { type BrandListModel } from "@/models/product/brand/brandListModel";
-import { type BrandBasicModel } from "@/models/brandModels";
 import { useProductCategoryService } from "@/services/productCategoryService";
 import { useBrandService } from "@/services/brandService";
-import { ValidationError } from "@/errors";
 
 // Layout component.
 import MainBlock from "@/views/layouts/MainBlockComponent";
@@ -19,27 +13,26 @@ import CreatingLink from "@/views/layouts/CreateLinkComponent";
 
 // Services.
 const brandService = useBrandService();
-const productCategoryService = useProductCategoryService();
+const categoryService = useProductCategoryService();
 
 interface SecondaryListProps<
         TList extends
             IUpsertableListModel<TBasic, TAuthorization> &
             IClonableModel<TList>,
-        TBasic extends IUpsertableBasicModel<TAuthorization>,
+        TBasic extends IProductGroupingBasicModel<TAuthorization>,
         TAuthorization extends IUpsertableExistingAuthorizationModel> {
     resourceType: string;
     iconClassName: string;
     isInitialRendering: boolean;
     initialModel: TList;
-    reload(model: TList, startReloadTransition: TransitionStartFunction): Promise<void>;
-    renderItemContent(item: TBasic): ReactNode;
+    reload(model: TList): Promise<TList>;
 }
 
 const SecondaryList = <
             TList extends
                 IUpsertableListModel<TBasic, TAuthorization> &
                 IClonableModel<TList>,
-            TBasic extends IUpsertableBasicModel<TAuthorization>,
+            TBasic extends IProductGroupingBasicModel<TAuthorization>,
             TAuthorization extends IUpsertableExistingAuthorizationModel>
         (props: SecondaryListProps<TList, TBasic, TAuthorization>) => {
     // Dependencies.
@@ -57,7 +50,10 @@ const SecondaryList = <
     // Effect.
     useEffect(() => {
         if (!props.isInitialRendering) {
-            props.reload(model, startReloadingTransition);
+            startReloadingTransition(async () => {
+                const reloadedModel = await props.reload(model);
+                setModel(reloadedModel);
+            });
         }
     }, [model.page]);
 
@@ -110,7 +106,7 @@ const SecondaryList = <
     
                             {/* Name */}
                             <div className="flex-fill fw-bold">
-                                {props.renderItemContent(item)}
+                                {item.name}
                             </div>
     
                             {/* Edit button */}
@@ -155,34 +151,27 @@ const ProductCategoryList = (props: Props<ProductCategoryListModel>) => {
             resourceType="category"
             iconClassName="bi bi-tag-fill"
             isInitialRendering={props.isInitialRendering}
-            reload={}
+            initialModel={props.initialModel}
+            reload={async (model) => {
+                const responseDto = await categoryService.getListAsync(model.toRequestDto());
+                return model.fromListResponseDto(responseDto);
+            }}
         />
     );
 };
 
-const BrandList = ({ isInitialRendering: isInitialLoading, onInitialLoadingFinished }: Props) => {
-    const service = useMemo(() => useBrandService(), []);
-
+const BrandList = (props: Props<BrandListModel>) => {
     return (
-        <SecondaryList resourceType="brand" iconClassName="bi bi-building"
-                isInitialRendering={isInitialLoading}
-                onInitialLoadingFinished={onInitialLoadingFinished}
-                initializeModel={requestDto => new BrandListModel(requestDto)}
-                initialLoadAsync={async (model, setModel) => {
-                    const [responseDto, canCreate] = await Promise.all([
-                        service.getListAsync(model.toRequestDto()),
-                        service.getCreatingPermissionAsync()
-                    ]);
-                    setModel(model => model.fromResponseDtos(responseDto, canCreate));
-                }}
-                reloadAsync={async (model, setModel) => {
-                    const responseDto = await service.getListAsync(model.toRequestDto());
-                    setModel(model => model.fromResponseDtos(responseDto));
-                }}
-                getCreatingPermissionAsync={service.getCreatingPermissionAsync}
-                onPageChanged={(setModel, page) => {
-                    setModel(model => model.from({ page }));
-                }} />
+        <SecondaryList
+            resourceType="brand"
+            iconClassName="bi bi-tag-fill"
+            isInitialRendering={props.isInitialRendering}
+            initialModel={props.initialModel}
+            reload={async (model) => {
+                const responseDto = await brandService.getListAsync(model.toRequestDto());
+                return model.fromListResponseDto(responseDto);
+            }}
+        />
     );
 };
 
