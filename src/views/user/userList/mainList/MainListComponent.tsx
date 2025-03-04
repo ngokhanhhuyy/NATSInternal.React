@@ -1,7 +1,6 @@
-import React, { useState, useEffect, startTransition } from "react";
+import React, { useState, useEffect, useTransition, useRef } from "react";
 import { UserListModel } from "@/models/user/userListModel";
 import { useUserService } from "@/services/userService";
-import { useModelState } from "@/hooks/modelStateHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
 import { ValidationError } from "@/errors";
 
@@ -29,8 +28,9 @@ const MainList = (props: MainListProps) => {
 
     // Model.
     const [model, setModel] = useState<UserListModel>(() => props.initialModel);
-    const [isReloading, setReloading] = useState<boolean>(false);
-    const modelState = useModelState();
+    const [isReloading, startReloadingTransition] = useTransition();
+    const requestId = useRef<number>(1);
+    const requestIdQueue = useRef<number[]>([]);
 
     const onPaginationPageButtonClicked = async (page: number): Promise<void> => {
         setModel(model => model.from({ page }));
@@ -51,23 +51,32 @@ const MainList = (props: MainListProps) => {
 
     // Callbacks.
     const reloadAsync = async (): Promise<void> => {
-        modelState.resetErrors();
-        setReloading(true);
-
-        startTransition(async () => {
+        startReloadingTransition(async () => {
+            const currentRequestId = requestId.current;
             try {
+                requestIdQueue.current.push(currentRequestId);
+                requestId.current += 1;
                 const responseDto = await userService.getListAsync(model.toRequestDto());
-                setModel(model => model.fromListResponseDto(responseDto));
-            } catch (error) {
-                if (error instanceof ValidationError) {
-                    await getUndefinedErrorConfirmationAsync();
-                    window.location.reload();
-                    return;
+                const lastIndexInQueue = requestIdQueue.current.length - 1;
+                if (requestIdQueue.current[lastIndexInQueue] === currentRequestId) {
+                    setModel(model => model.fromListResponseDto(responseDto));
+                    document.getElementById("content")
+                        ?.scrollTo({ top: 0, behavior: "smooth" });
                 }
-    
-                throw error;
+            } catch (error) {
+                const lastIndexInQueue = requestIdQueue.current.length - 1;
+                if (requestIdQueue.current[lastIndexInQueue] === currentRequestId) {
+                    if (error instanceof ValidationError) {
+                        await getUndefinedErrorConfirmationAsync();
+                        window.location.reload();
+                        return;
+                    }
+
+                    throw error;
+                }
             } finally {
-                setReloading(false);
+                requestIdQueue.current = requestIdQueue.current
+                    .filter(id => id != currentRequestId);
             }
         });
     };
@@ -77,12 +86,11 @@ const MainList = (props: MainListProps) => {
             {/* List filters */}
             <div className="col col-12">
                 <Filters
+                    isReloading={isReloading}
                     model={model}
                     onChanged={(changedData) => {
                         setModel(model => model.from(changedData));
                     }}
-                    modelState={modelState}
-                    isReloading={isReloading}
                 />
             </div>
 

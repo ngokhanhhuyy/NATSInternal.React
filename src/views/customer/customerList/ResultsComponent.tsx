@@ -27,7 +27,7 @@ const Results = ({ model, isReloading }: Props) => {
                     ))}
                 </ul>
             ) : (
-                <div className="opacity-50 my-4">
+                <div className="opacity-50 my-4 text-center">
                     Không tìm thấy kết quả
                 </div>
             )}

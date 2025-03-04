@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useTransition } from "react";
+import React, { useState, useRef, useEffect, useTransition } from "react";
 import { useCustomerService } from "@/services/customerService";
 import { CustomerListModel } from "@/models/customer/customerListModel";
 import { useViewStates } from "@/hooks/viewStatesHook";
@@ -35,6 +35,8 @@ const CustomerListView = () => {
     });
     const [model, setModel] = useState(() => initializedModel);
     const [isReloading, startReloadingTransition] = useTransition();
+    const requestId = useRef<number>(1);
+    const requestIdQueue = useRef<number[]>([]);
 
     // Effect.
     useEffect(() => {
@@ -52,20 +54,34 @@ const CustomerListView = () => {
     // Callbacks.
     const reload = () => {
         startReloadingTransition(async () => {
+            const currentRequestId = requestId.current;
             try {
+                requestIdQueue.current.push(currentRequestId);
+                requestId.current += 1;
                 const responseDto = await customerService.getListAsync(model.toRequestDto());
-                setModel(model => model.fromListResponseDto(responseDto));
-                document.getElementById("content")?.scrollTo({ top: 0, behavior: "smooth" });
-            } catch (error) {
-                if (error instanceof ValidationError) {
-                    await alertModelStore.getSubmissionErrorConfirmationAsync();
-                    return;
+                const lastIndexInQueue = requestIdQueue.current.length - 1;
+                if (requestIdQueue.current[lastIndexInQueue] === currentRequestId) {
+                    setModel(model => model.fromListResponseDto(responseDto));
+                    document.getElementById("content")
+                        ?.scrollTo({ top: 0, behavior: "smooth" });
                 }
-    
-                throw error;
+            } catch (error) {
+                const lastIndexInQueue = requestIdQueue.current.length - 1;
+                if (requestIdQueue.current[lastIndexInQueue] === currentRequestId) {
+                    if (error instanceof ValidationError) {
+                        await alertModelStore.getSubmissionErrorConfirmationAsync();
+                        return;
+                    }
+
+                    throw error;
+                }
+            } finally {
+                requestIdQueue.current = requestIdQueue.current
+                    .filter(id => id != currentRequestId);
             }
         });
     };
+
     return (
         <MainContainer>
             <div className="row g-3">

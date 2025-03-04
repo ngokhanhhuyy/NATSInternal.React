@@ -2,7 +2,6 @@ import React, { useMemo } from "react";
 import { type UserListModel } from "@models/user/userListModel";
 import { RoleMinimalModel } from "@models/roleModels";
 import { useRoleUtility } from "@/utilities/roleUtility";
-import type { IModelState } from "@/hooks/modelStateHook";
 
 // Layout components.
 import MainBlock from "@layouts/MainBlockComponent";
@@ -20,7 +19,6 @@ import ValidationMessage from "@/views/form/ValidationMessageComponent";
 interface Props {
     model: UserListModel;
     onChanged: (changedData: Partial<UserListModel>) => any;
-    modelState: IModelState;
     isReloading: boolean;
 }
 
@@ -30,9 +28,6 @@ const roleUtility = useRoleUtility();
 const Filters = (props: Props) => {
     // Computed.
     const blockTitle = useMemo<string>(() => "Danh sách nhân viên", []);
-    const isSearchContentValid = !props.model.content.length
-        || props.model.content.length >= 3;
-    const searchContentColumnClassName = !isSearchContentValid ? "pb-0" : "";
 
     // Header.
     const header = (
@@ -86,7 +81,7 @@ const Filters = (props: Props) => {
             <FormContext.Provider value={null}>
                 <div className="row g-3">
                     {/* Search content */}
-                    <div className={`col ${searchContentColumnClassName}`}>
+                    <div className="col col-12">
                         <div className="input-group">
                             <TextInput
                                 className="border-end-0"
