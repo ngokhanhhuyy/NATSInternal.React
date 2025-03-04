@@ -1,12 +1,12 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserService } from "@/services/userService";
 import { UserPasswordResetModel } from "@/models/user/userPasswordResetModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
-import { useAlertModalStore } from "@/stores/alertModalStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
-import { NotFoundError } from "@/errors";
+import { AuthorizationError } from "@/errors";
 
 // Layout components.
 import UpsertViewContainer from "@/views/layouts/UpsertViewContainerComponent";
@@ -22,39 +22,24 @@ import SubmitButton from "@/views/form/SubmitButtonComponent";
 const UserPasswordResetView = ({ id }: { id: number }) => {
     // Dependency.
     const navigate = useNavigate();
-    const alertModalStore = useAlertModalStore();
     const userService = useMemo(() => useUserService(), []);
     const routeGenerator = useMemo(() => useRouteGenerator(), []);
 
     // Model and states.
-    const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
-    const [model, setModel] = useState(() => new UserPasswordResetModel(id));
-    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model);
-
-    // Effect.
-    useEffect(() => {
-        const checkPermissionAsync = async () => {
-            try {
-                const canReset = await userService.getResetPasswordPermissionAsync(id);
-                if (!canReset) {
-                    await alertModalStore.getUnauthorizationConfirmationAsync();
-                    await navigate(routeGenerator.getUserListRoutePath());
-                }
-
-                setOriginalModel(model);
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(routeGenerator.getUserListRoutePath());
-                    return;
-                }
-
-                throw error;
+    const initialModel = useAsyncModelInitializer({
+        initializer: async () => {
+            const canReset = await userService.getResetPasswordPermissionAsync(id);
+            if (!canReset) {
+                throw new AuthorizationError();
             }
-        };
 
-        checkPermissionAsync().finally(() => onInitialLoadingFinished());
-    }, []);
+            return new UserPasswordResetModel(id);
+        },
+        cacheKey: "userPasswordReset"
+    });
+    const { modelState } = useUpsertViewStates();
+    const [model, setModel] = useState(() => initialModel);
+    const isModelDirty = useDirtyModelChecker(initialModel, model);
 
     // Callbacks.
     const handleSubmissionAsync = async (): Promise<void> => {
@@ -69,7 +54,6 @@ const UserPasswordResetView = ({ id }: { id: number }) => {
         <UpsertViewContainer
             formId="userCreateForm"
             modelState={modelState}
-            isInitialLoading={isInitialLoading}
             submittingAction={handleSubmissionAsync}
             onSubmissionSucceeded={handleSucceededSubmissionAsync}
             isModelDirty={isModelDirty}

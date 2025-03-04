@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import { type UserListModel } from "@models/user/userListModel";
 import { RoleMinimalModel } from "@models/roleModels";
 import { useRoleUtility } from "@/utilities/roleUtility";
@@ -28,9 +28,6 @@ interface Props {
 const roleUtility = useRoleUtility();
 
 const Filters = (props: Props) => {
-    // States.
-    const [searchContent, setSearchContent] = useState<string>(() => "");
-
     // Computed.
     const blockTitle = useMemo<string>(() => "Danh sách nhân viên", []);
     const isSearchContentValid = !props.model.content.length
@@ -85,12 +82,7 @@ const Filters = (props: Props) => {
     `;
 
     return (
-        <MainBlock
-            title={blockTitle}
-            header={header}
-            bodyPadding={2}
-            bodyClassName={props.isReloading ? "opacity-50 pe-none" : ""}
-        >
+        <MainBlock title={blockTitle} header={header} bodyPadding={2}>
             <FormContext.Provider value={null}>
                 <div className="row g-3">
                     {/* Search content */}
@@ -121,26 +113,6 @@ const Filters = (props: Props) => {
                                 <i className="bi bi-sliders" />
                             </button>
                         </div>
-
-                        {/* Search content validation message */}
-                        {isSearchContentValid && (
-                            <span className={"small opacity-50 " +
-                                            `${isSearchContentValid ? "d-none" : ""}`}>
-                                * Nội dung tìm kiếm phải chứa ít nhất 3 ký tự.
-                            </span>
-                        )}
-                    </div>
-
-                    {/* Search button */}
-                    <div className="col col-auto d-none">
-                        <button
-                            className="btn btn-primary"
-                            type="button"
-                            onClick={() => props.onChanged({ content: searchContent })}
-                        >
-                            <i className="bi bi-search"></i>
-                            <span className="d-sm-inline d-none ms-2">Tìm kiếm</span>
-                        </button>
                     </div>
                 </div>
 

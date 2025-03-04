@@ -111,6 +111,7 @@ input:not([type="checkbox"]):not(.is-invalid):not(.is-valid),
 textarea:not(.is-invalid):not(.is-valid),
 select:not(.is-invalid):not(.is-valid) {
     color: inherit !important;
+    background-color: rgba(var(--bs-primary-rgb), 0.01);
 }
 
 input:not([type="checkbox"]):not(.is-invalid):not(.is-valid):focus,

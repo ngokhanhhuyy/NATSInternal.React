@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import type { BrandMinimalModel } from "@/models/product/brand/brandMinimalModel";
-import type { ProductCategoryMinimalModel }
+import { type ProductCategoryMinimalModel }
     from "@/models/product/productCategory/productCategoryMinimalModel";
 import { useInitialDataStore } from "@/stores/initialDataStore";
 

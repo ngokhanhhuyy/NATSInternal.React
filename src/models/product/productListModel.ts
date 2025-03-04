@@ -29,9 +29,19 @@ export class ProductListModel
     public readonly createRoute: string = routeGenerator.getProductCreateRoutePath();
 
     constructor(
+            productListResponseDto: ResponseDtos.Product.List,
+            brandOptionResponseDtos?: ResponseDtos.Brand.Minimal[],
+            categoryOptionResponseDtos?: ResponseDtos.ProductCategory.Minimal[],
             initialResponseDto?: ResponseDtos.Product.Initial,
             requestDto?: RequestDtos.Product.List) {
         super();
+
+        this.items = productListResponseDto.items.map(dto => new ProductBasicModel(dto)) || [];
+        this.pageCount = productListResponseDto.pageCount;
+        this.categoryOptions = categoryOptionResponseDtos
+            ?.map(dto => new ProductCategoryMinimalModel(dto)) ?? [];
+        this.brandOptions = brandOptionResponseDtos
+            ?.map(dto => new BrandMinimalModel(dto)) ?? [];
 
         if (initialResponseDto) {
             const sortingOptions = initialResponseDto.listSortingOptions;
@@ -48,19 +58,6 @@ export class ProductListModel
             this.page = requestDto.page ?? this.page;
             this.resultsPerPage = requestDto.resultsPerPage ?? 15;
         }
-    }
-
-    public fromResponseDtos(
-            list: ResponseDtos.Product.List,
-            categoryOptions?: ResponseDtos.ProductCategory.Minimal[],
-            brandOptions?: ResponseDtos.Brand.Minimal[]): ProductListModel {
-        return this.from({
-            items: list.items?.map(dto => new ProductBasicModel(dto)) || [],
-            pageCount: list.pageCount,
-            categoryOptions: categoryOptions
-                ?.map(dto => new ProductCategoryMinimalModel(dto)) ?? [],
-            brandOptions: brandOptions?.map(dto => new BrandMinimalModel(dto)) ?? []
-        });
     }
 
     public fromListResponseDto(responseDto: ResponseDtos.Product.List): ProductListModel {

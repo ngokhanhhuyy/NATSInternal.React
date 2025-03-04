@@ -15,19 +15,21 @@ export class UserPersonalInformationUpsertModel
     public readonly avatarUrl: string | null = null;
     public readonly avatarFile : string | null = null;
     public readonly avatarChanged: boolean = false;
+    
+    constructor(responseDto?: ResponseDtos.User.PersonalInformation) {
+        super();
 
-    fromResponseDto(responseDto: ResponseDtos.User.PersonalInformation) {
-        return this.from({
-            firstName: responseDto.firstName,
-            middleName: responseDto.middleName || "",
-            lastName: responseDto.lastName,
-            fullName: responseDto.fullName,
-            gender: responseDto.gender,
-            birthday: this.birthday.fromResponseDto(responseDto.birthday),
-            phoneNumber: responseDto.phoneNumber || "",
-            email: responseDto.email || "",
-            avatarUrl: responseDto.avatarUrl,
-        });
+        if (responseDto) {
+            this.firstName = responseDto.firstName;
+            this.middleName = responseDto.middleName || "";
+            this.lastName = responseDto.lastName;
+            this.fullName = responseDto.fullName;
+            this.gender = responseDto.gender;
+            this.birthday = this.birthday.fromResponseDto(responseDto.birthday);
+            this.phoneNumber = responseDto.phoneNumber || "";
+            this.email = responseDto.email || "";
+            this.avatarUrl = responseDto.avatarUrl;
+        }
     }
 
     public toRequestDto(): RequestDtos.User.UpsertPersonalInformation {

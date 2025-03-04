@@ -1,13 +1,13 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserService } from "@/services/userService";
 import { UserCreateModel } from "@/models/user/userCreateModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
 import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
-import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useInitialDataStore } from "@/stores/initialDataStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
-import { NotFoundError } from "@/errors";
+import { AuthorizationError } from "@/errors";
 
 // Layout components.
 import UpsertViewContainer from "@/views/layouts/UpsertViewContainerComponent";
@@ -24,43 +24,26 @@ import UserUserInfoUpsert from "../UserUserInfoUpsertComponent";
 // Component.
 const UserCreateView = () => {
     // Dependencies.
-    const userService = useMemo(() => useUserService(), []);
-    const routeGenerator = useMemo(() => useRouteGenerator(), []);
+    const userService = useUserService();
+    const routeGenerator = useRouteGenerator();
     const navigate = useNavigate();
-    const alertModalStore = useAlertModalStore();
-    const initialData = useInitialDataStore(store => store.data);
+    const roleOptions = useInitialDataStore(store => store.data.role.allAsOptions);
 
     // Model and states.
-    const { modelState, isInitialLoading, onInitialLoadingFinished } = useUpsertViewStates();
-    const [model, setModel] = useState(() => {
-        const roleOptionsResponseDtos = initialData.role.allAsOptions;
-        return new UserCreateModel(roleOptionsResponseDtos);
+    const { isInitialRendering, modelState } = useUpsertViewStates();
+    const initialModel = useAsyncModelInitializer({
+        initializer: async () => {
+            const canCreate = await userService.getCreatingPermissionAsync();
+            if (!canCreate) {
+                throw new AuthorizationError();
+            };
+
+            return new UserCreateModel(roleOptions);
+        },
+        cacheKey: "userCreate"
     });
-    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model);
-
-    // Effect.
-    useEffect(() => {
-        const checkPermissionAsync = async () => {
-            try {
-                const canCreate = await userService.getCreatingPermissionAsync();
-                if (!canCreate) {
-                    await alertModalStore.getUnauthorizationConfirmationAsync();
-                    await navigate(routeGenerator.getUserListRoutePath());
-                };
-
-                setOriginalModel(model);
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await navigate(routeGenerator.getUserListRoutePath());
-                    return;
-                }
-
-                throw error;
-            }
-        };
-
-        checkPermissionAsync().then(onInitialLoadingFinished);
-    }, []);
+    const [model, setModel] = useState(() => initialModel);
+    const isModelDirty = useDirtyModelChecker(initialModel, model);
 
     // Callbacks.
     const handleSubmissionAsync = async (): Promise<number> => {
@@ -75,7 +58,6 @@ const UserCreateView = () => {
         <UpsertViewContainer
             formId="userCreateForm"
             modelState={modelState}
-            isInitialLoading={isInitialLoading}
             submittingAction={handleSubmissionAsync}
             onSubmissionSucceeded={handleSucceededSubmissionAsync}
             isModelDirty={isModelDirty}
@@ -85,36 +67,35 @@ const UserCreateView = () => {
                     <MainBlock title="Tạo nhân viên mới" closeButton
                             bodyPadding={0} bodyBorder={false}>
                         {/* Account information */}
-                        <AccountInformation model={model} setModel={setModel} />
+                        <AccountInformation
+                            model={model}
+                            onModelChanged={(changedData) => {
+                                setModel(model => model.from(changedData));
+                            }}
+                        />
 
                         {/* Personal information */}
-                        <UserPersonalInfoUpsert model={model.personalInformation}
-                                setModel={arg => {
-                                    if (typeof arg === "function") {
-                                        setModel(model => model.from({
-                                            personalInformation: arg(model.personalInformation)
-                                        }));
-                                    } else {
-                                        setModel(model => model.from({
-                                            personalInformation: arg
-                                        }));
-                                    }
-                                }} />
+                        <UserPersonalInfoUpsert
+                            isInitialRendering={isInitialRendering}
+                            model={model.personalInformation}
+                            onModelChanged={(changedData => {
+                                setModel(model => model.from({
+                                    personalInformation: model.personalInformation
+                                        .from(changedData)
+                                }));
+                            })}
+                        />
 
                         {/* User information */}
                         <UserUserInfoUpsert
-                                model={model.userInformation}
-                                setModel={arg => {
-                                    if (typeof arg === "function") {
-                                        setModel(model => model.from({
-                                            userInformation: arg(model.userInformation)
-                                        }));
-                                    } else {
-                                        setModel(model => model.from({
-                                            userInformation: arg
-                                        }));
-                                    }
-                                }} />
+                            model={model.userInformation}
+                            onModelChanged={(changedData) => {
+                                setModel(model => model.from({
+                                    userInformation: model.userInformation
+                                        .from(changedData)
+                                }));
+                            }}
+                        />
                     </MainBlock>
                 </div>
                 

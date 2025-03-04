@@ -2,13 +2,10 @@ import React from "react";
 import { usePageLoadProgressBarStore } from "@/stores/pageLoadProgressBarStore";
 
 // Props.
-interface MainContainerProps extends React.ComponentPropsWithRef<"div"> {
-    isInitialLoading?: boolean;
-    as?: "div" | "form" | "ul";
-}
+interface MainContainerProps extends React.ComponentPropsWithRef<"div"> { }
 
 const MainContainer = (props: MainContainerProps) => {
-    const { className, children, isInitialLoading, as, ...rest } = props;
+    const { className, children, ...rest } = props;
 
     // Dependencies.
     const isLoading = usePageLoadProgressBarStore(store => store.phase === "waiting");
@@ -16,9 +13,7 @@ const MainContainer = (props: MainContainerProps) => {
     // Computed
     const computeClassName = () => {
         const classNames = [className];
-        if (isInitialLoading) {
-            classNames.push("d-none");
-        } else if (isLoading) {
+        if (isLoading) {
             classNames.push("opacity-50 pe-none");
         }
         

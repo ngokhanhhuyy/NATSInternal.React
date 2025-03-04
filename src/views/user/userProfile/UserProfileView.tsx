@@ -1,10 +1,8 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React from "react";
 import { UserDetailModel } from "@/models/user/userDetailModel";
 import { useUserService } from "@/services/userService";
 import { useViewStates } from "@/hooks/viewStatesHook";
-import { useAlertModalStore } from "@/stores/alertModalStore";
-import { NotFoundError } from "@/errors";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 
 // Layout components.
 import MainContainer from "@/views/layouts/MainContainerComponent";
@@ -17,36 +15,20 @@ import AvatarAndNames from "./AvatarAndNamesComponent";
 // Component.
 const UserProfileView = ({ id }: { id: number }) => {
     // Dependency.
-    const userService = useMemo(() => useUserService(), []);
-    const alertModalStore = useAlertModalStore();
-    const navigate = useNavigate();
+    const userService = useUserService();
 
     // Model and states.
-    const { isInitialLoading, onInitialLoadingFinished, routeGenerator } = useViewStates();
-    const [model, setModel] = useState<UserDetailModel>();
-
-    // Effect.
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const responseDto = await userService.getDetailAsync(id);
-                setModel(new UserDetailModel(responseDto));
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(routeGenerator.getUserListRoutePath());
-                    return;
-                }
-                
-                throw error;
-            }
-        };
-
-        fetchData().then(() => onInitialLoadingFinished());
-    }, []);
+    useViewStates();
+    const model = useAsyncModelInitializer({
+        initializer: async () => {
+            const responseDto = await userService.getDetailAsync(id);
+            return new UserDetailModel(responseDto);
+        },
+        cacheKey: "userDetail"
+    });
 
     return (
-        <MainContainer isInitialLoading={isInitialLoading}>
+        <MainContainer>
             <div className="row g-3 position-relative">
                 {/* Avatar and names */}
                 {(!model || model.personalInformation) && (

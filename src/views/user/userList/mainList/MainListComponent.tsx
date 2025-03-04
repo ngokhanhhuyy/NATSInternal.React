@@ -38,7 +38,6 @@ const MainList = (props: MainListProps) => {
 
     // Effect.
     useEffect(() => {
-        console.log(props.isInitialRendering);
         if (!props.isInitialRendering) {
             reloadAsync();
         }
@@ -77,7 +76,6 @@ const MainList = (props: MainListProps) => {
         <div className="row g-3">
             {/* List filters */}
             <div className="col col-12">
-                <pre>{JSON.stringify(model.content, null, 2)}</pre>
                 <Filters
                     model={model}
                     onChanged={(changedData) => {

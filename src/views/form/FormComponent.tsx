@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, createContext } from "react";
+import { useState, useMemo, useCallback, startTransition, createContext } from "react";
 import { useNavigate } from "react-router-dom";
 import type { IModelState } from "@/hooks/modelStateHook";
 import { useAlertModalStore } from "@/stores/alertModalStore";
@@ -100,16 +100,12 @@ const Form = <TSubmissionResult,>(props: FormProps<TSubmissionResult>) => {
         setSubmitting(true);
 
         try {
-            // if (!isModelDirty) {
-            //     await alertModalStore.getDataUnchangedSubmissionConfirmationAsync();
-            //     return;
-            // }
-
             const submissionResult = await submittingAction();
             modelState?.clearErrors();
             if (submissionSucceededModal ?? true) {
                 await alertModalStore.getSubmissionSuccessConfirmationAsync();
             }
+
             onSubmissionSucceeded(submissionResult);
         } catch (error) {
             const isValidationError = error instanceof ValidationError;
@@ -121,7 +117,7 @@ const Form = <TSubmissionResult,>(props: FormProps<TSubmissionResult>) => {
                 document.getElementById("content")?.scrollTo({ top: 0, behavior: "smooth" });
             } else  if (error instanceof AuthorizationError) {
                 await alertModalStore.getUnauthorizationConfirmationAsync();
-                await navigate(routeGenerator.getHomeRoutePath());
+                startTransition(async () => navigate(routeGenerator.getHomeRoutePath()));
             } else {
                 throw error;
             }

@@ -3,20 +3,18 @@ import { useViewStates } from "./viewStatesHook";
 export function useUpsertViewStates() {
     // States.
     const {
+        isInitialRendering,
         modelState,
-        AuthorizationError,
-        ValidationError,
         initialData,
         getDisplayName,
         routeGenerator
     } = useViewStates();
 
     return {
+        isInitialRendering,
         modelState,
         initialData,
         getDisplayName,
         routeGenerator,
-        AuthorizationError,
-        ValidationError,
     };
 }

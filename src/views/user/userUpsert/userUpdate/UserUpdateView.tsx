@@ -1,13 +1,13 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserService } from "@/services/userService";
 import { UserUpdateModel } from "@/models/user/userUpdateModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
-import { useAlertModalStore } from "@/stores/alertModalStore";
 import { useInitialDataStore } from "@/stores/initialDataStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
-import { NotFoundError } from "@/errors";
+import { AuthorizationError } from "@/errors";
 
 // Layout components.
 import MainBlock from "@/views/layouts/MainBlockComponent";
@@ -25,49 +25,29 @@ import UpsertViewContainer from "@/views/layouts/UpsertViewContainerComponent";
 const UserUpdateView = ({ id }: { id: number }) => {
     // Dependency.
     const navigate = useNavigate();
-    const userService = useMemo(() => useUserService(), []);
-    const routeGenerator = useMemo(() => useRouteGenerator(), []);
-    const alertModalStore = useAlertModalStore();
-    const initialData = useInitialDataStore(store => store.data);
+    const userService = useUserService();
+    const routeGenerator = useRouteGenerator();
+    const roleOptions = useInitialDataStore(store => store.data.role.allAsOptions);
 
     // Model and states.
-    const { modelState, isInitialLoading, onInitialLoadingFinished } = useUpsertViewStates();
-    const [model, setModel] = useState(() => {
-        return new UserUpdateModel(initialData.role.allAsOptions);
-    });
-    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model);
-
-    // Effect.
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const responseDto = await userService.getDetailAsync(id);
-                setModel(model => {
-                    const loadedModel = model.fromResponseDto(responseDto);
-                    setOriginalModel(loadedModel);
-                    return loadedModel;
-                });
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(routeGenerator.getUserListRoutePath());
-                    return;
-                }
-
-                throw error;
+    const { isInitialRendering, modelState } = useUpsertViewStates();
+    const initialModel = useAsyncModelInitializer({
+        initializer: async () => {
+            const responseDto = await userService.getDetailAsync(id);
+            if (!responseDto.authorization.canEdit) {
+                throw new AuthorizationError();
             }
-        };
 
-        fetchData().finally(onInitialLoadingFinished);
-    }, []);
+            return new UserUpdateModel(responseDto, roleOptions);
+        },
+        cacheKey: "userUpdate"
+    });
+    const [model, setModel] = useState(() => initialModel);
+    const isModelDirty = useDirtyModelChecker(initialModel, model);
 
     // Computed.
-    const isPersonalInformationBlockRounded = (() => {
-        return model.authorization?.canEditUserUserInformation ?? false;
-    })();
-
     const shouldRenderUserUserInformation = (() => {
-        return isInitialLoading || model.authorization?.canEditUserUserInformation;
+        return model.authorization?.canEditUserUserInformation;
     })();
 
     // Callbacks.
@@ -92,7 +72,6 @@ const UserUpdateView = ({ id }: { id: number }) => {
         <UpsertViewContainer
             formId="userCreateForm"
             modelState={modelState}
-            isInitialLoading={isInitialLoading}
             submittingAction={handleSubmissionAsync}
             onSubmissionSucceeded={handleSucceededSubmissionAsync}
             deletingAction={handleDeletionAsync}
@@ -110,36 +89,27 @@ const UserUpdateView = ({ id }: { id: number }) => {
                         {/* Personal information */}
                         <UserPersonalInfoUpsert
                             borderTop={false}
-                            roundedBottom={isPersonalInformationBlockRounded}
+                            roundedBottom={!shouldRenderUserUserInformation}
+                            isInitialRendering={isInitialRendering}
                             model={model.personalInformation}
-                            setModel={arg => {
-                                if (typeof arg === "function") {
-                                    setModel(model => model.from({
-                                        personalInformation: arg(model.personalInformation)
-                                    }));
-                                } else {
-                                    setModel(model => model.from({
-                                        personalInformation: arg
-                                    }));
-                                }
-                            }}
+                            onModelChanged={(changedData => {
+                                setModel(model => model.from({
+                                    personalInformation: model.personalInformation
+                                        .from(changedData)
+                                }));
+                            })}
                         />
 
                         {/* User information */}
                         {shouldRenderUserUserInformation && (
                             <UserUserInfoUpsert
                                 model={model.userInformation}
-                                setModel={arg => {
-                                    if (typeof arg === "function") {
-                                        setModel(model => model.from({
-                                            userInformation: arg(model.userInformation)
-                                        }));
-                                    } else {
-                                        setModel(model => model.from({
-                                            userInformation: arg
-                                        }));
-                                    }
-                                }}
+                                onModelChanged={(changedData => {
+                                    setModel(model => model.from({
+                                        userInformation: model.userInformation
+                                            .from(changedData)
+                                    }));
+                                })}
                             />
                         )}
                     </MainBlock>

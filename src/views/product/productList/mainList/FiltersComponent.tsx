@@ -1,6 +1,4 @@
-import React from "react";
 import type { ProductListModel } from "@/models/product/productListModel";
-import type { IModelState } from "@/hooks/modelStateHook";
 
 // Layout components.
 import MainBlock from "@/views/layouts/MainBlockComponent";
@@ -13,32 +11,23 @@ import OptionsSelectInput from "./OptionsSelectInputComponent";
 // Props.
 interface FiltersProps {
     model: ProductListModel;
-    setModel: React.Dispatch<React.SetStateAction<ProductListModel>>;
-    modelState: IModelState;
+    onModelChanged: (changedData: Partial<ProductListModel>) => void;
     isReloading: boolean;
 }
 
 const Filters = (props: FiltersProps) => {
-    const { model, setModel, isReloading } = props;
-
     // Computed.
-    const computeRowClassName = () => isReloading ? "opacity-50 pe-none" : "";
-
-    // Callbacks.
-    const handleBrandIdChange = (brandId: number) => {
-        setModel(model => model.from({ page: 1, brandId }));
-    };
-
-    const handleCategoryIdChange = (categoryId: number) => {
-        setModel(model => model.from({ page: 1, categoryId }));
-    };
+    const computeRowClassName = () => props.isReloading ? "opacity-50 pe-none" : "";
 
     // Header.
     const computeHeader = () => {
         const className = props.isReloading ? "placeholder disabled" : "";
         return (
-            <CreatingLink to={model.createRoute} className={className}
-                canCreate={model.canCreate} />
+            <CreatingLink
+                to={props.model.createRoute}
+                className={className}
+                canCreate={props.model.canCreate}
+            />
         );
     };
 
@@ -48,22 +37,26 @@ const Filters = (props: FiltersProps) => {
                 {/* Brand options */}
                 <div className="col col-md-6 col-sm-12 col-12">
                     <Label text="Thương hiệu" />
-                    <OptionsSelectInput resourceType="brand" name="brandId"
-                        disabled={isReloading}
-                        options={model.brandOptions}
-                        value={model.brandId}
-                        onValueChanged={handleBrandIdChange}
+                    <OptionsSelectInput
+                        name="brandId"
+                        resourceType="brand"
+                        disabled={props.isReloading}
+                        options={props.model.brandOptions}
+                        value={props.model.brandId}
+                        onValueChanged={(brandId) => props.onModelChanged({ brandId })}
                     />
                 </div>
 
                 {/* Category options */}
                 <div className="col col-md-6 col-sm-12 col-12">
                     <Label text="Phân loại" />
-                    <OptionsSelectInput resourceType="brand" name="categoryId"
-                        disabled={isReloading}
-                        options={model.categoryOptions}
-                        value={model.categoryId}
-                        onValueChanged={handleCategoryIdChange}
+                    <OptionsSelectInput
+                        name="categoryId"
+                        resourceType="brand"
+                        disabled={props.isReloading}
+                        options={props.model.categoryOptions}
+                        value={props.model.categoryId}
+                        onValueChanged={(categoryId) => props.onModelChanged({ categoryId })}
                     />
                 </div>
             </div>

@@ -9,21 +9,16 @@ export class UserUpdateModel extends AbstractClonableModel<UserUpdateModel> {
     public readonly userInformation: UserUserInformationUpsertModel;
     public readonly authorization: UserDetailAuthorizationModel | null;
 
-    constructor(roleOptions: ResponseDtos.Role.Minimal[]) {
+    constructor(
+            detailResponseDto: ResponseDtos.User.Detail,
+            roleOptionResponseDtos: ResponseDtos.Role.Minimal[]) {
         super();
-        this.personalInformation = new UserPersonalInformationUpsertModel();
-        this.userInformation = new UserUserInformationUpsertModel(roleOptions);
-        this.authorization = null;
-    }
-
-    fromResponseDto(detail: ResponseDtos.User.Detail): UserUpdateModel {
-        return this.from({
-            id: detail.id,
-            personalInformation: this.personalInformation
-                .fromResponseDto(detail.personalInformation),
-            userInformation: this.userInformation.fromResponseDto(detail.userInformation),
-            authorization: new UserDetailAuthorizationModel(detail.authorization)
-        });
+        this.personalInformation = new UserPersonalInformationUpsertModel(
+            detailResponseDto.personalInformation);
+        this.userInformation = new UserUserInformationUpsertModel(
+            roleOptionResponseDtos,
+            detailResponseDto.userInformation);
+        this.authorization = new UserDetailAuthorizationModel(detailResponseDto.authorization);
     }
 
     public toRequestDto(): RequestDtos.User.Update {

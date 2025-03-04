@@ -1,4 +1,4 @@
-import React, {type ComponentPropsWithoutRef} from "react";
+import React, { startTransition, type ComponentPropsWithoutRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 export interface MainBlockProps extends ComponentPropsWithoutRef<"div"> {
@@ -60,7 +60,7 @@ const MainBlock = (props: MainBlockProps) => {
         if (!props.header && props.closeButton) {
             return (
                 <div className="me-2" style={{ cursor: "pointer" }}
-                        onClick={() => navigate(-1)}>
+                        onClick={() => startTransition(() => navigate(-1))}>
                     <i className={`bi bi-x-lg text-${color}`}></i>
                 </div>
             );

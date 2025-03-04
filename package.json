@@ -4,8 +4,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite --config vite.config.ts",
-    "build": "rspack",
-    "start": "rspack serve",
+    "build": "rsbuild build",
+    "start": "rsbuild dev",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -17,9 +17,11 @@
     "@babel/preset-env": "^7.26.0",
     "@babel/preset-react": "^7.26.3",
     "@eslint/js": "^9.16.0",
+    "@rsbuild/core": "^1.2.14",
+    "@rsbuild/plugin-react": "^1.1.1",
     "@rspack/cli": "^1.1.5",
     "@rspack/core": "^1.1.5",
-    "@rspack/plugin-react-refresh": "^1.0.0",
+    "@rspack/plugin-react-refresh": "^1.0.1",
     "@types/bootstrap": "^5.2.10",
     "@types/css-modules": "^1.0.5",
     "@types/react": "19.0.0",
@@ -36,7 +38,7 @@
     "ts-loader": "^9.5.1",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.17.0",
-    "vite": "^5.4.11"
+    "vite": "^6.2.0"
   },
   "dependencies": {
     "@microsoft/signalr": "^8.0.7",

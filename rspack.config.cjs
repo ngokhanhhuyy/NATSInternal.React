@@ -7,7 +7,8 @@ const ReactRefreshPlugin = require('@rspack/plugin-react-refresh');
 const isDev = process.env.NODE_ENV === "development";
 
 module.exports = {
-  entry: "./src/main.tsx", output: {
+  entry: "./src/main.tsx",
+  output: {
     path: path.resolve(__dirname, "./dist"),
     publicPath: "/",
     filename: "[name].[hash].js",
@@ -118,7 +119,7 @@ module.exports = {
       "Allow-Control-Allow-Headers": "Content-Type,Authorization",
     },
     client: {
-      webSocketURL: "wss://frontend.khanhhuy.dev/ws",
+      webSocketURL: "wss://frontend-worksat.khanhhuy.dev/ws",
     },
     proxy: [
       {

@@ -12,12 +12,12 @@ import ValidationMessage from "@/views/form/ValidationMessageComponent";
 
 // Props.
 interface AccountInformationProps {
-    model: UserCreateModel,
-    setModel: React.Dispatch<React.SetStateAction<UserCreateModel>>;
+    model: UserCreateModel;
+    onModelChanged(changedData: Partial<UserCreateModel>): any;
 }
 
 // Component.
-const AccountInformation = ({ model, setModel }: AccountInformationProps) => {
+const AccountInformation = (props: AccountInformationProps) => {
     return (
         <SubBlock title="Thông tin tài khoản" bodyClassName="row g-3" borderTop={false}>
             {/* UserName */}
@@ -26,12 +26,16 @@ const AccountInformation = ({ model, setModel }: AccountInformationProps) => {
                     <Label text="Tên đăng nhập" required />
                     <div className="input-group">
                         <span className="input-group-text border-end-0">@</span>
-                        <TextInput name="userName" regex="a-zA-Z0-9_" maxLength={20}
-                                placeholder="nguyenvana"
-                                value={model.userName}
-                                onValueChanged={userName => {
-                                    setModel(model => model.from({ userName }));
-                                }} />
+                        <TextInput
+                            name="userName"
+                            regex="a-zA-Z0-9_"
+                            maxLength={20}
+                            placeholder="nguyenvana"
+                            value={props.model.userName}
+                            onValueChanged={userName => {
+                                props.onModelChanged({ userName });
+                            }}
+                        />
                     </div>
                     <ValidationMessage name="userName" />
                 </div>
@@ -41,11 +45,15 @@ const AccountInformation = ({ model, setModel }: AccountInformationProps) => {
             <div className="col col-sm-6 col-12">
                 <div className="form-group">
                     <Label text="Mật khẩu" required />
-                    <PasswordInput name="password" placeholder="Mật khẩu" maxLength={20}
-                            value={model.password}
-                            onValueChanged={password => {
-                                setModel(model => model.from({ password }));
-                            }} />
+                    <PasswordInput
+                        name="password"
+                        placeholder="Mật khẩu"
+                        maxLength={20}
+                        value={props.model.password}
+                        onValueChanged={password => {
+                            props.onModelChanged({ password });
+                        }}
+                    />
                     <ValidationMessage name="password" />
                 </div>
             </div>
@@ -54,12 +62,15 @@ const AccountInformation = ({ model, setModel }: AccountInformationProps) => {
             <div className="col col-sm-6 col-12">
                 <div className="form-group">
                     <Label text="Xác nhận mật khẩu" required />
-                    <PasswordInput name="confirmationPassword" placeholder="Xác nhận mật khẩu"
-                            maxLength={20}
-                            value={model.confirmationPassword}
-                            onValueChanged={confirmationPassword => {
-                                setModel(model => model.from({ confirmationPassword }));
-                            }} />
+                    <PasswordInput
+                        name="confirmationPassword"
+                        placeholder="Xác nhận mật khẩu"
+                        maxLength={20}
+                        value={props.model.confirmationPassword}
+                        onValueChanged={confirmationPassword => {
+                            props.onModelChanged({ confirmationPassword });
+                        }}
+                    />
                 </div>
                 <ValidationMessage name="confirmationPassword" />
             </div>

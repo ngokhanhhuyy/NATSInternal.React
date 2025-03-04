@@ -17,8 +17,15 @@ export class BrandListModel
     public readonly canCreate: boolean | undefined;
     public readonly createRoute: string = routeGenerator.getBrandCreateRoutePath();
 
-    constructor(requestDto?: RequestDtos.Brand.List) {
+    constructor(
+            responseDto: ResponseDtos.Brand.List,
+            canCreate?: boolean,
+            requestDto?: RequestDtos.Brand.List) {
         super();
+
+        this.pageCount = responseDto.pageCount;
+        this.items = responseDto.items.map(dto => new BrandBasicModel(dto));
+        this.canCreate = canCreate;
         
         if (requestDto) {
             this.page = requestDto.page ?? this.page;
@@ -26,13 +33,10 @@ export class BrandListModel
         }
     }
     
-    public fromResponseDtos(
-            responseDto: ResponseDtos.Brand.List,
-            canCreate?: boolean): BrandListModel {
-        return this.from({
+    public fromListResponseDto(responseDto: ResponseDtos.Brand.List) {
+        return this.from({ 
             pageCount: responseDto.pageCount,
-            items: responseDto.items.map(dto => new BrandBasicModel(dto)),
-            canCreate
+            items: responseDto.items.map(dto => new BrandBasicModel(dto))
         });
     }
 

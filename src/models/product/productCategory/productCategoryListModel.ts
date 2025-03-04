@@ -20,8 +20,15 @@ export class ProductCategoryListModel
     public readonly canCreate: boolean | undefined;
     public readonly createRoute: string = routeGenerator.getProductCategoryCreateRoutePath();
 
-    constructor(requestDto?: RequestDtos.ProductCategory.List) {
+    constructor(
+            responseDto: ResponseDtos.ProductCategory.List,
+            canCreate?: boolean,
+            requestDto?: RequestDtos.ProductCategory.List,) {
         super();
+
+        this.pageCount = responseDto.pageCount;
+        this.items = responseDto.items.map(dto => new ProductCategoryBasicModel(dto));
+        this.canCreate = canCreate;
         
         if (requestDto) {
             this.page = requestDto.page ?? this.page;
@@ -29,13 +36,10 @@ export class ProductCategoryListModel
         }
     }
 
-    public fromResponseDtos(
-            responseDto: ResponseDtos.ProductCategory.List,
-            canCreate?: boolean): ProductCategoryListModel {
+    public fromListResponseDto(responseDto: ResponseDtos.ProductCategory.List) {
         return this.from({ 
             pageCount: responseDto.pageCount,
-            items: responseDto.items.map(dto => new ProductCategoryBasicModel(dto)),
-            canCreate
+            items: responseDto.items.map(dto => new ProductCategoryBasicModel(dto))
         });
     }
 

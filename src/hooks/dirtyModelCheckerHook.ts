@@ -16,11 +16,11 @@ const serializeModel = <TModel extends object, TKey extends keyof TModel>
 
 // Hook.
 export function useDirtyModelChecker<TModel extends object, TKey extends keyof TModel>(
-        originModel: TModel,
+        originalModel: TModel,
         currentModel: TModel | undefined,
         excludedKeys?: TKey[]): boolean {
     // States.
-    const originalModelJson = useRef(serializeModel(originModel));
+    const originalModelJson = useRef(serializeModel(originalModel));
     const isModelDirty = (() => {
         const currentModelJson = currentModel
             ? serializeModel(currentModel, excludedKeys)

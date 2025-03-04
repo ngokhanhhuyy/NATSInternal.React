@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserService } from "@/services/userService";
 import { UserPasswordChangeModel } from "@/models/user/userPasswordChangeModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
 import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useCurrentUserStore } from "@/stores/currentUserStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
 
@@ -26,15 +27,16 @@ const UserPasswordChangeView = () => {
     const routeGeneator = useRouteGenerator();
 
     // Model.
-    const [model, setModel] = useState(() => new UserPasswordChangeModel());
-    const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
-    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model);
-
-    // Effect.
-    useEffect(() => {
-        setOriginalModel(model);
-        setTimeout(onInitialLoadingFinished, 300);
-    }, []);
+    const initialModel = useAsyncModelInitializer({
+        initializer: async () => {
+            await new Promise(resolve => setTimeout(resolve, 300));
+            return new UserPasswordChangeModel();
+        },
+        cacheKey: "userPasswordChange"
+    });
+    const { modelState } = useUpsertViewStates();
+    const [model, setModel] = useState(() => initialModel);
+    const isModelDirty = useDirtyModelChecker(initialModel, model);
 
     // Callbacks.
     const handleSubmissionAsync = async () => {
@@ -50,7 +52,6 @@ const UserPasswordChangeView = () => {
         <UpsertViewContainer
             formId="userCreateForm"
             modelState={modelState}
-            isInitialLoading={isInitialLoading}
             submittingAction={handleSubmissionAsync}
             onSubmissionSucceeded={handleSucceededSubmissionAsync}
             isModelDirty={isModelDirty}
