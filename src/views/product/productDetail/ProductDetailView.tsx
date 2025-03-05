@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import { useViewStates } from "@/hooks/viewStatesHook";
 import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useProductService } from "@/services/productService";
@@ -15,7 +14,7 @@ import MainContainer from "@layouts/MainContainerComponent";
 
 // Child component.
 import ProductDetail from "./ProductDetailComponent";
-import { HasProductList, SupplyList, OrderList, TreatmentList } from "./HasProductListComponent";
+import HasProductList from "./HasProductListComponent";
 
 // Component.
 const ProductDetailView = ({ id }: { id: number }) => {
@@ -28,7 +27,7 @@ const ProductDetailView = ({ id }: { id: number }) => {
     // States.
     const initialModels = useAsyncModelInitializer({
         initializer: async () => {
-            const requestDto = { productId: id, resultPerPage: 5 };
+            const requestDto = { productId: id, resultsPerPage: 5 };
             const [productDetail, supplyList, orderList, treatmentList] = await Promise.all([
                 productService.getDetailAsync(id),
                 supplyService.getListAsync(requestDto),
@@ -54,15 +53,7 @@ const ProductDetailView = ({ id }: { id: number }) => {
                 {/* Product Detail */}
                 <div className="col col-xl-4 col-lg-5 col-md-5 col-sm-12 col-12
                                 mb-md-0 mb-sm-3">
-                    <ProductDetail
-                        id={id}
-                        onInitialLoadingFinished={() => {
-                            setInitialLoadingStates(states => ({
-                                ...states,
-                                productDetail: false
-                            }));
-                        }}
-                    />
+                    <ProductDetail model={initialModels.productDetail} />
                 </div>
 
                 {/* Recent supply, orders and treatments */}
@@ -100,7 +91,7 @@ const ProductDetailView = ({ id }: { id: number }) => {
                         <HasProductList
                             productId={id}
                             resourceType="treatment"
-                            blockColor="success"
+                            blockColor="danger"
                             isInitialRendering={isInitialRendering}
                             initialModel={initialModels.treatmentList}
                             reloadAsync={async (model) => {

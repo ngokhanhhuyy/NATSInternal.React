@@ -747,7 +747,7 @@ const HomeRoutes = () => {
     }, []);
 
     return (
-        <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <ErrorBoundary FallbackComponent={ErrorFallback} key={location.pathname}>
             <Suspense>
                 {view}
             </Suspense>

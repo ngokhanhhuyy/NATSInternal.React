@@ -1,12 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useTransition } from "react";
 import { Link } from "react-router-dom";
-import { useSupplyService } from "@/services/supplyService";
-import { useOrderService } from "@/services/orderService";
-import { useTreatmentService } from "@/services/treatmentService";
 import { useInitialDataStore } from "@/stores/initialDataStore";
-import { SupplyBasicModel } from "@/models/supply/supplyBasicModel";
-import { OrderBasicModel } from "@/models/order/orderBasicModel";
-import { TreatmentBasicModel } from "@/models/treatment/treatmentBasicModel";
 import { useAlertModalStore } from "@/stores/alertModalStore";
 import { ValidationError } from "@/errors";
 import * as styles from "./HasProductListComponent.module.css";
@@ -36,7 +30,9 @@ const HasProductList = <
         (props: HasProductListProps<TList, TBasic, TAuthorization>) => {
     // Dependencies.
     const initialDataStore = useInitialDataStore();
-    const alertModalStore = useAlertModalStore();
+    const getSubmissionErrorConfirmationAsync = useAlertModalStore(store => {
+        return store.getSubmissionErrorConfirmationAsync;
+    });
 
     // Model and states.
     const [model, setModel] = useState<TList>(() => props.initialModel);
@@ -45,23 +41,21 @@ const HasProductList = <
     // Effect.
     useEffect(() => {
         if (!props.isInitialRendering) {
-            startReloadingTransition(reloadAsync);
+            startReloadingTransition(async () => {
+                try {
+                    const reloadedModel = await props.reloadAsync(model);
+                    setModel(reloadedModel);
+                } catch (error) {
+                    if (error instanceof ValidationError) {
+                        await getSubmissionErrorConfirmationAsync();
+                        return;
+                    }
+        
+                    throw error;
+                }
+            });
         }
     }, [model.resultsPerPage]);
-
-    const reloadAsync = async () => {
-        try {
-            const reloadedModel = await props.reloadAsync(model);
-            setModel(reloadedModel);
-        } catch (error) {
-            if (error instanceof ValidationError) {
-                await alertModalStore.getSubmissionErrorConfirmationAsync();
-                return;
-            }
-
-            throw error;
-        }
-    };
 
     // Computed.
     const resourceDisplayName = useMemo<string>(() => {
@@ -92,7 +86,7 @@ const HasProductList = <
                 displayName: option.toString()
             }))}
             value={model.resultsPerPage?.toString() ?? "5"}
-            onValueChanged={resultsPerPage => setModel(model => ({
+            onValueChanged={resultsPerPage => setModel(model => model.from({
                 ...model,
                 resultsPerPage: parseInt(resultsPerPage)
             }))}
@@ -163,67 +157,4 @@ const HasProductList = <
     );
 };
 
-interface Props {
-    productId: number;
-    isInitialLoading: boolean;
-    onInitialLoadingFinished: () => void;
-}
-
-const SupplyList = ({ productId, isInitialLoading, onInitialLoadingFinished }: Props) => {
-    // Dependencies.
-    const service = useSupplyService();
-
-    return (
-        <HasProductList
-            productId={productId}
-            resourceType="supply"
-            blockColor="primary"
-            isInitialLoading={isInitialLoading}
-            onInitialLoadingFinished={onInitialLoadingFinished}
-            onLoadAsync={async (requestDto) => {
-                const responseDto = await service.getListAsync(requestDto);
-                return responseDto.items.map(dto => new SupplyBasicModel(dto));
-            }}
-        />
-    );
-};
-
-const OrderList = ({ productId, isInitialLoading, onInitialLoadingFinished }: Props) => {
-    // Dependencies.
-    const service = useOrderService();
-
-    return (
-        <HasProductList
-            productId={productId}
-            resourceType="order"
-            blockColor="success"
-            isInitialLoading={isInitialLoading}
-            onInitialLoadingFinished={onInitialLoadingFinished}
-            onLoadAsync={async (requestDto) => {
-                const responseDto = await service.getListAsync(requestDto);
-                return responseDto.items.map(dto => new OrderBasicModel(dto));
-            }}
-        />
-    );
-};
-
-const TreatmentList = ({productId, isInitialLoading, onInitialLoadingFinished}: Props) => {
-    // Dependencies.
-    const service = useTreatmentService();
-
-    return (
-        <HasProductList
-            productId={productId}
-            resourceType="treatment"
-            blockColor="danger"
-            isInitialLoading={isInitialLoading}
-            onInitialLoadingFinished={onInitialLoadingFinished}
-            onLoadAsync={async (requestDto) => {
-                const responseDto = await service.getListAsync(requestDto);
-                return responseDto.items.map(dto => new TreatmentBasicModel(dto));
-            }}
-        />
-    );
-};
-
-export { HasProductList, SupplyList, OrderList, TreatmentList };
+export default HasProductList;

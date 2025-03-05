@@ -19,9 +19,10 @@ const ExpenseAndCostGraph = (props: ExpenseAndCostGraphProps) => {
         const costAmount = props.model
             .map(stats => stats.cost)
             .reduce((total, current) => total + current);
-        const totalRevenue = expenseAmount + costAmount;
-        const expensePercentage = Math.round(expenseAmount / totalRevenue * 100);
-        const costExpense = Math.round(costAmount / totalRevenue * 100);
+        const combinedExpensesCosts = expenseAmount + costAmount;
+        const expensePercentage = combinedExpensesCosts
+            && Math.round(expenseAmount / combinedExpensesCosts * 100);
+        const costPercentage = combinedExpensesCosts && 100 - expensePercentage;
         return [
             {
                 type: "expense",
@@ -33,7 +34,7 @@ const ExpenseAndCostGraph = (props: ExpenseAndCostGraphProps) => {
                 type: "cost",
                 displayName: () => "Nhập hàng",
                 amount: costAmount,
-                percentage: costExpense
+                percentage: costPercentage
             },
         ];
     }, [props.model]);

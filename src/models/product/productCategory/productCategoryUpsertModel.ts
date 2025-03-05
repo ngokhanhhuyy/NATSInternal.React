@@ -6,12 +6,14 @@ export class ProductCategoryUpsertModel
     public readonly name: string = "";
     public readonly canDelete: boolean | undefined;
 
-    fromResponseDto(responseDto: ResponseDtos.ProductCategory.Detail) {
-        return this.from({
-            id: responseDto.id,
-            name: responseDto.name,
-            canDelete: responseDto.authorization.canDelete
-        });
+    constructor(responseDto?: ResponseDtos.ProductCategory.Detail) {
+        super();
+
+        if (responseDto) {
+            this.id = responseDto.id;
+            this.name = responseDto.name;
+            this.canDelete = responseDto.authorization.canDelete;
+        }
     }
 
     public toRequestDto(): RequestDtos.ProductCategory.Upsert {

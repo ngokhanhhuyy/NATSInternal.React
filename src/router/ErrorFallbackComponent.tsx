@@ -1,40 +1,56 @@
-import { useEffect, startTransition } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, startTransition } from "react";
+import { Navigate } from "react-router-dom";
+import type { FallbackProps } from "react-error-boundary";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
+import { usePageLoadProgressBarStore } from "@/stores/pageLoadProgressBarStore";
 import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useRouteGenerator } from "./routeGenerator";
 import { AuthorizationError, NotFoundError, OperationError, ValidationError } from "@/errors";
 
-// Props.
-interface ErrorFallbackProps {
-    error: any;
-};
-
-const ErrorFallback = (props: ErrorFallbackProps) => {
+// Component.
+const ErrorFallback = (props: FallbackProps) => {
     // Dependencies.
-    const navigate = useNavigate();
     const alertModalStore = useAlertModalStore();
+    const finishPageLoading = usePageLoadProgressBarStore(store => store.finish);
+    const routeGenerator = useRouteGenerator();
+
+    // States.
+    const [isConfirmed, setConfirmed] = useState<boolean>(() => false);
 
     // Effect.
     useEffect(() => {
-        let alertPromise: Promise<void>;
+        getConfirmation().then(() => setConfirmed(true));
+        finishPageLoading();
+    }, []);
+
+    // Callbacks.
+    const getConfirmation = async (): Promise<void> => {
         if (props.error instanceof NotFoundError) {
-            alertPromise = alertModalStore.getNotFoundConfirmationAsync();
+            await alertModalStore.getNotFoundConfirmationAsync();
         } else if (props.error instanceof ValidationError ||
                 props.error instanceof OperationError) {
-            alertPromise = alertModalStore.getSubmissionErrorConfirmationAsync();
+            await alertModalStore.getSubmissionErrorConfirmationAsync();
         } else if (props.error instanceof AuthorizationError) { 
-            alertPromise = alertModalStore.getUnauthorizationConfirmationAsync();
+            await alertModalStore.getUnauthorizationConfirmationAsync();
         } else {
-            alertPromise = alertModalStore.getUndefinedErrorConfirmationAsync();
+            await alertModalStore.getUndefinedErrorConfirmationAsync();
         }
+    };
 
-        alertPromise.then(() => {
-            startTransition(() => {
-                navigate(-1);
-            });
-        });
-    });
+    if (!isConfirmed) {
+        return null;
+    }
 
-    return null;
+    switch (props.error.constructor) {
+        case NotFoundError:
+        case ValidationError:
+        case OperationError:
+        case AuthorizationError:
+            return <Navigate to={routeGenerator.getHomeRoutePath()} />;
+        default:
+            window.location.reload();
+            return null;
+    }
 };
 
 export default ErrorFallback;

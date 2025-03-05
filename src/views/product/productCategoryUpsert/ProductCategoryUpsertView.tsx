@@ -1,13 +1,13 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProductCategoryService } from "@/services/productCategoryService";
 import { ProductCategoryUpsertModel }
     from "@/models/product/productCategory/productCategoryUpsertModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
-import { useAlertModalStore } from "@/stores/alertModalStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
-import { NotFoundError } from "@/errors";
+import { AuthorizationError } from "@/errors";
 
 // Layout components.
 import UpsertViewContainer from "@layouts/UpsertViewContainerComponent";
@@ -24,49 +24,33 @@ import ValidationMessage from "@/views/form/ValidationMessageComponent";
 const ProductCategoryUpsertView = ({ id }: { id?: number }) => {
     // Dependencies.
     const navigate = useNavigate();
-    const alertModalStore = useAlertModalStore();
     const service = useProductCategoryService();
     const routeGenerator = useRouteGenerator();
 
     // Model and states.
-    const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
-    const [model, setModel] = useState(() => new ProductCategoryUpsertModel());
-    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model);
-
-    // Effect.
-    useEffect(() => {
-        const initialLoadAsync = async () => {
-            try {
-                if (id == null) {
-                    const canCreate = await service.getCreatingPermissionAsync();
-                    if (!canCreate) {
-                        await alertModalStore.getUnauthorizationConfirmationAsync();
-                        await navigate(routeGenerator.getProductListRoutePath());
-                    }
-
-                    setOriginalModel(model);
-                } else {
-                    const responseDto = await service.getDetailAsync(id);
-                    if (!responseDto.authorization.canEdit) {
-                        await alertModalStore.getUnauthorizationConfirmationAsync();
-                        return;
-                    }
-
-                    setModel(model => model.fromResponseDto(responseDto));
-                }
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(routeGenerator.getProductListRoutePath());
-                    return;
+    const { modelState } = useUpsertViewStates();
+    const initialModel = useAsyncModelInitializer({
+        initializer: async () => {
+            if (id == null) {
+                const canCreate = await service.getCreatingPermissionAsync();
+                if (!canCreate) {
+                    throw new AuthorizationError();
                 }
 
-                throw error;
+                return new ProductCategoryUpsertModel();
+            } else {
+                const responseDto = await service.getDetailAsync(id);
+                if (!responseDto.authorization.canEdit) {
+                    throw new AuthorizationError();
+                }
+
+                return new ProductCategoryUpsertModel(responseDto);
             }
-        };
-
-        initialLoadAsync().finally(onInitialLoadingFinished);
-    }, []);
+        },
+        cacheKey: id == null ? "productCategoryCreate" : "productCategoryUpdate"
+    });
+    const [model, setModel] = useState(() => initialModel);
+    const isModelDirty = useDirtyModelChecker(initialModel, model);
 
     // Computed.
     const isForCreating = useMemo<boolean>(() => id == null, [id]);
@@ -92,7 +76,6 @@ const ProductCategoryUpsertView = ({ id }: { id?: number }) => {
     return (
         <UpsertViewContainer
             modelState={modelState}
-            isInitialLoading={isInitialLoading}
             submittingAction={handleSubmissionAsync}
             onSubmissionSucceeded={handleSucceededAsync}
             deletingAction={handleDeletionAsync}

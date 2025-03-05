@@ -1,23 +1,22 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useProductService } from "@/services/productService";
 import { ProductDetailModel } from "@/models/product/productDetailModel";
 import { useAlertModalStore } from "@/stores/alertModalStore";
 import { useAmountUtility } from "@/utilities/amountUtility";
 import { useRouteGenerator } from "@/router/routeGenerator";
-import { OperationError, NotFoundError } from "@/errors";
+import { OperationError } from "@/errors";
 
 // Layout components.
 import MainBlock from "@layouts/MainBlockComponent";
 
 // Props.
 interface Props {
-    id: number;
-    onInitialLoadingFinished: () => void;
+    model: ProductDetailModel;
 }
 
 // Component.
-const ProductDetail = ({ id, onInitialLoadingFinished }: Props) => {
+const ProductDetail = (props: Props) => {
     // Dependencies.
     const navigate = useNavigate();
     const alertModalStore = useAlertModalStore();
@@ -26,7 +25,6 @@ const ProductDetail = ({ id, onInitialLoadingFinished }: Props) => {
     const routeGenerator = useRouteGenerator();
 
     // Model and state.
-    const [model, setModel] = useState<ProductDetailModel>();
     const [isDeleting, setDeleting] = useState<boolean>(false);
     const labelColumnClassName = useMemo(() => {
         return "col col-md-12 col-sm-4 col-12 fw-bold";
@@ -34,34 +32,9 @@ const ProductDetail = ({ id, onInitialLoadingFinished }: Props) => {
     const fieldColumnClassName = useMemo(() => {
         return "col col-md-12 col-sm-8 col-12 text-primary";
     }, []);
-    
-    // Effect.
-    useEffect(() => {
-        const loadAsync = async () => {
-            try {
-                const responseDto = await service.getDetailAsync(id);
-                setModel(new ProductDetailModel(responseDto));
-                onInitialLoadingFinished();
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(routeGenerator.getProductListRoutePath());
-                    return;
-                }
-
-                throw error;
-            }
-        };
-
-        loadAsync();
-    }, []);
 
     // Functions.
     const deleteAsync = useCallback(async (): Promise<void> => {
-        if (!model) {
-            return;
-        }
-
         const shouldDelete = await alertModalStore.getDeletingConfirmationAsync();
         if (!shouldDelete) {
             return;
@@ -70,7 +43,7 @@ const ProductDetail = ({ id, onInitialLoadingFinished }: Props) => {
         setDeleting(true);
         
         try {
-            await service.deleteAsync(model.id);
+            await service.deleteAsync(props.model.id);
             await alertModalStore.getSubmissionSuccessConfirmationAsync();
             await navigate(routeGenerator.getProductListRoutePath());
         } catch (error) {
@@ -83,40 +56,36 @@ const ProductDetail = ({ id, onInitialLoadingFinished }: Props) => {
         } finally {
             setDeleting(false);
         }
-    }, [model]);
-
-    if (!model) {
-        return null;
-    }
+    }, [props.model]);
 
     return (
         <MainBlock title="Chi tiết sản phẩm" closeButton>
             {/* Thumbnail */}
             <div className="row justify-content-center">
                 <div className="col col-md-12 col-sm-8 col-10 p-3">
-                    <img src={model.thumbnailUrl} className="img-thumbnail" />
+                    <img src={props.model.thumbnailUrl} className="img-thumbnail" />
                 </div>
             </div>
 
             {/* Name */}
             <div className="fw-bold fs-5 d-flex justify-content-center text-center">
-                {model.name}
+                {props.model.name}
             </div>
 
             {/* Action buttons */}
             <div className="actions-buttons d-flex justify-content-center
                             align-items-center">
                 {/* Edit button */}
-                {model.authorization.canEdit && (
+                {props.model.authorization.canEdit && (
                     <Link className="btn btn-outline-primary btn-sm me-2"
-                            to={model.updateRoute}>
+                            to={props.model.updateRoute}>
                         <i className="bi bi-pencil-square"></i>
                         <span className="ms-1">Chỉnh sửa</span>
                     </Link>
                 )}
 
                 {/* Delete button */}
-                {model.authorization.canDelete && (
+                {props.model.authorization.canDelete && (
                     <DeleteButton isDeleting={isDeleting} onClick={deleteAsync} />
                 )}
             </div>
@@ -128,7 +97,7 @@ const ProductDetail = ({ id, onInitialLoadingFinished }: Props) => {
                     Đơn vị
                 </div>
                 <div className={fieldColumnClassName}>
-                    <span>{model.unit}</span>
+                    <span>{props.model.unit}</span>
                 </div>
             </div>
 
@@ -139,7 +108,7 @@ const ProductDetail = ({ id, onInitialLoadingFinished }: Props) => {
                 </div>
                 <div className={fieldColumnClassName}>
                     <span>
-                        {amountUtility.getDisplayText(model.defaultPrice)}
+                        {amountUtility.getDisplayText(props.model.defaultPrice)}
                     </span>
                 </div>
             </div>
@@ -151,7 +120,7 @@ const ProductDetail = ({ id, onInitialLoadingFinished }: Props) => {
                 </div>
                 <div className={fieldColumnClassName}>
                     <span>
-                        {model.defaultVatPercentage}%
+                        {props.model.defaultVatPercentage}%
                     </span>
                 </div>
             </div>
@@ -163,7 +132,7 @@ const ProductDetail = ({ id, onInitialLoadingFinished }: Props) => {
                 </div>
                 <div className={fieldColumnClassName}>
                     <span>
-                        {model.stockingQuantity} {model.unit}
+                        {props.model.stockingQuantity} {props.model.unit}
                     </span>
                 </div>
             </div>
@@ -174,54 +143,54 @@ const ProductDetail = ({ id, onInitialLoadingFinished }: Props) => {
                     Được tạo lúc
                 </div>
                 <div className={fieldColumnClassName}>
-                    <span>{model.createdDateTime.dateTime}</span>
+                    <span>{props.model.createdDateTime.dateTime}</span>
                 </div>
             </div>
 
             {/* UpdatedDateTime */}
-            {model.updatedDateTime && (
+            {props.model.updatedDateTime && (
                 <div className="row mt-3">
                     <div className={labelColumnClassName}>
                         Được chỉnh sửa lúc
                     </div>
                     <div className={fieldColumnClassName}>
-                        <span>{model.updatedDateTime.dateTime}</span>
+                        <span>{props.model.updatedDateTime.dateTime}</span>
                     </div>
                 </div>
             )}
 
             {/* Brand */}
-            {model.brand && (
+            {props.model.brand && (
                 <div className="row mt-3">
                     <div className={labelColumnClassName}>
                         Thương hiệu
                     </div>
                     <div className={fieldColumnClassName}>
-                        <span>{model.brand.name}</span>
+                        <span>{props.model.brand.name}</span>
                     </div>
                 </div>
             )}
 
             {/* Category */}
-            {model.category && (
+            {props.model.category && (
                 <div className="row mt-3">
                     <div className={labelColumnClassName}>
                         Phân loại
                     </div>
                     <div className={fieldColumnClassName}>
-                        <span>{model.category.name}</span>
+                        <span>{props.model.category.name}</span>
                     </div>
                 </div>
             )}
 
             {/* Description */}
-            {model.description && (
+            {props.model.description && (
                 <div className="row mt-3">
                     <div className={labelColumnClassName}>
                         Mô tả
                     </div>
                     <div className={fieldColumnClassName}>
-                        <span>{model.description}</span>
+                        <span>{props.model.description}</span>
                     </div>
                 </div>
             )}
