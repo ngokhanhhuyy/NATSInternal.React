@@ -6,9 +6,6 @@ import { ListMonthYearOptionsModel } from "../list/listMonthYearOptionsModel";
 import { ListSortingOptionsModel } from "../list/listSortingOptionsModel";
 import { useRouteGenerator } from "@/router/routeGenerator";
 
-type InitialResponseDto = ResponseDtos.Order.Initial;
-type ListRequestDto = RequestDtos.Order.List;
-
 const routeGenerator = useRouteGenerator();
 
 export class OrderListModel
@@ -32,8 +29,14 @@ export class OrderListModel
     public readonly canCreate: boolean | undefined;
     public readonly createRoute: string = routeGenerator.getOrderCreateRoutePath();
 
-    constructor(initialResponseDto?: InitialResponseDto, requestDto?: ListRequestDto) {
+    constructor(
+            listResponseDto: ResponseDtos.Order.List,
+            initialResponseDto?: ResponseDtos.Order.Initial,
+            requestDto?: RequestDtos.Order.List) {
         super();
+
+        this.pageCount = listResponseDto.pageCount;
+        this.items = listResponseDto.items.map(dto => new OrderBasicModel(dto));
         
         if (initialResponseDto) {
             const sortingOptions = initialResponseDto.listSortingOptions;

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useTransition } from "react";
 import { Link } from "react-router-dom";
 import { useSupplyService } from "@/services/supplyService";
 import { useOrderService } from "@/services/orderService";
@@ -17,75 +17,58 @@ import MainBlock from "@/views/layouts/MainBlockComponent";
 // Form components.
 import SelectInput from "@/views/form/SelectInputComponent";
 
-type BasicModel = SupplyBasicModel | OrderBasicModel | TreatmentBasicModel;
-type RequestDto = { productId: number; resultsPerPage: number; };
-
-interface Model<TBasicModel extends BasicModel> {
-    readonly items: TBasicModel[];
-    readonly resultsPerPage: number;
-    readonly resultsPerPageOptions: number[],
-}
-
-export interface HasProductList<TBasicModel extends BasicModel> {
+export interface HasProductListProps<
+        TList extends IHasProductListModel<TList, TBasic, TAuthorization>,
+        TBasic extends IHasStatsBasicModel<TAuthorization>,
+        TAuthorization extends IHasStatsExistingAuthorizationModel> {
     productId: number;
     resourceType: string;
     blockColor: "primary" | "success" | "danger";
-    isInitialLoading: boolean;
-    onInitialLoadingFinished: () => void;
-    onLoadAsync(requestDto: RequestDto): Promise<TBasicModel[]>;
+    isInitialRendering: boolean;
+    initialModel: TList;
+    reloadAsync(model: TList): Promise<TList>;
 }
 
-const HasProductList = <TBasicModel extends BasicModel>
-        (props: HasProductList<TBasicModel>) => {
+const HasProductList = <
+            TList extends IHasProductListModel<TList, TBasic, TAuthorization>,
+            TBasic extends IHasStatsBasicModel<TAuthorization>,
+            TAuthorization extends IHasStatsExistingAuthorizationModel>
+        (props: HasProductListProps<TList, TBasic, TAuthorization>) => {
     // Dependencies.
     const initialDataStore = useInitialDataStore();
     const alertModalStore = useAlertModalStore();
 
     // Model and states.
-    const [model, setModel] = useState<Model<TBasicModel>>(() => {
-        const requestDto = { resultsPerPage: 5 };
-        return {
-            items: [],
-            resultsPerPage: requestDto.resultsPerPage,
-            resultsPerPageOptions: [ 5, 10, 15, 20 ],
-        };
-    });
-    const [isReloading, setReloading] = useState<boolean>(false);
+    const [model, setModel] = useState<TList>(() => props.initialModel);
+    const [isReloading, startReloadingTransition] = useTransition();
 
     // Effect.
     useEffect(() => {
-        const loadAsync = async () => {
-            if (!props.isInitialLoading) {
-                setReloading(true);
-            }
-
-            try {
-                const requestDto = {
-                    productId: props.productId,
-                    resultsPerPage: model.resultsPerPage
-                };
-                const basicModels = await props.onLoadAsync(requestDto);
-                setModel(model => ({ ...model, items: basicModels }));
-            } catch (error) {
-                if (error instanceof ValidationError) {
-                    await alertModalStore.getSubmissionErrorConfirmationAsync();
-                    return;
-                }
-
-                throw error;
-            } finally {
-                if (props.isInitialLoading) {
-                    props.onInitialLoadingFinished();
-                }
-            }
-        };
-
-        loadAsync().then(() => setReloading(false));
+        if (!props.isInitialRendering) {
+            startReloadingTransition(reloadAsync);
+        }
     }, [model.resultsPerPage]);
 
+    const reloadAsync = async () => {
+        try {
+            const reloadedModel = await props.reloadAsync(model);
+            setModel(reloadedModel);
+        } catch (error) {
+            if (error instanceof ValidationError) {
+                await alertModalStore.getSubmissionErrorConfirmationAsync();
+                return;
+            }
+
+            throw error;
+        }
+    };
+
+    // Computed.
     const resourceDisplayName = useMemo<string>(() => {
         return initialDataStore.getDisplayName(props.resourceType);
     }, [props.resourceType]);
+
+    const resultsPerPageOptions = useMemo<number[]>(() => [5, 10, 15, 20], []);
 
     const getIdClass = useCallback((isLocked: boolean): string => {
         const classNames = [ "fw-bold px-2 py-1 rounded" ];
@@ -104,11 +87,11 @@ const HasProductList = <TBasicModel extends BasicModel>
             className={`form-select form-select-sm ${props.blockColor}`}
             style={{ width: "fit-content" }}
             disabled={isReloading}
-            options={model.resultsPerPageOptions.map(option => ({
+            options={resultsPerPageOptions.map(option => ({
                 value: option.toString(),
                 displayName: option.toString()
             }))}
-            value={model.resultsPerPage.toString()}
+            value={model.resultsPerPage?.toString() ?? "5"}
             onValueChanged={resultsPerPage => setModel(model => ({
                 ...model,
                 resultsPerPage: parseInt(resultsPerPage)
@@ -186,7 +169,7 @@ interface Props {
     onInitialLoadingFinished: () => void;
 }
 
-const SupplyList = ({productId, isInitialLoading, onInitialLoadingFinished}: Props) => {
+const SupplyList = ({ productId, isInitialLoading, onInitialLoadingFinished }: Props) => {
     // Dependencies.
     const service = useSupplyService();
 
@@ -205,7 +188,7 @@ const SupplyList = ({productId, isInitialLoading, onInitialLoadingFinished}: Pro
     );
 };
 
-const OrderList = ({productId, isInitialLoading, onInitialLoadingFinished}: Props) => {
+const OrderList = ({ productId, isInitialLoading, onInitialLoadingFinished }: Props) => {
     // Dependencies.
     const service = useOrderService();
 
@@ -243,4 +226,4 @@ const TreatmentList = ({productId, isInitialLoading, onInitialLoadingFinished}: 
     );
 };
 
-export { SupplyList, OrderList, TreatmentList };
+export { HasProductList, SupplyList, OrderList, TreatmentList };

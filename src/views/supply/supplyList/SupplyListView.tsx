@@ -38,7 +38,7 @@ const SupplyListView = () => {
                     const canCreate = initialData.supply.creatingPermission;
 
                     setModel(model => {
-                        return model.fromResponseDtos(list, monthYearOptions, canCreate);
+                        return model.fromListResponseDto(list, monthYearOptions, canCreate);
                     });
                 } else {
                     setReloading(true);

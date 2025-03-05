@@ -17,7 +17,14 @@ interface FiltersProps {
 
 const Filters = (props: FiltersProps) => {
     // Computed.
-    const computeRowClassName = () => props.isReloading ? "opacity-50 pe-none" : "";
+    const computeRowClassName = () => {
+        const classNames = ["transition-reloading"];
+        if (props.isReloading) {
+            classNames.push("opacity-50 pe-none");
+        }
+
+        return classNames.join(" ");
+    };
 
     // Header.
     const computeHeader = () => {

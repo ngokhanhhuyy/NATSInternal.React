@@ -29,14 +29,22 @@ export class SupplyListModel
     public readonly createRoute = routeGenerator.getSupplyCreateRoutePath();
 
     constructor(
-            sortingOptions?: ResponseDtos.List.SortingOptions,
+            listResponseDto: ResponseDtos.Supply.List,
+            initialResponseDto?: ResponseDtos.Supply.Initial,
             requestDto?: RequestDtos.Supply.List) {
         super();
 
-        if (sortingOptions) {
+        this.pageCount = listResponseDto.pageCount;
+        this.items = listResponseDto.items.map(dto => new SupplyBasicModel(dto));
+        
+        if (initialResponseDto) {
+            const sortingOptions = initialResponseDto.listSortingOptions;
+            const monthyearOptions = initialResponseDto.listMonthYearOptions;
             this.sortingOptions = new ListSortingOptionsModel(sortingOptions);
             this.sortingByField = this.sortingOptions.defaultFieldName;
             this.sortingByAscending = this.sortingOptions.defaultAscending;
+            this.monthYearOptions = new ListMonthYearOptionsModel(monthyearOptions);
+            this.canCreate = initialResponseDto.creatingPermission;
         }
 
         if (requestDto) {
@@ -55,18 +63,6 @@ export class SupplyListModel
                 }
             }
         }
-    }
-    
-    public fromResponseDtos(
-            list: ResponseDtos.Supply.List,
-            monthYearOptions: ResponseDtos.List.MonthYearOptions | null,
-            canCreate: boolean): SupplyListModel {
-        return this.fromListResponseDto(list).from({
-            monthYearOptions: monthYearOptions
-                ? new ListMonthYearOptionsModel(monthYearOptions)
-                : undefined,
-            canCreate: canCreate
-        });
     }
 
     public fromListResponseDto(list: ResponseDtos.Supply.List) {

@@ -33,8 +33,14 @@ export class TreatmentListModel
     public readonly canCreate: boolean | undefined;
     public readonly createRoute: string = routeGenerator.getTreatmentCreateRoutePath();
 
-    constructor(initialResponseDto?: InitialResponseDto, requestDto?: ListRequestDto) {
+    constructor(
+            listResponseDto: ResponseDtos.Treatment.List,
+            initialResponseDto?: InitialResponseDto,
+            requestDto?: ListRequestDto) {
         super();
+        
+        this.pageCount = listResponseDto.pageCount;
+        this.items = listResponseDto.items.map(dto => new TreatmentBasicModel(dto));
         
         if (initialResponseDto) {
             const sortingOptions = initialResponseDto.listSortingOptions;

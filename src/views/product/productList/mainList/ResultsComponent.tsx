@@ -18,25 +18,33 @@ interface ResultsProps {
 
 const Results = ({ model, isReloading }: ResultsProps) => {
     // Computed.
-    const computeClassName = () => isReloading ? "opacity-50 pe-none" : "";
+    const computeUlClassName = (): string => {
+        const classNames = ["list-group list-group-flush transition-reloading"];
+        if (isReloading) {
+            classNames.push("opacity-50 pe-none");
+        }
+
+        return classNames.join(" ");
+    };
 
     return (
-        <ul className={`list-group list-group-flush border rounded-3 bg-white overflow-hidden
-                        ${computeClassName()}`}>
-            {model.length > 0
-                ? model.map(item => <Item model={item} key={item.id} />)
-                : (
-                    <li className="list-group-item d-flex flex-row justify-content-center
-                            align-items-center opacity-50 p-3">
-                        Không tìm thấy sản phẩm
-                    </li>
-                )}
+        <div className="border rounded-3 bg-white overflow-hidden">
+            <ul className={computeUlClassName()}>
+                {model.length > 0
+                    ? model.map(item => <Item model={item} key={item.id} />)
+                    : (
+                        <li className="list-group-item d-flex flex-row justify-content-center
+                                        align-items-center opacity-50 p-3">
+                            Không tìm thấy sản phẩm
+                        </li>
+                    )}
 
-        </ul>
+            </ul>
+        </div>
     );
 };
 
-const Item = ({model}: { model: ProductBasicModel }) => {
+const Item = ({ model }: { model: ProductBasicModel }) => {
     // Dependencies.
     const navigate = useNavigate();
     const photoUtility = useMemo(usePhotoUtility, []);
@@ -48,7 +56,7 @@ const Item = ({model}: { model: ProductBasicModel }) => {
     const unit = model?.unit.toLowerCase() ?? "";
 
     return (
-        <li className="list-group-item d-flex flex-row justify-content-start
+        <li className="list-group-item bg-transparent d-flex flex-row justify-content-start
                         align-items-center px-3 py-2">
             {/* Thumbnail */}
             <img className={`img-thumbnail ${styles["thumbnail"]}`}
