@@ -1,14 +1,13 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { Link } from "react-router-dom";
 import { useExpenseService } from "@/services/expenseService";
 import { ExpenseCategory } from "@/services/dtos/enums";
 import { ExpenseListModel } from "@/models/expense/expenseListModel";
 import type { ExpenseBasicModel } from "@/models/expense/expenseBasicModel";
 import { useViewStates } from "@/hooks/viewStatesHook";
-import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useInitialDataStore } from "@/stores/initialDataStore";
 import { useAmountUtility } from "@/utilities/amountUtility";
-import { ValidationError } from "@/errors";
 
 // Layout components.
 import MainContainer from "@/views/layouts/MainContainerComponent";
@@ -21,47 +20,33 @@ import Results from "@/views/shared/hasStatsList/HasStatsListResultsComponent";
 // Component.
 const ExpenseListView = () => {
     // Dependencies.
-    const alertModalStore = useAlertModalStore();
-    const initialData = useInitialDataStore(store => store.data);
+    const expenseInitialData = useInitialDataStore(store => store.data.expense);
     const service = useExpenseService();
 
     // Model and states.
-    const { isInitialLoading, onInitialLoadingFinished } = useViewStates();
-    const [model, setModel] = useState(() => new ExpenseListModel(initialData.expense));
-    const [isReloading, setReloading] = useState<boolean>(() => false);
+    const { isInitialRendering } = useViewStates();
+    const initialModel = useAsyncModelInitializer({
+        initializer: async () => {
+            const responseDto = await service.getListAsync();
+            return new ExpenseListModel(responseDto, expenseInitialData);
+        },
+        cacheKey: "expenseList"
+    });
+    const [model, setModel] = useState(() => initialModel);
+    const [isReloading, setReloadingTransition] = useTransition();
 
     // Effect.
     useEffect(() => {
-        const loadAsync = async () => {
-            try {
-                if (!isInitialLoading) { 
-                    setReloading(true);
-                }
-                
+        if (!isInitialRendering) {
+            setReloadingTransition(async () => {
                 const responseDto = await service.getListAsync(model.toRequestDto());
                 setModel(model => model.fromListResponseDto(responseDto));
-                document.getElementById("content")?.scrollTo({ top: 0, behavior: "smooth" });
-            } catch (error) {
-                if (error instanceof ValidationError) {
-                    await alertModalStore.getSubmissionErrorConfirmationAsync();
-                    return;
-                }
-
-                throw error;
-            }
-        };
-
-        loadAsync().finally(() => {
-            if (isInitialLoading) {
-                onInitialLoadingFinished();
-            }
-
-            setReloading(false);
-        });
+            });
+        }
     }, [model.page, model.sortingByAscending, model.sortingByField, model.monthYear]);
 
     return (
-        <MainContainer isInitialLoading={isInitialLoading}>
+        <MainContainer>
             <div className="row g-3 justify-content-center">
                 {/* Filter */}
                 <div className="col col-12">
@@ -69,7 +54,7 @@ const ExpenseListView = () => {
                         resourceType="expense"
                         isReloading={isReloading}
                         model={model}
-                        onChanged={(changedData) => {
+                        onModelChanged={(changedData) => {
                             setModel(model => model.from(changedData));
                         }}
                     />
@@ -103,7 +88,7 @@ const ExpenseListView = () => {
 
 const Item = ({ model }: { model: ExpenseBasicModel }) => {
     // Dependency.
-    const amountUtility = useMemo(useAmountUtility, []);
+    const amountUtility = useAmountUtility();
 
     // Computed.
     const computeIdClassName = (): string => {

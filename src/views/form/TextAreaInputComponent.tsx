@@ -13,7 +13,6 @@ function TextAreaInputComponent(props: TextAreaInputProps) {
     // Dependencies.
     const formContext = useContext(FormContext);
     const modelState = formContext?.modelState;
-    const isInitialLoading = formContext?.isInitialLoading ?? false;
 
     // Memo.
     const computeClassName = () => {
@@ -26,13 +25,17 @@ function TextAreaInputComponent(props: TextAreaInputProps) {
     };
 
     return (
-        <textarea  {...rest} className={computeClassName()} name={name}
-                style={{ minHeight: "150px" }}
-                placeholder={isInitialLoading ? "" : props.placeholder}
-                value={isInitialLoading ? "" : value}
-                onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
-                    onValueChanged?.(event?.target.value);
-                }}/>
+        <textarea 
+            {...rest}
+            className={computeClassName()}
+            name={name}
+            style={{ minHeight: "150px" }}
+            placeholder={props.placeholder}
+            value={value}
+            onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
+                onValueChanged?.(event?.target.value);
+            }}
+        />
     );
 }
 

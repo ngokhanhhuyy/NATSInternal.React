@@ -1,12 +1,11 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { ExpenseCategory } from "@/services/dtos/enums";
 import { ExpenseDetailModel } from "@/models/expense/expenseDetailModel";
 import { useExpenseService } from "@/services/expenseService";
 import { useViewStates } from "@/hooks/viewStatesHook";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useAmountUtility } from "@/utilities/amountUtility";
-import { useAlertModalStore } from "@/stores/alertModalStore";
-import { NotFoundError } from "@/errors";
 
 // Layout components.
 import MainContainer from "@layouts/MainContainerComponent";
@@ -18,38 +17,18 @@ import ExpenseUpdateHistoryList from "./ExpenseUpdateHistoryListComponent";
 // Component.
 const ExpenseDetailView = ({ id }: { id: number }) => {
     // Dependencies.
-    const getNotFoundConfirmationAsync = useAlertModalStore(store => {
-        return store.getNotFoundConfirmationAsync;
-    });
     const service = useExpenseService();
     const amountUtility = useMemo(useAmountUtility, []);
 
     // Model and states.
-    const { isInitialLoading, onInitialLoadingFinished } = useViewStates();
-    const [model, setModel] = useState<ExpenseDetailModel>();
-
-    // Effect.
-    useEffect(() => {
-        const loadAsync = async () => {
-            try {
-                const responseDto = await service.getDetailAsync(id);
-                setModel(new ExpenseDetailModel(responseDto));
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await getNotFoundConfirmationAsync();
-                    return;
-                }
-
-                throw error;
-            }
-        };
-
-        loadAsync().finally(() => onInitialLoadingFinished());
-    }, []);
-
-    if (!model) {
-        return null;
-    }
+    useViewStates();
+    const model = useAsyncModelInitializer({
+        initializer: async () => {
+            const responseDto = await service.getDetailAsync(id);
+            return new ExpenseDetailModel(responseDto);
+        },
+        cacheKey: "expenseDetail"
+    });
 
     // Computed.
     const labelColumnClassName = "col col-12";
@@ -79,7 +58,7 @@ const ExpenseDetailView = ({ id }: { id: number }) => {
     };
 
     return (
-        <MainContainer isInitialLoading={isInitialLoading}>
+        <MainContainer>
             <div className="row g-3 justify-content-center">
                 {/* ResourceAccess */}
                 {/* <div className="col col-12">

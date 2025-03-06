@@ -1,10 +1,8 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { SupplyDetailModel } from "@/models/supply/supplyDetailModel";
 import { useSupplyService } from "@/services/supplyService";
 import { useViewStates } from "@/hooks/viewStatesHook";
-import { useAlertModalStore } from "@/stores/alertModalStore";
-import { NotFoundError } from "@/errors";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 
 // Layout components.
 import MainContainer from "@/views/layouts/MainContainerComponent";
@@ -17,40 +15,20 @@ import SupplyUpdateHistoryList from "./SupplyUpdateHistoryListComponent";
 // Component.
 const SupplyDetailView = ({ id }: { id: number }) => {
     // Dependencies.
-    const navigate = useNavigate();
-    const alertModalStore = useAlertModalStore();
     const service = useSupplyService();
     
     // Model and states.
-    const { isInitialLoading, onInitialLoadingFinished } = useViewStates();
-    const [model, setModel] = useState<SupplyDetailModel>();
-    
-    // Effect.
-    useEffect(() => {
-        const loadAsync = async () => {
-            try {
-                const responseDto = await service.getDetailAsync(id);
-                setModel(new SupplyDetailModel(responseDto));
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(-1);
-                    return;
-                }
-
-                throw error;
-            }
-        };
-
-        loadAsync().finally(() => onInitialLoadingFinished());
-    }, []);
-
-    if (!model) {
-        return null;
-    }
+    useViewStates();
+    const model = useAsyncModelInitializer({
+        initializer: async () => {
+            const responseDto = await service.getDetailAsync(id);
+            return new SupplyDetailModel(responseDto);
+        },
+        cacheKey: "supplyDetail"
+    });
 
     return (
-        <MainContainer isInitialLoading={isInitialLoading}>
+        <MainContainer>
             <div className="row g-3 justify-content-center">
                 {/* Supply detail */}
                 <div className="col col-xl-6 col-12">

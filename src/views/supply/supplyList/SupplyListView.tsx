@@ -1,9 +1,9 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { SupplyListModel } from "@/models/supply/supplyListModel";
 import { useSupplyService } from "@/services/supplyService";
 import { useViewStates } from "@/hooks/viewStatesHook";
-import { useAlertModalStore } from "@/stores/alertModalStore";
-import { ValidationError } from "@/errors";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
+import { useInitialDataStore } from "@/stores/initialDataStore";
 
 // Layout components.
 import MainContainer from "@/views/layouts/MainContainerComponent";
@@ -18,57 +18,33 @@ import Results from "../supplyList/ResultsComponent";
 // Component.
 const SupplyListView = () => {
     // Dependencies.
-    const alertModalStore = useAlertModalStore();
     const service = useSupplyService();
+    const supplyInitialData = useInitialDataStore(store => store.data.supply);
 
     // Model and states.
-    const { isInitialLoading, onInitialLoadingFinished, initialData } = useViewStates();
-    const [isReloading, setReloading] = useState<boolean>(false);
-    const [model, setModel] = useState(() => {
-        return new SupplyListModel(initialData.supply.listSortingOptions);
+    const { isInitialRendering } = useViewStates();
+    const initialModel = useAsyncModelInitializer({
+        initializer: async () => {
+            const responseDto = await service.getListAsync();
+            return new SupplyListModel(responseDto, supplyInitialData);
+        },
+        cacheKey: "supplyList"
     });
+    const [model, setModel] = useState(() => initialModel);
+    const [isReloading, startReloadingTransition] = useTransition();
 
     // Effect.
     useEffect(() => {
-        const loadAsync = async () => {
-            try {
-                if (isInitialLoading) {
-                    const list = await service.getListAsync(model.toRequestDto());
-                    const monthYearOptions = initialData.supply.listMonthYearOptions;
-                    const canCreate = initialData.supply.creatingPermission;
-
-                    setModel(model => {
-                        return model.fromListResponseDto(list, monthYearOptions, canCreate);
-                    });
-                } else {
-                    setReloading(true);
-                    const responseDto = await service.getListAsync(model.toRequestDto());
-                    setModel(model => model.fromListResponseDto(responseDto));
-                }
-
-                document.getElementById("content")?.scrollTo({ top: 0, behavior: "smooth" });
-            } catch (error) {
-                if (error instanceof ValidationError) {
-                    await alertModalStore.getSubmissionErrorConfirmationAsync();
-                    return;
-                }
-
-                throw error;
-            }
-        };
-
-        loadAsync().finally(() => {
-            if (isInitialLoading) {
-                onInitialLoadingFinished();
-            }
-
-            setReloading(false);
-        });
-
+        if (!isInitialRendering) {
+            startReloadingTransition(async () => {
+                const responseDto = await service.getListAsync(model.toRequestDto());
+                setModel(model => model.fromListResponseDto(responseDto));
+            });
+        }
     }, [model.page, model.sortingByAscending, model.sortingByField, model.monthYear]);
 
     return (
-        <MainContainer isInitialLoading={isInitialLoading}>
+        <MainContainer>
             <div className="row g-3 p-0 justify-content-center">
                 {/* Filter */}
                 <div className="col col-12">
@@ -76,7 +52,7 @@ const SupplyListView = () => {
                         resourceType="supply"
                         isReloading={isReloading}
                         model={model}
-                        onChanged={(changedData) => {
+                        onModelChanged={(changedData) => {
                             setModel(model => model.from(changedData));
                         }}
                     />

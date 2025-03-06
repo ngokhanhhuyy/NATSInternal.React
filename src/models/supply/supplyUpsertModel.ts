@@ -19,44 +19,23 @@ export class SupplyUpsertModel
     public canSetStatsDateTime: boolean = false;
     public canDelete: boolean = false;
 
-    public fromDetailResponseDto(responseDto: ResponseDtos.Supply.Detail): SupplyUpsertModel {
-        let items = this.items;
-        if (responseDto.items) {
-            items = [
-                ...items,
-                ...responseDto.items.map(dto => new SupplyUpsertItemModel(dto))
-            ];
+    constructor(canSetStatsDateTime: boolean);
+    constructor(responseDto: ResponseDtos.Supply.Detail);
+    constructor(arg: boolean | ResponseDtos.Supply.Detail) {
+        super();
+
+        if (typeof arg === "boolean") {
+            this.canSetStatsDateTime = arg;
+        } else {
+            this.id = arg.id;
+            this.statsDateTime = this.statsDateTime.fromDateTimeResponseDto(arg.statsDateTime);
+            this.shipmentFee = arg.shipmentFee;
+            this.note = arg.note ?? "";
+            this.items = arg.items.map(dto => new SupplyUpsertItemModel(dto));
+            this.photos = arg.photos?.map(dto => new SupplyUpsertPhotoModel(dto)) ?? [];
+            this.canSetStatsDateTime = arg.authorization.canSetStatsDateTime;
+            this.canDelete = arg.authorization.canDelete;
         }
-
-        let photos = this.photos;
-        if (responseDto.photos) {
-            photos = [
-                ...photos,
-                ...responseDto.photos.map(dto => new SupplyUpsertPhotoModel(dto))
-            ];
-        }
-
-        return this.from({
-            id: responseDto.id,
-            statsDateTime: this.statsDateTime
-                .fromDateTimeResponseDto(responseDto.statsDateTime),
-            shipmentFee: responseDto.shipmentFee,
-            note: responseDto.note ?? "",
-            items,
-            photos,
-            canSetStatsDateTime: responseDto.authorization.canSetStatsDateTime,
-            canDelete: responseDto.authorization.canDelete
-        });
-    }
-
-    public fromCreatingAuthorizationResponseDto(
-            authorization: ResponseDtos.Supply.CreatingAuthorization | null):
-                SupplyUpsertModel {
-        return this.from({
-            statsDateTime: this.statsDateTime.from({ isForCreating: true }),
-            canSetStatsDateTime: authorization?.canSetStatsDateTime ?? false,
-            canDelete: false
-        });
     }
 
     public toRequestDto(): RequestDtos.Supply.Upsert {

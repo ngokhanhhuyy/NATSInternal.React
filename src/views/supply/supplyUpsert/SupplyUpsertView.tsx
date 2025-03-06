@@ -1,13 +1,18 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSupplyService } from "@/services/supplyService";
+import { useProductService } from "@/services/productService";
+import { useBrandService } from "@/services/brandService";
+import { useProductCategoryService } from "@/services/productCategoryService";
 import { SupplyUpsertModel } from "@/models/supply/supplyUpsertModel";
+import { ProductListModel } from "@/models/product/productListModel";
 import { SupplyUpsertItemModel } from "@/models/supply/supplyItem/supplyUpsertItemModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
-import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useInitialDataStore } from "@/stores/initialDataStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
-import { NotFoundError } from "@/errors";
+import { AuthorizationError } from "@/errors";
 
 // Form components.
 import Label from "@/views/form/LabelComponent";
@@ -23,7 +28,7 @@ import UpsertViewContainer from "@/views/layouts/UpsertViewContainerComponent";
 import MainBlock from "@/views/layouts/MainBlockComponent";
 
 // Child components.
-import ProductPicker
+import ProductPicker, { requestDtoForInitialModel as requestDtoForProductList }
     from "@/views/shared/hasProduct/upsert/productPicker/ProductPickerComponent";
 import SupplyPickedItemList from "./SupplyPickedItemListComponent";
 import SupplyItemInputModal from "./itemInputModal/SupplyItemInputModalComponent";
@@ -36,68 +41,85 @@ type ModalPromiseResolve = (changedData: ChangedData | PromiseLike<ChangedData>)
 const SupplyUpsertView = ({ id }: { id?: number }) => {
     // Depdencies.
     const navigate = useNavigate();
-    const alertModalStore = useAlertModalStore();
-    const service = useSupplyService();
+    const productListInitialData = useInitialDataStore(store => store.data.product);
+    const supplyService = useSupplyService();
+    const productService = useProductService();
+    const brandService = useBrandService();
+    const productCategoryService = useProductCategoryService();
     const routeGenerator = useRouteGenerator();
 
     // Model and states.
-    const {isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
-    const [initialLoadingState, setInitialLoadingState] = useState(() => ({
-        supplyForm: true,
-        productPicker: true
-    }));
-    const [model, setModel] = useState(() => new SupplyUpsertModel());
+    const { isInitialRendering, modelState } = useUpsertViewStates();
+    const initialModels = useAsyncModelInitializer({
+        initializer: async () => {
+            const productListPromise = productService.getListAsync(requestDtoForProductList);
+            const brandOptionsPromise = brandService.getAllAsync();
+            const categoryOptionsPromise = productCategoryService.getAllAsync();
+
+            if (id == null) {
+                const [
+                    creatingAuthorization,
+                    productList,
+                    brandOptions,
+                    categoryOptions
+                ] = await Promise.all([
+                    supplyService.getCreatingAuthorizationAsync(),
+                    productListPromise,
+                    brandOptionsPromise,
+                    categoryOptionsPromise
+                ]);
+
+                const canSetStatsDateTime = creatingAuthorization?.canSetStatsDateTime;
+                if (!canSetStatsDateTime) {
+                    throw new AuthorizationError();
+                }
+
+                return {
+                    supplyUpsert: new SupplyUpsertModel(canSetStatsDateTime),
+                    productList: new ProductListModel(
+                        productList,
+                        brandOptions,
+                        categoryOptions,
+                        productListInitialData,
+                        requestDtoForProductList)
+                };
+            } else {
+                const [
+                    supplyDetail,
+                    productList,
+                    brandOptions,
+                    categoryOptions
+                ] = await Promise.all([
+                    supplyService.getDetailAsync(id),
+                    productListPromise,
+                    brandOptionsPromise,
+                    categoryOptionsPromise
+                ]);
+
+                if (!supplyDetail.authorization.canEdit) {
+                    throw new AuthorizationError();
+                }
+
+                return {
+                    supplyUpsert: new SupplyUpsertModel(supplyDetail),
+                    productList: new ProductListModel(
+                        productList,
+                        brandOptions,
+                        categoryOptions,
+                        productListInitialData,
+                        requestDtoForProductList)
+                };
+            }
+        },
+        cacheKey: id == null ? "supplyCreate" : "supplyUpdate"
+    });
+    const [model, setModel] = useState(() => initialModels?.supplyUpsert);
     const [modalModel, setModalModel] = useState<SupplyUpsertItemModel | null>(() => null);
     const modalPromiseResolve = useRef<ModalPromiseResolve | null>(null);
-    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model, ["updatedReason"]);
-
-    // Effect.
-    useEffect(() => {
-        const initialLoadAsync = async () => {
-            try {
-                if (id == null) {
-                    const authorization = await service.getCreatingAuthorizationAsync();
-                    if (!authorization) {
-                        await navigate(routeGenerator.getSupplyListRoutePath());
-                        return;
-                    }
-
-                    setModel(model => {
-                        const loadedModel = model
-                            .fromCreatingAuthorizationResponseDto(authorization);
-                        setOriginalModel(loadedModel);
-                        return loadedModel;
-                    });
-                } else {
-                    const detailResponseDto = await service.getDetailAsync(id);
-                    setModel(model => {
-                        const loadedModel = model.fromDetailResponseDto(detailResponseDto);
-                        setOriginalModel(loadedModel);
-                        return loadedModel;
-                    });
-                }
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await alertModalStore.getSubmissionErrorConfirmationAsync();
-                    await navigate(routeGenerator.getSupplyListRoutePath());
-                    return;
-                }
-                
-                throw error;
-            }
-        };
-
-        initialLoadAsync().finally(() => {
-            setInitialLoadingState(state => ({ ...state, supplyForm: false }));
-        });
-    }, []);
-
-    useEffect(() => {
-        const { supplyForm, productPicker } = initialLoadingState;
-        if (!supplyForm && !productPicker) {
-            onInitialLoadingFinished();
-        }
-    }, [initialLoadingState]);
+    const isModelDirty = useDirtyModelChecker(
+        initialModels.supplyUpsert,
+        model,
+        ["updatedReason"]);
 
     // Callbacks.
     const openItemModalAsync = async (item: SupplyUpsertItemModel) => {
@@ -109,9 +131,9 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
 
     const handleSubmissionAsync = async (): Promise<number> => {
         if (id == null) {
-            return await service.createAsync(model.toRequestDto());
+            return await supplyService.createAsync(model.toRequestDto());
         } else {
-            await service.updateAsync(model.id, model.toRequestDto());
+            await supplyService.updateAsync(model.id, model.toRequestDto());
             return model.id;
         }
     };
@@ -121,7 +143,7 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
     };
 
     const handleDeletionAsync = async () => {
-        await service.deleteAsync(model.id);
+        await supplyService.deleteAsync(model.id);
     };
 
     const handleSucceededDeletionAsync = async () => {
@@ -131,7 +153,6 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
     return (
         <UpsertViewContainer
             modelState={modelState}
-            isInitialLoading={isInitialLoading}
             submittingAction={handleSubmissionAsync}
             onSubmissionSucceeded={handleSucceededSubmissionAsync}
             deletingAction={handleDeletionAsync}
@@ -153,7 +174,6 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
                                     <Label text="Ngày giờ nhập hàng" required />
                                     <StatsDateTimeInput
                                         name="suppliedDateTime"
-                                        disabled={initialLoadingState.supplyForm}
                                         value={model.statsDateTime}
                                         onValueChanged={statsDateTime => {
                                             setModel(m => m.from({ statsDateTime }));
@@ -169,7 +189,6 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
                                 <MoneyInput
                                     name="shipmentFee"
                                     suffix=" vnđ"
-                                    disabled={initialLoadingState.supplyForm}
                                     value={model.shipmentFee}
                                     onValueChanged={shipmentFee => {
                                         setModel(m => m.from({ shipmentFee }));
@@ -183,7 +202,6 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
                                 <Label text="Ghi chú" />
                                 <TextAreaInput
                                     name="note"
-                                    disabled={initialLoadingState.supplyForm}
                                     value={model.note}
                                     onValueChanged={note => {
                                         setModel(m => m.from({ note }));
@@ -199,7 +217,6 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
                                     <Label text="Lý do chỉnh sửa" required />
                                     <TextAreaInput
                                         name="updatedReason"
-                                        disabled={initialLoadingState.supplyForm}
                                         placeholder="Lý do chỉnh sửa ..."
                                         value={model.updatedReason}
                                         onValueChanged={updatedReason => {
@@ -218,13 +235,8 @@ const SupplyUpsertView = ({ id }: { id?: number }) => {
                 {/* Product picker */}
                 <div className="col col-lg-6 col-12">
                     <ProductPicker
-                        isInitialLoading={initialLoadingState.productPicker}
-                        onInitialLoadingFinished={() => {
-                            setInitialLoadingState(state => ({
-                                ...state,
-                                productPicker: false
-                            }));
-                        }}
+                        isInitialRendering={isInitialRendering}
+                        initialModel={initialModels.productList}
                         pickedItems={model.items}
                         onPicked={async (product) => {
                             const newItem = new SupplyUpsertItemModel(product);

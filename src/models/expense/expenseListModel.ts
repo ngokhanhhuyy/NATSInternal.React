@@ -6,9 +6,6 @@ import { ListMonthYearOptionsModel } from "../list/listMonthYearOptionsModel";
 import { ListSortingOptionsModel } from "../list/listSortingOptionsModel";
 import { useRouteGenerator } from "@/router/routeGenerator";
 
-type InitialResponseDto = ResponseDtos.Expense.Initial;
-type ListRequestDto = RequestDtos.Expense.List;
-
 const routeGenerator = useRouteGenerator();
 
 export class ExpenseListModel
@@ -30,9 +27,15 @@ export class ExpenseListModel
     public readonly canCreate: boolean | undefined;
     public readonly createRoute: string = routeGenerator.getExpenseCreateRoutePath();
 
-    constructor(initialResponseDto?: InitialResponseDto, requestDto?: ListRequestDto) {
+    constructor(
+            listResponseDto: ResponseDtos.Expense.List,
+            initialResponseDto?: ResponseDtos.Expense.Initial,
+            requestDto?: RequestDtos.Expense.List) {
         super();
         
+        this.pageCount = listResponseDto.pageCount;
+        this.items = listResponseDto.items.map(dto => new ExpenseBasicModel(dto));
+
         if (initialResponseDto) {
             const sortingOptions = initialResponseDto.listSortingOptions;
             const monthyearOptions = initialResponseDto.listMonthYearOptions;

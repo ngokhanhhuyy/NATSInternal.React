@@ -1,7 +1,5 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useRef, useMemo, useEffect, useTransition } from "react";
 import { useProductService } from "@/services/productService";
-import { useBrandService } from "@/services/brandService";
-import { useProductCategoryService } from "@/services/productCategoryService";
 import { ProductListModel } from "@/models/product/productListModel";
 import { ProductBasicModel } from "@/models/product/productBasicModel";
 import { useAlertModalStore } from "@/stores/alertModalStore";
@@ -19,67 +17,73 @@ import SelectInput, { SelectInputOption } from "@/views/form/SelectInputComponen
 // Child components.
 import Results from "./ProductPickerResultsComponent";
 
+// Request dto for initial model.
+export const requestDtoForInitialModel: RequestDtos.Product.List = { resultsPerPage: 7 };
+
 // Props.
 interface Props<TUpsertItem extends IHasProductUpsertItemModel<TUpsertItem>> {
-    isInitialLoading: boolean;
-    onInitialLoadingFinished(): void;
+    isInitialRendering: boolean;
+    initialModel: ProductListModel;
     pickedItems: TUpsertItem[];
     onPicked(product: ProductBasicModel): void | Promise<void>;
 }
 
 // Component.
 const ProductPicker = <TUpsertItem extends IHasProductUpsertItemModel<TUpsertItem>>
-        ({ pickedItems, onPicked, ...props }: Props<TUpsertItem>) => {
+        (props: Props<TUpsertItem>) => {
     // Dependencies.
-    const alertModalStore = useAlertModalStore();
-    const productService = useProductService();
-    const brandService = useBrandService();
-    const productCategoryService = useProductCategoryService();
+    const service = useProductService();
+    const getSubmissionErrorConfirmationAsync = useAlertModalStore(store => {
+        return store.getSubmissionErrorConfirmationAsync;
+    });
 
     // Model and states.
-    const [model, setModel] = useState(() => {
-        return new ProductListModel(undefined, { resultsPerPage: 7 });
-    });
-    const [isReloading, setReloading] = useState(false);
+    const [model, setModel] = useState(() => props.initialModel);
+    const [isReloading, startReloadingTransition] = useTransition();
+    const requestId = useRef<number>(1);
+    const requestIdQueue = useRef<number[]>([]);
 
     // Effect.
-    const loadAsync = async () => {
-        try {
-            if (props.isInitialLoading) {
-                const responseDtos = await Promise.all([
-                    productService.getListAsync(model.toRequestDto()),
-                    productCategoryService.getAllAsync(),
-                    brandService.getAllAsync()
-                ]);
-
-                setModel(model => model.fromResponseDtos(...responseDtos));
-            } else {
-                setReloading(true);
-                const list = await productService.getListAsync(model.toRequestDto());
-                setModel(model => model.fromListResponseDto(list));
-            }
-        } catch (error) {
-            if (error instanceof ValidationError) {
-                await alertModalStore.getSubmissionErrorConfirmationAsync();
-                return;
-            }
-
-            throw error;
-        } finally {
-            if (props.isInitialLoading) {
-                props.onInitialLoadingFinished();
-            }
-
-            setReloading(false);
-        }
-    };
-
     useEffect(() => {
-        loadAsync();
-    }, [model.page, model.brandId, model.categoryId]);
+        if (!props.isInitialRendering) {
+            startReloadingTransition(async () => {
+                const currentRequestId = requestId.current;
+                try {
+                    requestIdQueue.current.push(currentRequestId);
+                    requestId.current += 1;
+                    const responseDto = await service.getListAsync(model.toRequestDto());
+                    const lastIndexInQueue = requestIdQueue.current.length - 1;
+                    if (requestIdQueue.current[lastIndexInQueue] === currentRequestId) {
+                        setModel(model => model.fromListResponseDto(responseDto));
+                    }
+                } catch (error) {
+                    const lastIndexInQueue = requestIdQueue.current.length - 1;
+                    if (requestIdQueue.current[lastIndexInQueue] === currentRequestId) {
+                        if (error instanceof ValidationError) {
+                            await getSubmissionErrorConfirmationAsync();
+                            return;
+                        }
+    
+                        throw error;
+                    }
+                } finally {
+                    requestIdQueue.current = requestIdQueue.current
+                        .filter(id => id != currentRequestId);
+                }
+            });
+        };
+    }, [model.page, model.brandId, model.categoryId, model.productName]);
 
     // Computed.
-    const isReloadingClassName = isReloading ? "opacity-50 pe-none" : "";
+    const computeReloadingClassName = (): string => {
+        const classNames = ["transition-reloading"];
+        if (isReloading) {
+            classNames.push("opacity-50 pe-none");
+        }
+
+        return classNames.join(" ");
+    };
+
     const brandOptions: SelectInputOption[] = [
         { value: "", displayName: "Tất cả thương hiệu" },
         ...model.brandOptions?.map(option => ({
@@ -114,60 +118,71 @@ const ProductPicker = <TUpsertItem extends IHasProductUpsertItemModel<TUpsertIte
         setModel(model => model.from({ page: model.page + 1 }));
     };
 
+    // Header.
+    const computeHeader = (): React.ReactNode => {
+        if (isReloading) {
+            return (
+                <div className="spinner-border spinner-border-sm me-2" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+            );
+        }
+
+        return null;
+    };
     // Template.
     return (
         <MainBlock
             title="Sản phẩm"
             className="sticky-top"
+            header={computeHeader()}
             bodyPadding={[0, 2, 2, 2]}
             bodyClassName="row g-3"
         >
             <FormContext.Provider value={null}>
                 {/* Product name search */}
-                <div className={`col col-12 ${isReloadingClassName}`}>
+                <div className={`col col-12`}>
                     <Label text="Tìm kiếm sản phẩm" />
-                    <div className="input-group">
-                        <TextInput
-                            name="productName"
-                            className="border-end-0"
-                            placeholder="Tìm kiếm theo tên ..."
-                            value={model.productName ?? ""}
-                            onValueChanged={productName => setModel(model => model.from({
+                    <TextInput
+                        name="productName"
+                        className="border-end-0"
+                        placeholder="Tìm kiếm theo tên ..."
+                        value={model.productName ?? ""}
+                        onValueChanged={productName => {
+                            setModel(model => model.from({
+                                page: 1,
                                 productName: productName || undefined
-                            }))}
-                        />
-
-                        <button
-                            type="button"
-                            className="btn btn-primary flex-shrink-0"
-                            style={{ width: "fit-content" }}
-                            onClick={loadAsync}
-                        >
-                            <i className="bi bi-search" />
-                        </button>
-                    </div>
+                            }));
+                        }}
+                    />
                 </div>
     
                 {/* Category options */}
-                <div className={`col col-xl-6 col-lg-12 col-md-6 col-12
-                                ${isReloadingClassName}`}>
+                <div className={`col col-xl-6 col-lg-12 col-md-6 col-12`}>
                     <Label text="Phân loại" />
-                    <SelectInput name="categoryId" options={categoryOptions}
+                    <SelectInput
+                        name="categoryId"
+                        options={categoryOptions}
                         value={model.categoryId?.toString() ?? ""}
                         onValueChanged={id => {
                             if (!id) {
-                                setModel(model => model.from({ categoryId: undefined }));
+                                setModel(model => model.from({
+                                    page: 1,
+                                    categoryId: undefined
+                                }));
                             } else {
                                 const categoryId = parseInt(id);
-                                setModel(model => model.from({ categoryId }));
+                                setModel(model => model.from({
+                                    page: 1,
+                                    categoryId 
+                                }));
                             }
                         }}
                     />
                 </div>
     
                 {/* Brand options */}
-                <div className={`col col-xl-6 col-lg-12 col-md-6 col-12
-                                ${isReloadingClassName}`}>
+                <div className={`col col-xl-6 col-lg-12 col-md-6 col-12`}>
                     <Label text="Thương hiệu" />
                     <SelectInput
                         name="brandId"
@@ -175,18 +190,23 @@ const ProductPicker = <TUpsertItem extends IHasProductUpsertItemModel<TUpsertIte
                         value={model.brandId?.toString() ?? ""}
                         onValueChanged={id => {
                             if (!id) {
-                                setModel(model => model.from({ brandId: undefined }));
+                                setModel(model => model.from({
+                                    page: 1,
+                                    brandId: undefined
+                                }));
                             } else {
                                 const brandId = parseInt(id);
-                                setModel(model => model.from({ brandId }));
+                                setModel(model => model.from({
+                                    page: 1,
+                                    brandId
+                                }));
                             }
                         }}
                     />
                 </div>
     
-                {/* Product results */}
-                <div className={`col col-12 ${isReloadingClassName}`}>
-                    {/* Pagination */}
+                {/* Pagination */}
+                <div className={`col col-12`}>
                     {model.pageCount > 0 && (
                         <div className="d-flex justify-content-center
                                         align-items-center pagination">
@@ -217,13 +237,13 @@ const ProductPicker = <TUpsertItem extends IHasProductUpsertItemModel<TUpsertIte
                 </div>
     
                 {/* Results list */}
-                <div className={`col col-12 ${isReloadingClassName}`}>
+                <div className={`col col-12 ${computeReloadingClassName()}`}>
                     <Results
                         isReloading={isReloading}
                         productsModel={model.items}
                         productsModelResultsPerPage={model.resultsPerPage}
-                        itemsModel={pickedItems}
-                        onPicked={onPicked}
+                        itemsModel={props.pickedItems}
+                        onPicked={props.onPicked}
                     />
                 </div>
             </FormContext.Provider>

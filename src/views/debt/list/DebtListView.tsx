@@ -89,7 +89,7 @@ const DebtListView = <
                         resourceType={props.resourceType}
                         isReloading={isReloading}
                         model={model}
-                        onChanged={(changedData) => {
+                        onModelChanged={(changedData) => {
                             setModel(model => model.from(changedData as Partial<TListModel>));
                         }}
                     />
