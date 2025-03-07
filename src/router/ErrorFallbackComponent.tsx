@@ -1,38 +1,37 @@
-import { useEffect, startTransition } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import type { FallbackProps } from "react-error-boundary";
+import { usePageLoadProgressBarStore } from "@/stores/pageLoadProgressBarStore";
 import { useAlertModalStore } from "@/stores/alertModalStore";
 import { AuthorizationError, NotFoundError, OperationError, ValidationError } from "@/errors";
 
-// Props.
-interface ErrorFallbackProps {
-    error: any;
-};
-
-const ErrorFallback = (props: ErrorFallbackProps) => {
+// Component.
+const ErrorFallback = (props: FallbackProps) => {
     // Dependencies.
-    const navigate = useNavigate();
     const alertModalStore = useAlertModalStore();
+    const finishPageLoading = usePageLoadProgressBarStore(store => store.finish);
 
     // Effect.
     useEffect(() => {
-        let alertPromise: Promise<void>;
+        getConfirmation().then(() => {
+            props.resetErrorBoundary(props.error.constructor.name as string);
+        });
+        finishPageLoading();
+    }, []);
+
+    // Callbacks.
+    const getConfirmation = async (): Promise<void> => {
         if (props.error instanceof NotFoundError) {
-            alertPromise = alertModalStore.getNotFoundConfirmationAsync();
+            console.log("NotFound");
+            await alertModalStore.getNotFoundConfirmationAsync();
         } else if (props.error instanceof ValidationError ||
                 props.error instanceof OperationError) {
-            alertPromise = alertModalStore.getSubmissionErrorConfirmationAsync();
+            await alertModalStore.getSubmissionErrorConfirmationAsync();
         } else if (props.error instanceof AuthorizationError) { 
-            alertPromise = alertModalStore.getUnauthorizationConfirmationAsync();
+            await alertModalStore.getUnauthorizationConfirmationAsync();
         } else {
-            alertPromise = alertModalStore.getUndefinedErrorConfirmationAsync();
+            await alertModalStore.getUndefinedErrorConfirmationAsync();
         }
-
-        alertPromise.then(() => {
-            startTransition(() => {
-                navigate(-1);
-            });
-        });
-    });
+    };
 
     return null;
 };

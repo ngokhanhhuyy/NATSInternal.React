@@ -22,38 +22,30 @@ interface ItemProps {
 // Component.
 const Results = <TUpsertItem extends IHasProductUpsertItemModel<TUpsertItem>>
         (props: ResultsProps<TUpsertItem>) => {
-    const { isReloading, productsModel, itemsModel, onPicked } = props;
-
     // Computed.
-    const pickedProductIds = itemsModel.map(item => item.product.id);
+    const pickedProductIds = props.itemsModel.map(item => item.product.id);
 
     // Callback.
     const isMaximumQuantityExceeded = (product: ProductBasicModel) => {
-        const supplyItem = itemsModel.find(i => i.product.id === product.id);
+        const supplyItem = props.itemsModel.find(i => i.product.id === product.id);
         return (supplyItem?.quantity ?? 0) + 1 >= 100;
     };
-
-    // Template.
-    if (!isReloading && !productsModel.length) {
-        // Fallback.
-        return (
-            <div className="border rounded p-4 d-flex mt-2
-                            justify-content-center align-items-center">
-                Không tìm thấy sản phẩm
-            </div>
-        );
-    }
 
     // Results.
     return (
         <ul className="list-group">
-            {productsModel.map(product => (
+            {props.productsModel.length > 0 ? props.productsModel.map(product => (
                 <Item model={product} key={product.id}
                     isPickable={!pickedProductIds.includes(product.id)}
                     isMaximumQuantityExceeded={isMaximumQuantityExceeded(product)}
-                    onPicked={() => onPicked(product)}
+                    onPicked={() => props.onPicked(product)}
                 />
-            ))}
+            )) : (
+                <li className="list-group-item d-flex p-3 justify-content-center
+                                align-items-center opacity-50">
+                    Không tìm thấy sản phẩm
+                </li>
+            )}
         </ul>
     );
 };

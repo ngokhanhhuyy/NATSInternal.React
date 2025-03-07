@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { HomeModel } from "@/models/home/homeModel";
 import { useStatsService } from "@/services/statsService";
 import { useViewStates } from "@/hooks/viewStatesHook";
@@ -25,7 +25,7 @@ const HomeView = () => {
     const initialData = useInitialDataStore(store => store.data);
 
     // Model and states.
-    const { isInitialLoading, onInitialLoadingFinished } = useViewStates();
+    useViewStates();
     const initializedModel = useAsyncModelInitializer({
         initializer: async () => {
             const [
@@ -56,13 +56,6 @@ const HomeView = () => {
     });
 
     const [model, _] = useState<HomeModel>(() => initializedModel);
-
-    // Effect.
-    useEffect(() => {
-        if (isInitialLoading) {
-            onInitialLoadingFinished();
-        }
-    }, []);
 
     // Computed.
     const firstRowColumnClass = "col col-xxl-3 col-lg-6 col-md-6 col-sm-12 col-12";

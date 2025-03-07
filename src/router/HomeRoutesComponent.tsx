@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useTransition, Suspense } from "react";
+import React, { useState, useEffect, useTransition, createContext, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { usePageLoadProgressBarStore } from "@/stores/pageLoadProgressBarStore";
 import { useBreadcrumbStore } from "@/stores/breadcrumbStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
 import { clearAsyncModelInitializerCache } from "@/hooks/asyncModelInitializerHook";
+import { UndefinedError } from "@/errors";
 
 const simulatedLazy = <TProps extends object>(loader: () => Promise<{ default: React.ComponentType<TProps>}>) => {
     return React.lazy(async () => {
@@ -17,7 +18,7 @@ const simulatedLazy = <TProps extends object>(loader: () => Promise<{ default: R
 // Loading view and error components.
 import LoadingView from "@/views/layouts/LoadingView";
 import { ErrorBoundary } from "react-error-boundary";
-import ErrorFallback from "./ErrorFallbackComponent";
+import errorFallbackRender from "./ErrorFallbackComponent";
 
 
 // View components.
@@ -696,6 +697,8 @@ const routes: Routes = {
     }
 };
 
+export const ClearSuspenseContext = createContext(() => { });
+
 const HomeRoutes = () => {
     // Dependencies.
     const navigate = useNavigate();
@@ -747,7 +750,15 @@ const HomeRoutes = () => {
     }, []);
 
     return (
-        <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <ErrorBoundary
+            FallbackComponent={errorFallbackRender}
+            onReset={(detail: { reason: "imperative-api"; args: any[]; }) => {
+                setView(null);
+                navigate(routeGenerator.getHomeRoutePath());
+                if (detail.reason[0] === UndefinedError.constructor.name) {
+                    window.location.reload();
+                }
+            }}>
             <Suspense>
                 {view}
             </Suspense>

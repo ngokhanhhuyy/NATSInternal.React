@@ -30,43 +30,32 @@ export class ProductUpsertModel
     public readonly categoryOptions: ProductCategoryMinimalModel[] = [];
     public readonly canDelete: boolean = false;
 
-    constructor() {
-        super();
-        this.photos = new ClonableArrayModel();
-    }
-
-    fromResponseDtos(
+    constructor(
             categoryOptions: ResponseDtos.ProductCategory.Minimal[],
             brandOptions: ResponseDtos.Brand.Minimal[],
-            detail?: ResponseDtos.Product.Detail): ProductUpsertModel {
-        const newModel: ProductUpsertModel = this.from({
-            brandOptions: brandOptions?.map(dto => new BrandMinimalModel(dto)) ?? [],
-            categoryOptions: categoryOptions
-                ?.map(dto => new ProductCategoryMinimalModel(dto)) ?? []
-        });
+            detail?: ResponseDtos.Product.Detail) {
+        super();
+        this.photos = new ClonableArrayModel();
+        
+        this.brandOptions = brandOptions?.map(dto => new BrandMinimalModel(dto)) ?? [];
+        this.categoryOptions = categoryOptions
+            ?.map(dto => new ProductCategoryMinimalModel(dto)) ?? [];
 
         if (detail) {
-            return newModel.from({
-                id: detail.id,
-                name: detail.name,
-                description: detail.description ?? "",
-                unit: detail.unit,
-                defaultPrice: detail.defaultPrice,
-                defaultVatPercentage: detail.defaultVatPercentage,
-                isForRetail: detail.isForRetail,
-                isDiscontinued: detail.isDiscontinued,
-                thumbnailUrl: detail.thumbnailUrl ?? photoUtility.getDefaultPhotoUrl(),
-                categoryId: detail.category?.id ?? null,
-                brandId: detail.brand?.id ?? null,
-                photos: [
-                    ...this.photos,
-                    ...detail.photos?.map(p => new ProductUpsertPhotoModel(p)) ?? []
-                ],
-                canDelete: detail.authorization.canDelete,
-            });
+            this.id = detail.id;
+            this.name = detail.name;
+            this.description = detail.description ?? "";
+            this.unit = detail.unit;
+            this.defaultPrice = detail.defaultPrice;
+            this.defaultVatPercentage = detail.defaultVatPercentage;
+            this.isForRetail = detail.isForRetail;
+            this.isDiscontinued = detail.isDiscontinued;
+            this.thumbnailUrl = detail.thumbnailUrl ?? photoUtility.getDefaultPhotoUrl();
+            this.categoryId = detail.category?.id ?? null;
+            this.brandId = detail.brand?.id ?? null;
+            this.photos = detail.photos?.map(p => new ProductUpsertPhotoModel(p)) ?? [];;
+            this.canDelete = detail.authorization.canDelete;
         }
-
-        return newModel;
     }
 
     public toRequestDto(): RequestDtos.Product.Upsert {

@@ -73,7 +73,7 @@ const ConsultantListView = () => {
                         resourceType="consultant"
                         isReloading={isReloading}
                         model={model}
-                        onChanged={(changedData) => {
+                        onModelChanged={(changedData) => {
                             setModel(model => model.from(changedData));
                         }}
                     />

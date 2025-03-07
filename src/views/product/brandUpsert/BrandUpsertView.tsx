@@ -1,12 +1,12 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBrandService } from "@/services/brandService";
 import { BrandUpsertModel } from "@/models/product/brand/brandUpsertModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
-import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
 import { useRouteGenerator } from "@/router/routeGenerator";
-import { NotFoundError } from "@/errors";
+import { AuthorizationError } from "@/errors";
 
 // Layout components.
 import UpsertViewContainer from "@layouts/UpsertViewContainerComponent";
@@ -24,53 +24,33 @@ import ValidationMessage from "@/views/form/ValidationMessageComponent";
 const BrandUpsertView = ({ id }: { id?: number }) => {
     // Dependencies.
     const navigate = useNavigate();
-    const alertModalStore = useAlertModalStore();
     const service = useBrandService();
     const routeGenerator = useRouteGenerator();
 
     // Model.
-    const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
-    const [model, setModel] = useState<BrandUpsertModel>(() => new BrandUpsertModel());
-    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model);
-    
-    // Effect.
-    useEffect(() => {
-        const initialLoadAsync = async () => {
-            try {
-                if (id == null) {
-                    const canCreate = await service.getCreatingPermissionAsync();
-                    if (!canCreate) {
-                        await alertModalStore.getUnauthorizationConfirmationAsync();
-                        await navigate(routeGenerator.getProductListRoutePath());
-                    }
-
-                    setOriginalModel(model);
-                } else {
-                    const responseDto = await service.getDetailAsync(id);
-                    if (!responseDto.authorization.canEdit) {
-                        await alertModalStore.getUnauthorizationConfirmationAsync();
-                        return;
-                    }
-
-                    setModel(model => {
-                        const loadedModel = model.fromResponseDto(responseDto);
-                        setOriginalModel(loadedModel);
-                        return loadedModel;
-                    });
-                }
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(routeGenerator.getProductListRoutePath());
-                    return;
+    const initialModel = useAsyncModelInitializer({
+        initializer: async () => {
+            if (id == null) {
+                const canCreate = await service.getCreatingPermissionAsync();
+                if (!canCreate) {
+                    throw new AuthorizationError();
                 }
 
-                throw error;
+                return new BrandUpsertModel();
+            } else {
+                const responseDto = await service.getDetailAsync(id);
+                if (!responseDto.authorization.canEdit) {
+                    throw new AuthorizationError();
+                }
+
+                return new BrandUpsertModel(responseDto);
             }
-        };
-
-        initialLoadAsync().finally(onInitialLoadingFinished);
-    }, []);
+        },
+        cacheKey: id == null ? "brandCreate" : "brandUpdate"
+    });
+    const { modelState } = useUpsertViewStates();
+    const [model, setModel] = useState<BrandUpsertModel>(() => initialModel);
+    const isModelDirty = useDirtyModelChecker(initialModel, model);
 
     // Computed.
     const isForCreating = useMemo(() => id == null, [id]);
@@ -96,7 +76,6 @@ const BrandUpsertView = ({ id }: { id?: number }) => {
     return (
         <UpsertViewContainer
             modelState={modelState}
-            isInitialLoading={isInitialLoading}
             submittingAction={handleSubmissionAsync}
             onSubmissionSucceeded={handleSucceededAsync}
             deletingAction={handleDeletionAsync}

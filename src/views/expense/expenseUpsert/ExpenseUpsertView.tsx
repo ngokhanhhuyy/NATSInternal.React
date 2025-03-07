@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useExpenseService } from "@/services/expenseService";
 import { ExpenseCategory } from "@/services/dtos/enums";
 import { ExpenseUpsertModel } from "@/models/expense/expenseUpsertModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
-import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useInitialDataStore } from "@/stores/initialDataStore";
 import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
 import { useRouteGenerator } from "@/router/routeGenerator";
-import { NotFoundError } from "@/errors";
+import { AuthorizationError } from "@/errors";
 
 // Layout components.
 import UpsertViewContainer from "@layouts/UpsertViewContainerComponent";
@@ -29,55 +29,30 @@ import ValidationMessage from "@/views/form/ValidationMessageComponent";
 const ExpenseUpsertView = ({ id }: { id?: number }) => {
     // Dependencies.
     const navigate = useNavigate();
-    const alertModalStore = useAlertModalStore();
     const initialData = useInitialDataStore(store => store.data);
     const service = useExpenseService();
     const routeGenerator = useRouteGenerator();
 
     // Model and states.
-    const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
-    const [model, setModel] = useState(() => new ExpenseUpsertModel());
-    const dirtyModelChecker = useDirtyModelChecker(model, ["updatedReason"]);
-
-    // Effect.
-    useEffect(() => {
-        const initialLoadAsync = async () => {
-            try {
-                if (id == null) {
-                    const authorization = initialData.consultant.creatingAuthorization;
-                    if (!authorization) {
-                        await alertModalStore.getUnauthorizationConfirmationAsync();
-                        await navigate(routeGenerator.getExpenseListRoutePath());
-                        return;
-                    }
-
-                    setModel(model => {
-                        const loadedModel = model
-                            .fromCreatingAuthorizationResponseDto(authorization);
-                        dirtyModelChecker.setOriginalModel(loadedModel);
-                        return loadedModel;
-                    });
-                } else {
-                    const detail = await service.getDetailAsync(id);
-                    setModel(model => {
-                        const loadedModel = model.fromDetailResponseDto(detail);
-                        dirtyModelChecker.setOriginalModel(loadedModel);
-                        return loadedModel;
-                    });
-                }
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(routeGenerator.getExpenseListRoutePath());
-                    return;
+    const { modelState } = useUpsertViewStates();
+    const initialModel = useAsyncModelInitializer({
+        initializer: async () => {
+            if (id == null) {
+                const authorization = initialData.consultant.creatingAuthorization;
+                if (!authorization) {
+                    throw new AuthorizationError();
                 }
 
-                throw error;
+                return new ExpenseUpsertModel(authorization.canSetStatsDateTime);
+            } else {
+                const responseDto = await service.getDetailAsync(id);
+                return new ExpenseUpsertModel(responseDto);
             }
-        };
-
-        initialLoadAsync().finally(() => onInitialLoadingFinished());
-    }, []);
+        },
+        cacheKey: id == null ? "expenseCreate" : "expenseUpdate"
+    });
+    const [model, setModel] = useState(() => initialModel);
+    const isModelDirty = useDirtyModelChecker(initialModel, model, ["updatedReason"]);
 
     // Computed.
     const blockTitle: string = id == null ? "Tạo chi phí mới" : "Chỉnh sửa chi phí";
@@ -118,19 +93,18 @@ const ExpenseUpsertView = ({ id }: { id?: number }) => {
         await service.deleteAsync(model.id);
     };
 
-    const handleSucceededDeletionAsync = async () => {
+    const handleSucceededDeletionAsync = useCallback(async () => {
         await navigate(routeGenerator.getExpenseListRoutePath());
-    };
+    }, []);
 
     return (
         <UpsertViewContainer
-            isInitialLoading={isInitialLoading}
             modelState={modelState}
             submittingAction={handleSubmissionAsync}
             onSubmissionSucceeded={handleSucceededSubmissionAsync}
             deletingAction={handleDeletionAsync}
             onDeletionSucceeded={handleSucceededDeletionAsync}
-            isModelDirty={dirtyModelChecker.isModelDirty}
+            isModelDirty={isModelDirty}
         >
             <div className="row g-3">
                 {/* Expense detail */}
@@ -144,7 +118,7 @@ const ExpenseUpsertView = ({ id }: { id?: number }) => {
                                     name="amount"
                                     suffix=" đồng"
                                     value={model.amount}
-                                    onValueChanged= {amount => {
+                                    onValueChanged={amount => {
                                         setModel(model => model.from({ amount }));
                                     }}
                                 />

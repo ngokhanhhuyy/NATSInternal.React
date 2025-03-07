@@ -1,5 +1,4 @@
 import { AbstractClonableModel } from "../baseModels";
-import { ClonableArrayModel } from "../arrayModel";
 import { ExpenseCategory } from "@/services/dtos/enums";
 import { ExpenseUpsertPhotoModel } from "./expensePhoto/expenseUpsertPhotoModel";
 import { StatsDateTimeInputModel } from "../dateTime/statsDateTimeInputModel";
@@ -15,38 +14,29 @@ export class ExpenseUpsertModel
     public readonly category: ExpenseCategory = ExpenseCategory.Equipment;
     public readonly note: string = "";
     public readonly payeeName: string = "";
-    public readonly photos: ClonableArrayModel<ExpenseUpsertPhotoModel> = new ClonableArrayModel();
+    public readonly photos: ExpenseUpsertPhotoModel[] = [];
     public readonly updatedReason: string = "";
     public readonly canSetStatsDateTime: boolean = false;
     public readonly canDelete: boolean = false;
-    
-    public fromDetailResponseDto(detail: ResponseDtos.Expense.Detail): ExpenseUpsertModel {
-        let photos = this.photos;
-        if (detail.photos) {
-            photos = photos
-                .addMultiple(detail.photos.map(dto => new ExpenseUpsertPhotoModel(dto)));
+
+    constructor(canSetStatsDateTime: boolean);
+    constructor(responseDto: ResponseDtos.Expense.Detail);
+    constructor(arg: boolean | ResponseDtos.Expense.Detail) {
+        super();
+
+        if (typeof arg === "boolean") {
+            this.canSetStatsDateTime = arg;
+        } else {
+            this.id = arg.id;
+            this.amount = arg.amountAfterVat;
+            this.statsDateTime = this.statsDateTime.fromDateTimeResponseDto(arg.statsDateTime);
+            this.category = arg.category;
+            this.note = arg.note ?? "";
+            this.payeeName = arg.payee.name;
+            this.photos = arg.photos?.map(dto => new ExpenseUpsertPhotoModel(dto)) ?? [];
+            this.canSetStatsDateTime = arg.authorization.canSetStatsDateTime;
+            this.canDelete = arg.authorization.canDelete;
         }
-
-        return this.from({
-            id: detail.id,
-            amount: detail.amountAfterVat,
-            statsDateTime: this.statsDateTime.fromDateTimeResponseDto(detail.statsDateTime),
-            category: detail.category,
-            note: detail.note ?? "",
-            payeeName: detail.payee.name,
-            photos: photos,
-            canSetStatsDateTime: detail.authorization.canSetStatsDateTime,
-            canDelete: detail.authorization.canDelete,
-        });
-    }
-
-    public fromCreatingAuthorizationResponseDto(
-            authorization: ResponseDtos.Expense.CreatingAuthorization | null):
-                ExpenseUpsertModel {
-        return this.from({
-            canSetStatsDateTime: authorization?.canSetStatsDateTime ?? false,
-            canDelete: false
-        });
     }
 
     public toRequestDto(): RequestDtos.Expense.Upsert {

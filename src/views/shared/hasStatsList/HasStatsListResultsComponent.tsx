@@ -23,23 +23,27 @@ const HasStatsListResults = <
     const displayName = getDisplayName(resourceType);
 
     // Computed.
-    const computeClassName = () => {
+    const computeClassName = (): string => {
+        const classNames = [
+            "list-group list-group-flush border rounded-3",
+            "bg-white overflow-hidden transition-reloading"
+        ];
+
         if (isReloading) {
-            return "opacity-50 pe-none";
+            classNames.push("opacity-50 pe-none");
         }
 
-        return "";
+        return classNames.join(" ");
     };
 
     return (
-        <ul className={`list-group list-group-flush border rounded-3 bg-white overflow-hidden
-                        ${computeClassName()}`}>
+        <ul className={computeClassName()}>
             {model.length > 0
                 ? model.map((item, index) => render(item, index))
                 : (
                     <li className="list-group-item bg-transparent p-3 d-flex
-                                    justify-content-center align-items-center">
-                        Không có {displayName} nào
+                                    justify-content-center align-items-center opacity-50">
+                        Không có {displayName.toLowerCase()} nào
                     </li>
                 )
             }

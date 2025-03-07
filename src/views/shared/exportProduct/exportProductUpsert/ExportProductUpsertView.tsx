@@ -254,7 +254,7 @@ const ExportProductUpsertView = <
                 <div className={`col col-lg-6 col-12 pe-lg-2 pe-0 pb-lg-0 pb-3
                                 ${currentStepIndex === 2 ? "" : "d-none"}`}>
                     <ProductPicker
-                        isInitialLoading={initialLoadingStates.productPickerList}
+                        isInitialRendering={initialLoadingStates.productPickerList}
                         onInitialLoadingFinished={() => {
                             setInitialLoadingStates(states => ({
                                 ...states,

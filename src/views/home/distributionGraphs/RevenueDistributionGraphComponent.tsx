@@ -23,9 +23,12 @@ const RevenueDistributionGraph = (props: RevenueDistributionGraphProps) => {
             .map(stats => stats.treatmentGrossRevenue)
             .reduce((total, current) => total + current);
         const totalRevenue = consultantRevenue + orderRevenue + treatmentRevenue;
-        const consultantPercentage = Math.round(consultantRevenue / totalRevenue * 100);
-        const orderPercentage = Math.round(orderRevenue / totalRevenue * 100);
-        const treatmentPercentage = 100 - (consultantPercentage + orderPercentage);
+        const consultantPercentage = totalRevenue
+            && Math.round(consultantRevenue / totalRevenue * 100);
+        const orderPercentage = totalRevenue
+            && Math.round(orderRevenue / totalRevenue * 100);
+        const treatmentPercentage = totalRevenue
+            && 100 - (consultantPercentage + orderPercentage);
         return [
             {
                 type: "consultant",

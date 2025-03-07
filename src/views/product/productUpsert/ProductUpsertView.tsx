@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProductService } from "@/services/productService";
 import { useProductCategoryService } from "@/services/productCategoryService";
@@ -6,9 +6,9 @@ import { useBrandService } from "@/services/brandService";
 import { ProductUpsertModel } from "@/models/product/productUpsertModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
 import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
-import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useRouteGenerator } from "@/router/routeGenerator";
-import { NotFoundError } from "@/errors";
+import { AuthorizationError } from "@/errors";
 
 // Layout components.
 import UpsertViewContainer from "@/views/layouts/UpsertViewContainerComponent";
@@ -29,16 +29,10 @@ const ProductUpsertView = ({ id }: { id?: number; }) => {
     const productCategoryService = useProductCategoryService();
     const brandService = useBrandService();
     const routeGenerator = useRouteGenerator();
-    const alertModalStore = useAlertModalStore();
 
     // Model and states.
-    const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
-    const [model, setModel] = useState(() => new ProductUpsertModel());
-    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model);
-
-    // Effect.
-    useEffect(() => {
-        const initialLoadAsync = async () => {
+    const initialModel = useAsyncModelInitializer({
+        initializer: async () => {
             if (id == null) {
                 const [canCreate, brandOptions, categoryOptions] = await Promise.all([
                     productService.getCreatingPermissionAsync(),
@@ -47,52 +41,29 @@ const ProductUpsertView = ({ id }: { id?: number; }) => {
                 ]);
 
                 if (!canCreate) {
-                    await alertModalStore.getUnauthorizationConfirmationAsync();
-                    await navigate(-1);
-                    return;
+                    throw new AuthorizationError();
                 }
 
-                setModel(model => {
-                    const loadedModel = model.fromResponseDtos(brandOptions, categoryOptions);
-                    setOriginalModel(model);
-                    return loadedModel;
-                });
+                return new ProductUpsertModel(brandOptions, categoryOptions);
             } else {
-                try {
-                    const [brandOptions, categoryOptions, detail] = await Promise.all([
-                        brandService.getAllAsync(),
-                        productCategoryService.getAllAsync(),
-                        productService.getDetailAsync(id)
-                    ]);
+                const [brandOptions, categoryOptions, detail] = await Promise.all([
+                    brandService.getAllAsync(),
+                    productCategoryService.getAllAsync(),
+                    productService.getDetailAsync(id)
+                ]);
     
-                    if (!detail.authorization.canEdit) {
-                        await alertModalStore.getUnauthorizationConfirmationAsync();
-                        await navigate(-1);
-                        return;
-                    }
-
-                    setModel(model => {
-                        const loadedModel = model.fromResponseDtos(
-                            brandOptions,
-                            categoryOptions,
-                            detail);
-                        setOriginalModel(model);
-                        return loadedModel;
-                    });
-                } catch (error) {
-                    if (error instanceof NotFoundError) {
-                        await alertModalStore.getNotFoundConfirmationAsync();
-                        await navigate(-1);
-                        return;
-                    }
-                    
-                    throw error;
+                if (!detail.authorization.canEdit) {
+                    throw new AuthorizationError();
                 }
-            }
-        };
 
-        initialLoadAsync().finally(onInitialLoadingFinished);
-    }, []);
+                return new ProductUpsertModel(brandOptions, categoryOptions, detail);
+            }
+        },
+        cacheKey: id == null ? "productCreate" : "productUpdate"
+    });
+    const { modelState } = useUpsertViewStates();
+    const [model, setModel] = useState(() => initialModel);
+    const isModelDirty = useDirtyModelChecker(initialModel, model);
 
     // Computed.
     const isForCreating = useMemo(() => id == null, [id]);
@@ -134,7 +105,6 @@ const ProductUpsertView = ({ id }: { id?: number; }) => {
     return (
         <UpsertViewContainer
             modelState={modelState}
-            isInitialLoading={isInitialLoading}
             submittingAction={handleSubmissionAsync}
             deletingAction={handleDeletionAsync}
             onSubmissionSucceeded={handleSucceededSubmissionAsync}
@@ -145,9 +115,12 @@ const ProductUpsertView = ({ id }: { id?: number; }) => {
                 <div className="col col-12">
                     <MainBlock title={blockTitle} bodyPadding={2} closeButton>
                         {/* Upper row */}
-                        <Inputs model={model} setModel={setModel}
-                            isInitialLoading={isInitialLoading}
-                            onThumbnailFileChanged={onThumbnailFileChanged}/>
+                        <Inputs
+                            model={model}
+                            onModelChanged={(changedData) => {
+                                setModel(model => model.from(changedData));
+                            }}
+                            onThumbnailFileChanged={onThumbnailFileChanged} />
                     </MainBlock>
                 </div>
             </div>

@@ -17,21 +17,23 @@ export class BrandUpsertModel
     public readonly country: CountrySingleModel | null = null;
     public readonly canDelete: boolean | undefined;
 
-    fromResponseDto(responseDto: ResponseDtos.Brand.Detail) {
-        return this.from({
-            id: responseDto.id,
-            name: responseDto.name,
-            website: responseDto.website?.replace("https://", "") || "",
-            socialMediaUrl: responseDto.socialMediaUrl?.replace("https://", "") || "",
-            phoneNumber: responseDto.phoneNumber || "",
-            email: responseDto.email || "",
-            address: responseDto.address || "",
-            thumbnailUrl: responseDto.thumbnailUrl,
-            thumbnailFile: null,
-            thumbnailChanged: false,
-            country: responseDto.country && new CountrySingleModel(responseDto.country),
-            canDelete: responseDto.authorization.canDelete
-        });
+    constructor(responseDto?: ResponseDtos.Brand.Detail) {
+        super();
+
+        if (responseDto) {
+            this.id = responseDto.id;
+            this.name = responseDto.name;
+            this.website = responseDto.website?.replace("https://", "") || "";
+            this.socialMediaUrl = responseDto.socialMediaUrl?.replace("https://", "") || "";
+            this.phoneNumber = responseDto.phoneNumber || "";
+            this.email = responseDto.email || "";
+            this.address = responseDto.address || "";
+            this.thumbnailUrl = responseDto.thumbnailUrl;
+            this.thumbnailFile = null;
+            this.thumbnailChanged = false;
+            this.country = responseDto.country && new CountrySingleModel(responseDto.country);
+            this.canDelete = responseDto.authorization.canDelete;
+        }
     }
 
     public toRequestDto(): RequestDtos.Brand.Upsert {

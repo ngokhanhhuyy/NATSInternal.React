@@ -70,12 +70,13 @@ export class TreatmentListModel
             }
         }
     }
-        
+
     public fromListResponseDto(responseDto: ResponseDtos.Treatment.List) {
         return this.from({
             pageCount: responseDto.pageCount,
             items: responseDto.items?.map(i => new TreatmentBasicModel(i)) ?? []
-        });
+        });;
+        
     }
 
     public toRequestDto(): RequestDtos.Treatment.List {

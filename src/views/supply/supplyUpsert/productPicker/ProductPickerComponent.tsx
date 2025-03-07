@@ -22,14 +22,14 @@ import Results from "./ProductPickerResultsComponent";
 
 // Props.
 interface Props {
-    isInitialLoading: boolean;
-    onInitialLoadingFinished(): void;
+    isInitialRendering: boolean;
+    initialModels: ProductListModel;
     pickedItems: SupplyUpsertItemModel[];
     onPicked(product: ProductBasicModel): void | Promise<void>;
 }
 
 // Component.
-const ProductPicker = ({ pickedItems, onPicked, ...props }: Props) => {
+const ProductPicker = (props: Props) => {
     // Dependencies.
     const alertModalStore = useAlertModalStore();
     const productService = useProductService();
@@ -45,7 +45,7 @@ const ProductPicker = ({ pickedItems, onPicked, ...props }: Props) => {
     // Effect.
     const loadAsync = async () => {
         try {
-            if (props.isInitialLoading) {
+            if (props.isInitialRendering) {
                 const responseDtos = await Promise.all([
                     productService.getListAsync(model.toRequestDto()),
                     productCategoryService.getAllAsync(),
@@ -66,7 +66,7 @@ const ProductPicker = ({ pickedItems, onPicked, ...props }: Props) => {
 
             throw error;
         } finally {
-            if (props.isInitialLoading) {
+            if (props.isInitialRendering) {
                 props.onInitialLoadingFinished();
             }
 
