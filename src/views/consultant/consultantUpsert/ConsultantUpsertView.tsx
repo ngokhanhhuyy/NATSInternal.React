@@ -1,13 +1,15 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useConsultantService } from "@/services/consultantService";
+import { useCustomerService } from "@/services/customerService";
 import { ConsultantUpsertModel } from "@/models/consultant/consultantUpsertModel";
+import { CustomerListModel } from "@/models/customer/customerListModel";
 import { useUpsertViewStates } from "@/hooks/upsertViewStatesHook";
-import { useInitialDataStore } from "@/stores/initialDataStore";
-import { useAlertModalStore } from "@/stores/alertModalStore";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useDirtyModelChecker } from "@/hooks/dirtyModelCheckerHook";
+import { useInitialDataStore } from "@/stores/initialDataStore";
 import { useRouteGenerator } from "@/router/routeGenerator";
-import { NotFoundError } from "@/errors";
+import { AuthorizationError } from "@/errors";
 
 // Layout components.
 import UpsertViewContainer from "@/views/layouts/UpsertViewContainerComponent";
@@ -23,74 +25,55 @@ import SubmitButton from "@/views/form/SubmitButtonComponent";
 import DeleteButton from "@/views/form/DeleteButtonComponent";
 
 // Child component.
-import CustomerPicker from "@/views/shared/customerPicker/CustomerPickerComponent";
+import CustomerPicker, { requestDtoForInitialModel as requestDtoForProductList }
+    from "@/views/shared/customerPicker/CustomerPickerComponent";
 
 // Component.
 const ConsultantUpsertView = ({ id }: { id?: number }) => {
     // Dependencies.
     const navigate = useNavigate();
-    const alertModalStore = useAlertModalStore();
-    const initialData = useInitialDataStore(store => store.data.consultant);
-    const service = useConsultantService();
+    const initialData = useInitialDataStore(store => store.data);
+    const consultantService = useConsultantService();
+    const customerService = useCustomerService();
     const routeGenerator = useRouteGenerator();
 
     // Model and states.
-    const { isInitialLoading, onInitialLoadingFinished, modelState } = useUpsertViewStates();
-    const [model, setModel] = useState(() => new ConsultantUpsertModel());
-    const [initialLoadingState, setInitialLoadingState] = useState(() => ({
-        consultantForm: true,
-        customerPicker: true
-    }));
-    const { isModelDirty, setOriginalModel } = useDirtyModelChecker(model, ["updatedReason"]);
-
-    // Effect
-    useEffect(() => {
-        const initialLoadAsync = async () => {
-            try {
-                if (id == null) {
-                    const authorization = initialData.creatingAuthorization;
-                    if (!authorization) {
-                        await alertModalStore.getUnauthorizationConfirmationAsync();
-                        await navigate(routeGenerator.getConsultantListRoutePath());
-                        return;
-                    }
-
-                    setModel(model => {
-                        const loadedModel = model
-                            .fromCreatingAuthorizationResponseDto(authorization);
-                        setOriginalModel(loadedModel);
-                        return loadedModel;
-                    });
-                } else {
-                    const responseDto = await service.getDetailAsync(id);
-                    setModel(model => {
-                        const loadedModel = model.fromDetailResponseDto(responseDto);
-                        setOriginalModel(loadedModel);
-                        return loadedModel;
-                    });
-                }
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(routeGenerator.getConsultantListRoutePath());
-                    return;
+    const { isInitialRendering, modelState } = useUpsertViewStates();
+    const initialModels = useAsyncModelInitializer({
+        initializer: async () => {
+            const customerListPromise = customerService.getListAsync(requestDtoForProductList);
+            let consultantUpsertModel: ConsultantUpsertModel;
+            if (id == null) {
+                const authorization = await consultantService.getCreatingAuthorizationAsync();
+                const canSetStatsDateTime = authorization?.canSetStatsDateTime;
+                if (!canSetStatsDateTime) {
+                    throw new AuthorizationError();
                 }
 
-                throw error;
+                consultantUpsertModel = new ConsultantUpsertModel(canSetStatsDateTime);
+            } else {
+                const responseDto = await consultantService.getDetailAsync(id);
+
+                if (!responseDto.authorization.canEdit) {
+                    throw new AuthorizationError();
+                }
+                
+                consultantUpsertModel = new ConsultantUpsertModel(responseDto);
             }
-        };
 
-        initialLoadAsync().finally(() => {
-            setInitialLoadingState(state => ({ ...state, consultantForm: false }));
-        });
-    }, []);
-
-    useEffect(() => {
-        const { consultantForm, customerPicker } = initialLoadingState;
-        if (!consultantForm && !customerPicker) {
-            onInitialLoadingFinished();
-        }
-    }, [initialLoadingState]);
+            const customerList = await customerListPromise;
+            return {
+                consultantUpsert: consultantUpsertModel,
+                customerList: new CustomerListModel(customerList, initialData.customer)
+            };
+        },
+        cacheKey: id == null ? "consultantCreate" : "consultantUpdate"
+    });
+    const [model, setModel] = useState(() => initialModels.consultantUpsert);
+    const isModelDirty = useDirtyModelChecker(
+        initialModels.consultantUpsert,
+        model,
+        ["updatedReason"]);
 
     // Computed.
     const blockTitle = useMemo<string>(() => {
@@ -104,28 +87,27 @@ const ConsultantUpsertView = ({ id }: { id?: number }) => {
     // Callback.
     const handleSubmissionAsync = async (): Promise<number> => {
         if (id == null) {
-            return await service.createAsync(model.toRequestDto());
+            return await consultantService.createAsync(model.toRequestDto());
         } else {
-            await service.updateAsync(model.id, model.toRequestDto());
+            await consultantService.updateAsync(model.id, model.toRequestDto());
             return model.id;
         }
     };
 
-    const handleDeletionAsync = async (): Promise<void> => {
-        await service.deleteAsync(model.id);
-    };
+    const handleDeletionAsync = useCallback(async (): Promise<void> => {
+        await consultantService.deleteAsync(model.id);
+    }, [model.id]);
 
     const handleSucceededSubmissionAsync = async (submissionResult: number): Promise<void> => {
         await navigate(routeGenerator.getConsultantDetailRoutePath(submissionResult));
     };
 
-    const handleSucceededDeletionAsync = async (): Promise<void> => {
+    const handleSucceededDeletionAsync = useCallback(async (): Promise<void> => {
         await navigate(routeGenerator.getConsultantListRoutePath());
-    };
+    }, []);
 
     return (
         <UpsertViewContainer
-            isInitialLoading={isInitialLoading}
             modelState={modelState}
             submittingAction={handleSubmissionAsync}
             onSubmissionSucceeded={handleSucceededSubmissionAsync}
@@ -205,11 +187,8 @@ const ConsultantUpsertView = ({ id }: { id?: number }) => {
                 {/* Customer picker */}
                 <div className="col col-12">
                     <CustomerPicker
-                        isInitialLoading={initialLoadingState.customerPicker}
-                        onInitialLoadingFinished={() => setInitialLoadingState(state => ({
-                            ...state,
-                            customerPicker: false
-                        }))}
+                        isInitialRendering={isInitialRendering}
+                        initialModel={initialModels.customerList}
                         value={model.customer}
                         onValueChanged={customer => {
                             setModel(model => model.from({ customer }));

@@ -2,12 +2,9 @@ import { AbstractClonableModel } from "../baseModels";
 import { CustomerBasicModel } from "../customer/customerBasicModel";
 import { StatsDateTimeInputModel } from "../dateTime/statsDateTimeInputModel";
 
-type CreatingAuthorization = ResponseDtos.Consultant.CreatingAuthorization;
-type Detail = ResponseDtos.Consultant.Detail;
-
 export class ConsultantUpsertModel
         extends AbstractClonableModel<ConsultantUpsertModel>
-        implements IHasCustomerUpsertModel {
+        implements IHasCustomerUpsertModel<ConsultantUpsertModel> {
     public readonly id: number = 0;
     public readonly amountBeforeVat: number = 0;
     public readonly vatPercentage: number = 0;
@@ -18,25 +15,24 @@ export class ConsultantUpsertModel
     public readonly canSetStatsDateTime: boolean = false;
     public readonly canDelete: boolean = false;
 
-    public fromCreatingAuthorizationResponseDto(responseDto: CreatingAuthorization):
-            ConsultantUpsertModel {
-        return this.from({
-            canSetStatsDateTime: responseDto.canSetStatsDateTime
-        });
-    }
+    constructor(canSetStatsDateTime: boolean);
+    constructor(responseDto: ResponseDtos.Consultant.Detail);
+    constructor(arg: boolean | ResponseDtos.Consultant.Detail) {
+        super();
 
-    public fromDetailResponseDto(responseDto: Detail): ConsultantUpsertModel {
-        return this.from({
-            id: responseDto.id,
-            amountBeforeVat: responseDto.amountBeforeVat,
-            vatPercentage: responseDto.vatAmount / responseDto.amountBeforeVat,
-            note: responseDto.note ?? "",
-            statsDateTime: this.statsDateTime
-                .fromDateTimeResponseDto(responseDto.statsDateTime),
-            customer: new CustomerBasicModel(responseDto.customer),
-            canSetStatsDateTime: responseDto.authorization.canSetStatsDateTime,
-            canDelete: responseDto.authorization.canDelete,
-        });
+        if (typeof arg === "boolean") {
+            this.canSetStatsDateTime = arg;
+        } else {
+            this.id = arg.id;
+            this.amountBeforeVat = arg.amountBeforeVat;
+            this.vatPercentage = arg.vatAmount / arg.amountBeforeVat;
+            this.note = arg.note ?? "";
+            this.statsDateTime = this.statsDateTime
+                .fromDateTimeResponseDto(arg.statsDateTime);
+            this.customer = new CustomerBasicModel(arg.customer);
+            this.canSetStatsDateTime = arg.authorization.canSetStatsDateTime;
+            this.canDelete = arg.authorization.canDelete;
+        }
     }
 
     public toRequestDto(): RequestDtos.Consultant.Upsert {

@@ -92,7 +92,8 @@ export function useApiClient() {
             endpointPath: string,
             requestDto?: object,
             params?: Params,
-            delay: number = 300): Promise<Response> {
+            delay: number = 300,
+            abortSignal: AbortSignal | null = null): Promise<Response> {
         let endpointUrl = url + endpointPath;
         if (params != null && getQueryString(params) != null) {
             endpointUrl += "?" + getQueryString(params);
@@ -102,6 +103,7 @@ export function useApiClient() {
             headers: { "Content-Type": "application/json" },
             credentials: "include" as RequestCredentials,
             method: method,
+            signal: abortSignal
         };
 
         if (requestDto) {
@@ -131,11 +133,11 @@ export function useApiClient() {
      * @param endpointPath The path of the api's endpoint to send the request.
      * @param params (Optional) An object containing the data which will be converted
      * into a query string and added into the request's url.
-     * @param params (Optional, default: 300) A value specifying the minimum time that the
+     * @param delay (Optional, default: 300) A value specifying the minimum time that the
      * operation should wait before returning the response. This is for user experience
      * enhancement.
-     * @param delay A value specifying the minimum time that the operation
-     * should wait before returning the response. This is for user experience enhancement.
+     * @param abortSignal (Optional) A signal from {@link AbortController} for request
+     * cancellation.
      * @returns A `Promise` which resolves to an object as an implementation of type
      * `TResponseDto`.
      * @example getAsync<ResponseDtos.User.Detail>("user/1");
@@ -143,8 +145,15 @@ export function useApiClient() {
     async function getAsync<TResponseDto>(
             endpointPath: string,
             params?: Params,
-            delay?: number): Promise<TResponseDto> {
-        const response = await executeAsync("get", endpointPath, undefined, params, delay);
+            delay?: number,
+            abortSignal?: AbortSignal): Promise<TResponseDto> {
+        const response = await executeAsync(
+            "get",
+            endpointPath,
+            undefined,
+            params,
+            delay,
+            abortSignal);
         const responseAsText = await response.text();
         return jsonUtility.parseJson<TResponseDto>(responseAsText)!;
     }
@@ -160,21 +169,26 @@ export function useApiClient() {
      * @param requestDto An object as the payload for the response body.
      * @param params (Optional) An object containing the data which will be converted
      * into a query string and added into the request's url.
-     * @param params (Optional, default: 300) A value specifying the minimum time that the
+     * @param delay (Optional, default: 300) A value specifying the minimum time that the
      * operation should wait before returning the response. This is for user experience
      * enhancement.
-     * @param delay A value specifying the minimum time that the operation
-     * should wait before returning the response. This is for user experience enhancement.
-     * @returns A `Promise` which resolves to an object as an implementation of type
-     * `TResponseDto`.
+     * @param abortSignal (Optional) A signal from {@link AbortController} for request
+     * cancellation.
      * @example postAsync<int>("user");
      */
     async function postAsync<TResponseDto>(
             endpointPath: string,
             requestDto: object,
             params?: Params,
-            delay?: number): Promise<TResponseDto> {
-        const response = await executeAsync("post", endpointPath, requestDto, params, delay);
+            delay?: number,
+            abortSignal?: AbortSignal): Promise<TResponseDto> {
+        const response = await executeAsync(
+            "post",
+            endpointPath,
+            requestDto,
+            params,
+            delay,
+            abortSignal);
         const responseAsText = await response.text();
         return jsonUtility.parseJson<TResponseDto>(responseAsText)!;
     }
@@ -188,11 +202,11 @@ export function useApiClient() {
      * @param requestDto An object as the payload for the response body.
      * @param params (Optional) An object containing the data which will be converted
      * into a query string and added into the request's url.
-     * @param params (Optional, default: 300) A value specifying the minimum time that the
+     * @param delay (Optional, default: 300) A value specifying the minimum time that the
      * operation should wait before returning the response. This is for user experience
      * enhancement.
-     * @param delay A value specifying the minimum time that the operation
-     * should wait before returning the response. This is for user experience enhancement.
+     * @param abortSignal (Optional) A signal from {@link AbortController} for request
+     * cancellation.
      * @returns A `Promise` which resolves to an object as an implementation of type
      * `TResponseDto`.
      * @example postAndIgnoreAsync("user/changePasswordAsync/1");
@@ -201,8 +215,9 @@ export function useApiClient() {
             endpointPath: string,
             requestDto: object,
             params?: Params,
-            delay?: number): Promise<void> {
-        await executeAsync("post", endpointPath, requestDto, params, delay);
+            delay?: number,
+            abortSignal?: AbortSignal): Promise<void> {
+        await executeAsync("post", endpointPath, requestDto, params, delay, abortSignal);
     }
 
     /**
@@ -216,11 +231,11 @@ export function useApiClient() {
      * @param requestDto An object as the payload for the response body.
      * @param params (Optional) An object containing the data which will be converted
      * into a query string and added into the request's url.
-     * @param params (Optional, default: 300) A value specifying the minimum time that the
+     * @param delay (Optional, default: 300) A value specifying the minimum time that the
      * operation should wait before returning the response. This is for user experience
      * enhancement.
-     * @param delay A value specifying the minimum time that the operation
-     * should wait before returning the response. This is for user experience enhancement.
+     * @param abortSignal (Optional) A signal from {@link AbortController} for request
+     * cancellation.
      * @returns A `Promise` which resolves to an object as an implementation of type
      * `TResponseDto`.
      * @example putAsync<boolean>("user/1", requestDto);
@@ -229,8 +244,15 @@ export function useApiClient() {
             endpointPath: string,
             requestDto: object,
             params?: Params,
-            delay?: number): Promise<TResponseDto> {
-        const response = await executeAsync("put", endpointPath, requestDto, params, delay);
+            delay?: number,
+            abortSignal?: AbortSignal): Promise<TResponseDto> {
+        const response = await executeAsync(
+            "put",
+            endpointPath,
+            requestDto,
+            params,
+            delay,
+            abortSignal);
         const responseAsText = await response.text();
         return jsonUtility.parseJson<TResponseDto>(responseAsText)!;
     }
@@ -244,11 +266,11 @@ export function useApiClient() {
      * @param requestDto An object as the payload for the response body.
      * @param params (Optional) An object containing the data which will be converted
      * into a query string and added into the request's url.
-     * @param params (Optional, default: 300) A value specifying the minimum time that the
+     * @param delay (Optional, default: 300) A value specifying the minimum time that the
      * operation should wait before returning the response. This is for user experience
      * enhancement.
-     * @param delay A value specifying the minimum time that the operation
-     * should wait before returning the response. This is for user experience enhancement.
+     * @param abortSignal (Optional) A signal from {@link AbortController} for request
+     * cancellation.
      * @returns A `Promise` which resolves to an object as an implementation of type
      * `TResponseDto`.
      * @example putAndIgnoreAsync("user/1", requestDto);
@@ -257,8 +279,9 @@ export function useApiClient() {
             endpointPath: string,
             requestDto: object,
             params?: Record<string, any>,
-            delay?: number): Promise<void> {
-        await executeAsync("put", endpointPath, requestDto, params, delay);
+            delay?: number,
+            abortSignal?: AbortSignal): Promise<void> {
+        await executeAsync("put", endpointPath, requestDto, params, delay, abortSignal);
     }
 
     /**
@@ -274,8 +297,8 @@ export function useApiClient() {
      * @param params (Optional, default: 300) A value specifying the minimum time that the
      * operation should wait before returning the response. This is for user experience
      * enhancement.
-     * @param delay A value specifying the minimum time that the operation
-     * should wait before returning the response. This is for user experience enhancement.
+     * @param abortSignal (Optional) A signal from {@link AbortController} for request
+     * cancellation.
      * @returns A `Promise` which resolves to an object as an implementation of type
      * `TResponseDto`.
      * @example deleteAsync<boolean>("user/1");
@@ -283,8 +306,15 @@ export function useApiClient() {
     async function deleteAsync<TResponseDto>(
             endpointPath: string,
             params?: Params,
-            delay?: number): Promise<TResponseDto> {
-        const response = await executeAsync("delete", endpointPath, undefined, params, delay);
+            delay?: number,
+            abortSignal?: AbortSignal): Promise<TResponseDto> {
+        const response = await executeAsync(
+            "delete",
+            endpointPath,
+            undefined,
+            params,
+            delay,
+            abortSignal);
         const responseAsText = await response.text();
         return jsonUtility.parseJson<TResponseDto>(responseAsText)!;
     }
@@ -296,11 +326,11 @@ export function useApiClient() {
      * @param endpointPath The path of the api's endpoint to send the request.
      * @param params (Optional) An object containing the data which will be converted
      * into a query string and added into the request's url.
-     * @param params (Optional, default: 300) A value specifying the minimum time that the
+     * @param delay (Optional, default: 300) A value specifying the minimum time that the
      * operation should wait before returning the response. This is for user experience
      * enhancement.
-     * @param delay A value specifying the minimum time that the operation
-     * should wait before returning the response. This is for user experience enhancement.
+     * @param abortSignal (Optional) A signal from {@link AbortController} for request
+     * cancellation.
      * @returns A `Promise` which resolves to an object as an implementation of type
      * `TResponseDto`.
      * @example deleteAndIgnoreAysnc("user/1");
@@ -308,8 +338,9 @@ export function useApiClient() {
     async function deleteAndIgnoreAsync(
             endpointPath: string,
             params?: Params,
-            delay?: number): Promise<void> {
-        await executeAsync("delete", endpointPath, undefined, params, delay);
+            delay?: number,
+            abortSignal?: AbortSignal): Promise<void> {
+        await executeAsync("delete", endpointPath, undefined, params, delay, abortSignal);
     }
 
     return {
@@ -345,7 +376,6 @@ export function getQueryString<TParams extends Record<string, any>>(
                 return `${encodeURIComponent(prefixedKey)}=${encodeURIComponent(value)}`;
             }
             return "";
-        })
-        .filter((part) => !!part)
+        }).filter((part) => !!part)
         .join("&");
 }

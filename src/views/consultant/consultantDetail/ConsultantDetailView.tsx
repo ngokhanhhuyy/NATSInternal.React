@@ -1,12 +1,10 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
 import { ConsultantDetailModel } from "@/models/consultant/consultantDetailModel";
 import { useConsultantService } from "@/services/consultantService";
 import { useViewStates } from "@/hooks/viewStatesHook";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
 import { useAmountUtility } from "@/utilities/amountUtility";
-import { useAlertModalStore } from "@/stores/alertModalStore";
-import { NotFoundError } from "@/errors";
 
 // Layout components.
 import MainContainer from "@/views/layouts/MainContainerComponent";
@@ -21,36 +19,20 @@ import UpdateHistories from "./UpdateHistoriesComponent";
 // Component.
 const ConsultantDetailView = ({ id }: { id: number }) => {
     // Dependencies.
-    const navigate = useNavigate();
-    const alertModalStore = useAlertModalStore();
     const service = useConsultantService();
     const amountUtility = useMemo(useAmountUtility, []);
     
     // Model and states.
-    const { onInitialLoadingFinished } = useViewStates();
-    const [model, setModel] = useState<ConsultantDetailModel>();
+    useViewStates();
+    const model = useAsyncModelInitializer({
+        initializer: async () => {
+            const responseDto = await service.getDetailAsync(id);
+            return new ConsultantDetailModel(responseDto);
+        },
+        cacheKey: "consultantDetail"
+    });
 
-    // Effect.
-    useEffect(() => {
-        const loadAsync = async () => {
-            try {
-                const responseDto = await service.getDetailAsync(id);
-                setModel(new ConsultantDetailModel(responseDto));
-            } catch (error) {
-                if (error instanceof NotFoundError) {
-                    await alertModalStore.getNotFoundConfirmationAsync();
-                    await navigate(-1);
-                    return;
-                }
-
-                throw error;
-            }
-        };
-
-        loadAsync().finally(onInitialLoadingFinished);
-    }, []);
-
-    // Memo.
+    // Computed.
     const labelColumnClassName = useMemo(() => "col col-12", []);
     const idClass = useMemo<string | undefined>(() => {
         const color = model?.isLocked ? "danger" : "primary";

@@ -1,12 +1,12 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useTransition } from "react";
 import { Link } from "react-router-dom";
 import { useConsultantService } from "@/services/consultantService";
 import { ConsultantListModel } from "@/models/consultant/consultantListModel";
 import type { ConsultantBasicModel } from "@/models/consultant/consultantBasicModel";
-import { useAlertModalStore } from "@/stores/alertModalStore";
 import { useViewStates } from "@/hooks/viewStatesHook";
+import { useAsyncModelInitializer } from "@/hooks/asyncModelInitializerHook";
+import { useInitialDataStore } from "@/stores/initialDataStore";
 import { useAmountUtility } from "@/utilities/amountUtility";
-import { ValidationError } from "@/errors";
 
 // Layout components.
 import MainContainer from "@/views/layouts/MainContainerComponent";
@@ -18,54 +18,33 @@ import Results from "@/views/shared/hasStatsList/HasStatsListResultsComponent";
 
 const ConsultantListView = () => {
     // Dependencies.
-    const alertModalStore = useAlertModalStore();
+    const consultantInitialData = useInitialDataStore(store => store.data.consultant);
     const service = useConsultantService();
     
     // Model and states.
-    const { isInitialLoading, onInitialLoadingFinished, initialData } = useViewStates();
-    const [isReloading, setReloading] = useState<boolean>(false);
-    const [model, setModel] = useState(() => new ConsultantListModel(initialData.consultant));
+    const { isInitialRendering } = useViewStates();
+    const initialModel = useAsyncModelInitializer({
+        initializer: async () => {
+            const responseDto = await service.getListAsync();
+            return new ConsultantListModel(responseDto, consultantInitialData);
+        },
+        cacheKey: "consultantList"
+    });
+    const [model, setModel] = useState(() => initialModel);
+    const [isReloading, startReloadingTransition] = useTransition();
 
     // Effect.
     useEffect(() => {
-        const loadAsync = async () => {
-            try {
-                if (isInitialLoading) {
-                    const list = await service.getListAsync(model.toRequestDto());
-                    const monthYearOptions = initialData.consultant.listMonthYearOptions;
-                    const canCreate = initialData.consultant.creatingPermission;
-
-                    setModel(model => {
-                        return model.fromResponseDtos(list, monthYearOptions, canCreate);
-                    });
-                } else {
-                    setReloading(true);
-                    const responseDto = await service.getListAsync(model.toRequestDto());
-                    setModel(model => model.fromListResponseDto(responseDto));
-                }
-
-                document.getElementById("content")?.scrollTo({ top: 0, behavior: "smooth" });
-            } catch (error) {
-                if (error instanceof ValidationError) {
-                    await alertModalStore.getSubmissionErrorConfirmationAsync(error.errors);
-                    return;
-                }
-
-                throw error;
-            }
-        };
-
-        loadAsync().finally(() => {
-            if (isInitialLoading) {
-                onInitialLoadingFinished();
-            }
-
-            setReloading(false);
-        });
+        if (!isInitialRendering) {
+            startReloadingTransition(async () => {
+                const responseDto = await service.getListAsync(model.toRequestDto());
+                setModel(model => model.fromListResponseDto(responseDto));
+            });
+        }
     }, [model.page, model.monthYear, model.sortingByAscending, model.sortingByField]);
 
     return (
-        <MainContainer isInitialLoading={isInitialLoading}>
+        <MainContainer>
             <div className="row g-3 justify-content-center">
                 {/* Filter */}
                 <div className="col col-12">

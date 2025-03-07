@@ -15,6 +15,7 @@ const routeGenerator = useRouteGenerator();
 export class ConsultantListModel
         extends AbstractClonableModel<ConsultantListModel>
         implements IHasCustomerListModel<
+            ConsultantListModel,
             ConsultantBasicModel,
             ConsultantExistingAuthorizationModel> {
     public readonly sortingByAscending: boolean | undefined;
@@ -31,8 +32,14 @@ export class ConsultantListModel
     public readonly canCreate: boolean | undefined;
     public readonly createRoute: string = routeGenerator.getConsultantCreateRoutePath();
 
-    constructor(initialResponseDto?: InitialResponseDto, requestDto?: ListRequestDto) {
+    constructor(
+            responseDto: ResponseDtos.Consultant.List,
+            initialResponseDto?: InitialResponseDto,
+            requestDto?: ListRequestDto) {
         super();
+        
+        this.pageCount = responseDto.pageCount;
+        this.items = responseDto.items?.map(i => new ConsultantBasicModel(i)) ?? [];
         
         if (initialResponseDto) {
             const sortingOptions = initialResponseDto.listSortingOptions;
@@ -60,18 +67,6 @@ export class ConsultantListModel
                 }
             }
         }
-    }
-
-    public fromResponseDtos(
-            list: ResponseDtos.Consultant.List,
-            monthYearOptions: ResponseDtos.List.MonthYearOptions | null,
-            canCreate: boolean): ConsultantListModel {
-        return this.fromListResponseDto(list).from({
-            monthYearOptions: monthYearOptions
-                ? new ListMonthYearOptionsModel(monthYearOptions)
-                : undefined,
-            canCreate: canCreate
-        });
     }
 
     public fromListResponseDto(list: ResponseDtos.Consultant.List) {

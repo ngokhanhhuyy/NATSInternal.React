@@ -27,21 +27,33 @@ const CustomerListView = () => {
     const { isInitialRendering } = useViewStates();
     const initializedModel = useAsyncModelInitializer({
         initializer: async () => {
-            const model = new CustomerListModel(initialData.customer);
             const responseDto = await customerService.getListAsync();
-            return model.fromListResponseDto(responseDto);
+            return new CustomerListModel(responseDto, initialData.customer);
         },
         cacheKey: "customerList"
     });
     const [model, setModel] = useState(() => initializedModel);
     const [isReloading, startReloadingTransition] = useTransition();
-    const requestId = useRef<number>(1);
-    const requestIdQueue = useRef<number[]>([]);
+    const debouncingTimeoutId = useRef<number | null>(null);
 
     // Effect.
     useEffect(() => {
         if (!isInitialRendering) {
-            reload();
+            startReloadingTransition(async () => {
+                    window.clearTimeout(debouncingTimeoutId.current ?? undefined);
+                    debouncingTimeoutId.current = null;
+
+                await new Promise<void>(resolve => {
+                    debouncingTimeoutId.current = window.setTimeout(async () => {
+                        const responseDto = await customerService
+                            .getListAsync(model.toRequestDto());
+                        setModel(model => model.fromListResponseDto(responseDto));
+                        document.getElementById("content")
+                            ?.scrollTo({ top: 0, behavior: "smooth" });
+                        resolve();
+                    }, 300);
+                });
+            });
         }
     }, [
         model.page,
@@ -50,37 +62,6 @@ const CustomerListView = () => {
         model.hasRemainingDebtAmountOnly,
         model.searchByContent
     ]);
-
-    // Callbacks.
-    const reload = () => {
-        startReloadingTransition(async () => {
-            const currentRequestId = requestId.current;
-            try {
-                requestIdQueue.current.push(currentRequestId);
-                requestId.current += 1;
-                const responseDto = await customerService.getListAsync(model.toRequestDto());
-                const lastIndexInQueue = requestIdQueue.current.length - 1;
-                if (requestIdQueue.current[lastIndexInQueue] === currentRequestId) {
-                    setModel(model => model.fromListResponseDto(responseDto));
-                    document.getElementById("content")
-                        ?.scrollTo({ top: 0, behavior: "smooth" });
-                }
-            } catch (error) {
-                const lastIndexInQueue = requestIdQueue.current.length - 1;
-                if (requestIdQueue.current[lastIndexInQueue] === currentRequestId) {
-                    if (error instanceof ValidationError) {
-                        await alertModelStore.getSubmissionErrorConfirmationAsync();
-                        return;
-                    }
-
-                    throw error;
-                }
-            } finally {
-                requestIdQueue.current = requestIdQueue.current
-                    .filter(id => id != currentRequestId);
-            }
-        });
-    };
 
     return (
         <MainContainer>
@@ -112,7 +93,7 @@ const CustomerListView = () => {
                             page={model.page}
                             pageCount={model.pageCount}
                             isReloading={isReloading}
-                            onClick={page =>  setModel(model => model.from({ page }))}
+                            onClick={page => setModel(model => model.from({ page }))}
                         />
                     </div>
                 )}

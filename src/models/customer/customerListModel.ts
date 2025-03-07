@@ -5,9 +5,6 @@ import { useRouteGenerator } from "@/router/routeGenerator";
 
 const routeGenerator = useRouteGenerator();
 
-type InitialResponseDto = ResponseDtos.Customer.Initial;
-type ListRequestDto = RequestDtos.Customer.List;
-
 export class CustomerListModel
         extends AbstractClonableModel<CustomerListModel>
         implements ICreatorTrackableListModel<CustomerBasicModel> {
@@ -24,8 +21,14 @@ export class CustomerListModel
     public readonly canCreate: boolean | undefined;
     public readonly createRoute: string = routeGenerator.getCustomerCreateRoutePath();
 
-    constructor(initialResponseDto?: InitialResponseDto, requestDto?: ListRequestDto) {
+    constructor(
+            responseDto: ResponseDtos.Customer.List,
+            initialResponseDto?: ResponseDtos.Customer.Initial,
+            requestDto?: RequestDtos.Customer.List) {
         super();
+
+        this.pageCount = responseDto.pageCount;
+        this.items = responseDto.items.map(dto => new CustomerBasicModel(dto));
 
         if (initialResponseDto) {
             const sortingOptions = initialResponseDto.listSortingOptions;

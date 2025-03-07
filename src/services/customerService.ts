@@ -10,6 +10,8 @@ const service = {
      * sorting and paginating conditions.
      *
      * @param requestDto (Optional) An object containing the conditions for the results.
+     * @param delay (Optional, default: true) A flag to indicate whether the operation should
+     * be delayed (last at least 300ms).
      * @returns A {@link Promise} representing the asynchronous operation, which result is an
      * object containing the results and the additional information for pagination.
      * @example getListAsync();
@@ -18,8 +20,10 @@ const service = {
      * @throws {ValidationError} Throws when the values of the conditions in the argument for
      * the `requestDto` parameter (if specified) is invalid.
      */
-    async getListAsync(requestDto?: ListRequestDto): Promise<ListResponseDto> {
-        return await apiClient.getAsync("/customer", requestDto);
+    async getListAsync(
+            requestDto?: ListRequestDto,
+            delay: boolean = true): Promise<ListResponseDto> {
+        return apiClient.getAsync("/customer", requestDto, delay ? undefined : 0);
     },
 
     /**
