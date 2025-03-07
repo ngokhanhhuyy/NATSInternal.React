@@ -39,13 +39,15 @@ export default defineConfig({
             "@/assets": fileURLToPath(new URL("./src/assets", import.meta.url)),
         },
     },
-    optimizeDeps: {
-        // include: ["src/**/*", "src/services/**/*", "src/views/layouts/**/*"],
-    },
     server: {
-        allowedHosts: ["frontend.khanhhuy.dev"],
+        allowedHosts: ["frontend.khanhhuy.dev", "frontend-workstation.khanhhuy.dev"],
         strictPort: true,
-        port: 5173, // Development server port
+        port: 5173, // Development server port,
+        headers: {
+          "Allow-Control-Allow-Origin": "*",
+          "Allow-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+          "Allow-Control-Allow-Headers": "Content-Type,Authorization",
+        },
         proxy: {
             "^/api": {
                 target: "http://localhost:5000",

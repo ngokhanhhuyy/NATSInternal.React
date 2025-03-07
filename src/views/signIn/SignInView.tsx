@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuthenticationService } from "@/services/authenticationService";
 import { useAuthenticationStore } from "@/stores/authenticationStore";
 import {
@@ -27,7 +27,7 @@ function SignInView() {
     const [isSignedIn, setSignedIn] = useState<boolean>(false);
     const [isInitiallyChecking, setInitiallyChecking] = useState(true);
     const [isSubmitting, setSubmitting] = useState<boolean>(() => false);
-    const { modelState: modelErrorState, onInitialLoadingFinished } = useUpsertViewStates();
+    const { modelState } = useUpsertViewStates();
 
     // Effect.
     useEffect(() => {
@@ -40,7 +40,6 @@ function SignInView() {
                 }
             }).finally(() => {
                 setInitiallyChecking(false);
-                onInitialLoadingFinished();
             });
     }, []);
 
@@ -58,7 +57,7 @@ function SignInView() {
     async function login(): Promise<void> {
         setSubmitting(true);
         setCommonError(null);
-        modelErrorState.resetErrors();
+        modelState.resetErrors();
         try {
             await authenticationService.signInAsync(model.toRequestDto());
             authenticationStore.isAuthenticated = true;
@@ -74,7 +73,7 @@ function SignInView() {
             setModel(model.from({ password: "" }));
             if (exception instanceof BadRequestError ||
                     exception instanceof OperationError) {
-                modelErrorState.setErrors(exception.errors);
+                modelState.setErrors(exception.errors);
             } else if (exception instanceof InternalServerError) {
                 setCommonError("Đã xảy ra lỗi từ máy chủ");
             } else if (exception instanceof ConnectionError) {
@@ -106,7 +105,7 @@ function SignInView() {
                         {/* Username */}
                         <div className="form-group mb-3">
                             <div className="form-floating">
-                                <Input modelErrorState={modelErrorState} value={model.userName}
+                                <Input modelErrorState={modelState} value={model.userName}
                                         onValueChanged={userName => {
                                             setModel(m => m.from({ userName }));
                                         }}
@@ -116,13 +115,13 @@ function SignInView() {
                                     Tên tài khoản
                                 </label>
                             </div>
-                            <ValidationMessage name="userName" modelState={modelErrorState} />
+                            <ValidationMessage name="userName" modelState={modelState} />
                         </div>
 
                         {/* Password */}
                         <div className="form-group mb-3">
                             <div className="form-floating">
-                                <Input modelErrorState={modelErrorState} value={model.password}
+                                <Input modelErrorState={modelState} value={model.password}
                                         onValueChanged={password => {
                                             setModel(m => m.from({ password }));
                                         }}
@@ -132,7 +131,7 @@ function SignInView() {
                                     Mật khẩu
                                 </label>
                             </div>
-                            <ValidationMessage name="password" modelState={modelErrorState} />
+                            <ValidationMessage name="password" modelState={modelState} />
                         </div>
                         <div className="form-group">
                             <SignInButton isSignedIn={isSignedIn}
